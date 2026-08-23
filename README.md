@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-470%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-478%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -106,6 +106,36 @@ Dimarco        D   Inter   [TITOLARE]   quot 32   ★obiettivo
 
 La ricerca è filtrata sul ruolo della fase attiva. Se lì dentro non trova niente allarga
 a tutti i ruoli e te lo dice: serve a recuperare la chiamata persa di un reparto già chiuso.
+
+#### Il pannello di assegnazione
+
+Una chiamata vera non va come la barra presuppone. Senti il nome, **cerchi se ti interessa**,
+il rilancio sale, e solo alla fine sai a quanto e a chi. Per questo accanto ai risultati c'è
+un pannello fisso — non un overlay che copre e va chiuso — che si riempie man mano:
+
+```
+┌─ risultati ──────────────────┬─ DIMARCO · D · Inter ────────┐
+│ ▸ Dimarco   D Inter [TIT] 32 │  [TITOLARE]  ★ obiettivo     │
+│   Dimarco A D Como  [PAN]  5 │  "spinge sempre, rigorista"  │
+│                              │  ── Inter · 4-3-3 ──         │
+│                              │  POR Sommer    MEZ Barella   │
+│                              │  DS  Dimarco ← MED Calhanoglu│
+│                              │  ── prezzo ──                │
+│                              │      −  [ 60 ]  +            │
+│                              │  A 60 possono rilanciare in 4│
+│                              │  ── a chi è andato? ──       │
+│                              │  [LEO 800] [MRC 740]         │
+│                              │  [ANN 612] [SQ4 pieno]          │
+└──────────────────────────────┴──────────────────────────────┘
+```
+
+I dodici riquadri fanno due lavori insieme: dicono **chi può ancora rilanciare** — con crediti
+e tetto massimo, e spenti quando il reparto è pieno o i crediti non bastano — e sono il
+**bottone con cui chiudi l'acquisto**. Le sigle non devi ricordarle.
+
+I due modi convivono e si alimentano: se digiti `dimarco 60`, il 60 compare già nel campo
+prezzo e ti resta solo da cliccare la squadra quando sai chi ha vinto. Se hai fretta,
+`dimarco 60 mrc` + `Invio` fa tutto in una riga come prima.
 
 ### 📋 Svincolati
 
@@ -221,7 +251,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 470 test
+npm test              # 478 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```

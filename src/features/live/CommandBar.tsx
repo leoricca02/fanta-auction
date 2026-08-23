@@ -27,6 +27,8 @@ const TAG_COLOR: Readonly<Record<Tag, string>> = {
 
 export interface CommandBarHandle {
   focus: () => void;
+  /** Svuota la barra: la chiama il pannello dopo un assegnazione riuscita. */
+  clear: () => void;
 }
 
 export interface CommandBarProps {
@@ -52,7 +54,19 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => inputRef.current?.focus(),
+      clear: () => {
+        setText("");
+        setIndex(0);
+        setFeedback(null);
+        inputRef.current?.focus();
+      },
+    }),
+    [],
+  );
   useEffect(() => inputRef.current?.focus(), []);
 
   const abbrs = useMemo(() => new Set(teams.map((t) => t.abbr)), [teams]);

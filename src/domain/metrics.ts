@@ -1,4 +1,4 @@
-import type { LeagueConfig } from './types';
+import type { LeagueConfig, Role } from './types';
 import type { LeagueState } from './reducer';
 import { maxBidAssoluto, teamState } from './reducer';
 import type { FreeAgents, PlayerNoteIndex } from './free-agents';
@@ -42,6 +42,70 @@ export function ceilingsForAll(state: LeagueState, config: LeagueConfig): TeamCe
       maxBidAssoluto: maxBidAssoluto(t),
     };
   });
+}
+
+/** Perche' una squadra non puo' prendere questo giocatore a questo prezzo. */
+export type BidBlock = 'ROLE_FULL' | 'CREDITS';
+
+export interface TeamBidStatus {
+  readonly teamId: string;
+  readonly credits: number;
+  readonly slotsFreeInRole: number;
+  readonly maxBidAssoluto: number;
+  /** `true` se puo' chiudere l'acquisto a `price`. */
+  readonly canAfford: boolean;
+  /** `null` quando puo'. */
+  readonly blockedBy: BidBlock | null;
+}
+
+/**
+ * Stato di ogni partecipante rispetto a un giocatore e a un prezzo.
+ *
+ * E' §4.2 letto dal verso utile mentre il rilancio sale: non solo "quanto puo'
+ * spendere al massimo", ma "puo' prendere *questo* a *questa* cifra, e se no
+ * perche'". Alimenta la griglia di assegnazione, dove i riquadri di chi e'
+ * fuori gioco sono spenti.
+ */
+export function bidStatusForAll(
+  state: LeagueState,
+  config: LeagueConfig,
+  role: Role,
+  price: number,
+): TeamBidStatus[] {
+  return config.teams.map((team) => {
+    const t = teamState(state, team.id);
+    const slotsFreeInRole = t.slotsFreeByRole[role];
+    const ceiling = maxBidAssoluto(t);
+
+    const blockedBy: BidBlock | null =
+      slotsFreeInRole <= 0 ? 'ROLE_FULL' : price > ceiling ? 'CREDITS' : null;
+
+    return {
+      teamId: t.teamId,
+      credits: t.credits,
+      slotsFreeInRole,
+      maxBidAssoluto: ceiling,
+      canAfford: blockedBy === null,
+      blockedBy,
+    };
+  });
+}
+
+/**
+ * Gli avversari che possono ancora rilanciare sopra `price`.
+ *
+ * E' la risposta a "chi puo' battermi su questo giocatore": si guarda mentre si
+ * decide se salire, quindi conta chi sta *sopra* la cifra, non chi la pareggia.
+ */
+export function rivalsAbove(
+  statuses: readonly TeamBidStatus[],
+  config: LeagueConfig,
+  price: number,
+): TeamBidStatus[] {
+  const userIds = new Set(config.teams.filter((t) => t.isUser).map((t) => t.id));
+  return statuses.filter(
+    (s) => !userIds.has(s.teamId) && s.slotsFreeInRole > 0 && s.maxBidAssoluto > price,
+  );
 }
 
 // ---------------------------------------------------------------------------

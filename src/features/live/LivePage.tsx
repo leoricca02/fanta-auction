@@ -12,6 +12,7 @@ import { FreeAgentsPanel } from '../free/FreeAgentsPanel';
 import { GoalsPanel } from '../goals/GoalsPanel';
 import type { CommandBarHandle } from './CommandBar';
 import { CommandBar } from './CommandBar';
+import { AssignPanel } from './AssignPanel';
 
 /**
  * Schermata dell'asta (PRD §5.1), tre zone.
@@ -147,62 +148,18 @@ export function LivePage(): JSX.Element {
             <kbd>Ctrl+Z</kbd> annulla · <kbd>Ctrl+Shift+Z</kbd> ripristina
           </p>
 
-          {highlighted !== null && currentPrice !== null && (
-            <WhoCanBeatMe
-              price={currentPrice}
-              player={highlighted}
-              ceilings={teams.map((t) => ({
-                team: t,
-                ceiling: maxBidAssoluto(teamState(state, t.id)),
-                slotsFreeInRole: teamState(state, t.id).slotsFreeByRole[highlighted.role],
-              }))}
-            />
-          )}
 
           <RecentEvents />
         </section>
 
-        <section className="min-h-0 w-80 shrink-0 overflow-y-auto border-l border-neutral-800 p-3">
-          <h2 className="mb-2 text-xs uppercase tracking-wide text-neutral-500">Partecipanti</h2>
-          <table className="w-full text-xs">
-            <thead className="text-neutral-500">
-              <tr>
-                <th className="text-left font-normal">sigla</th>
-                <th className="text-right font-normal">cr</th>
-                <th className="text-right font-normal">max</th>
-                {PHASE_ORDER.map((role) => (
-                  <th key={role} className="w-5 text-right font-normal">
-                    {role}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {teams.map((team) => {
-                const t = teamState(state, team.id);
-                return (
-                  <tr key={team.id} className={team.isUser ? 'text-emerald-300' : 'text-neutral-300'}>
-                    <td className="py-0.5 font-medium uppercase">{team.abbr}</td>
-                    <td className="py-0.5 text-right tabular-nums">{t.credits}</td>
-                    <td className="py-0.5 text-right tabular-nums text-neutral-400">
-                      {maxBidAssoluto(t)}
-                    </td>
-                    {PHASE_ORDER.map((role) => (
-                      <td
-                        key={role}
-                        className={`py-0.5 text-right tabular-nums ${
-                          t.slotsFreeByRole[role] === 0 ? 'text-neutral-700' : ''
-                        }`}
-                      >
-                        {t.slotsFreeByRole[role]}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
+        <AssignPanel
+          player={highlighted}
+          state={state}
+          teams={teams}
+          price={currentPrice}
+          onPriceChange={setCurrentPrice}
+          onAssigned={() => barRef.current?.clear()}
+        />
       </div>
 
       {overlay === 'card' && highlighted !== null && (
@@ -336,37 +293,6 @@ function MyRoster({
         </div>
       ))}
     </div>
-  );
-}
-
-function WhoCanBeatMe({
-  price,
-  player,
-  ceilings,
-}: {
-  readonly price: number;
-  readonly player: Player;
-  readonly ceilings: readonly {
-    readonly team: { readonly abbr: string; readonly isUser: boolean };
-    readonly ceiling: number;
-    readonly slotsFreeInRole: number;
-  }[];
-}): JSX.Element {
-  const rivals = ceilings.filter(
-    (c) => !c.team.isUser && c.slotsFreeInRole > 0 && c.ceiling > price,
-  );
-  return (
-    <p className="rounded border border-neutral-800 px-2 py-1.5 text-xs text-neutral-400">
-      A <strong className="text-neutral-100">{price}</strong> su {player.name}:{' '}
-      {rivals.length === 0 ? (
-        <span className="text-emerald-400">nessuno può rilanciare.</span>
-      ) : (
-        <>
-          <strong className="text-neutral-100">{rivals.length}</strong> possono rilanciare —{' '}
-          <span className="uppercase">{rivals.map((r) => r.team.abbr).join(' ')}</span>
-        </>
-      )}
-    </p>
   );
 }
 

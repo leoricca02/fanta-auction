@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  bidStatusForAll,
   ceilingsForAll,
   computeLeagueMetrics,
   computeReconciliation,
   maxBidAssoluto,
+  rivalsAbove,
 } from './metrics';
 import { initialLeagueState, reduce, teamState } from './reducer';
 import { makeNoteIndex } from './free-agents';
 import { makeLeagueConfig } from './config';
 import {
+  findPlayer,
   makeEvent,
   makePlayer,
   makePlayerNote,
@@ -83,6 +86,91 @@ describe('§4.2 — max bid assoluto', () => {
     const b = ceilingsForAll(initialLeagueState(dear), dear)[0]?.maxBidAssoluto;
     expect(a).toBe(58);
     expect(b).toBe(58);
+  });
+});
+
+describe('§4.2 — chi puo prendere questo giocatore a questa cifra', () => {
+  const config = realConfig();
+
+  it('a inizio asta possono tutti, fino a 776', () => {
+    const state = initialLeagueState(config);
+    const statuses = bidStatusForAll(state, config, 'A', 100);
+    expect(statuses).toHaveLength(12);
+    expect(statuses.every((s) => s.canAfford)).toBe(true);
+    expect(statuses.every((s) => s.blockedBy === null)).toBe(true);
+
+    const oltre = bidStatusForAll(state, config, 'A', 777);
+    expect(oltre.every((s) => s.blockedBy === 'CREDITS')).toBe(true);
+  });
+
+  it('il tetto e inclusivo: al massimo esatto si puo ancora', () => {
+    const state = initialLeagueState(config);
+    expect(bidStatusForAll(state, config, 'A', 776)[0]?.canAfford).toBe(true);
+    expect(bidStatusForAll(state, config, 'A', 777)[0]?.canAfford).toBe(false);
+  });
+
+  it('un reparto pieno blocca prima dei crediti', () => {
+    // Tre portieri a "leo": gli slot P si chiudono, i crediti restano tanti.
+    const portieri = config.players.filter((p) => p.role === 'P').slice(0, 3);
+    const state = reduce(
+      portieri.map((p) => makeEvent({ playerId: p.id, teamId: 'leo', price: 1, phase: 'P' })),
+      config,
+    );
+
+    const perPortiere = bidStatusForAll(state, config, 'P', 10).find((s) => s.teamId === 'leo');
+    expect(perPortiere?.blockedBy).toBe('ROLE_FULL');
+    expect(perPortiere?.credits).toBe(797);
+
+    // Sugli attaccanti la stessa squadra e' ancora in gioco.
+    expect(bidStatusForAll(state, config, 'A', 10).find((s) => s.teamId === 'leo')?.canAfford).toBe(
+      true,
+    );
+  });
+
+  it('riporta crediti, slot liberi nel ruolo e tetto', () => {
+    const lautaro = findPlayer(config.players, 'Martinez L.');
+    const state = reduce(
+      [makeEvent({ playerId: lautaro.id, teamId: 'sq2', price: 140, phase: 'A' })],
+      config,
+    );
+    const sq2 = bidStatusForAll(state, config, 'A', 50).find((s) => s.teamId === 'sq2');
+    expect(sq2).toMatchObject({
+      credits: 660,
+      slotsFreeInRole: 5,
+      maxBidAssoluto: 637,
+      canAfford: true,
+    });
+  });
+
+  it('a prezzo 0 non blocca nessuno per i crediti', () => {
+    const statuses = bidStatusForAll(initialLeagueState(config), config, 'A', 0);
+    expect(statuses.every((s) => s.canAfford)).toBe(true);
+  });
+});
+
+describe('§4.2 — chi puo ancora battermi', () => {
+  const config = realConfig();
+
+  it('esclude te stesso e chi ha il reparto pieno', () => {
+    const state = initialLeagueState(config);
+    const statuses = bidStatusForAll(state, config, 'A', 100);
+    const rivali = rivalsAbove(statuses, config, 100);
+
+    expect(rivali).toHaveLength(11);
+    expect(rivali.some((r) => r.teamId === 'leo')).toBe(false);
+  });
+
+  it('conta chi sta sopra la cifra, non chi la pareggia', () => {
+    const state = initialLeagueState(config);
+    const statuses = bidStatusForAll(state, config, 'A', 776);
+    expect(rivalsAbove(statuses, config, 775)).toHaveLength(11);
+    expect(rivalsAbove(statuses, config, 776)).toEqual([]);
+  });
+
+  it('si svuota quando nessuno puo piu rilanciare', () => {
+    const state = initialLeagueState(config);
+    const statuses = bidStatusForAll(state, config, 'A', 800);
+    expect(rivalsAbove(statuses, config, 800)).toEqual([]);
   });
 });
 
