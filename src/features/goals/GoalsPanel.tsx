@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { isBlankMarkdown } from '../../domain/markdown';
 import { sortedTargets } from '../../domain/objectives';
 import { lineupStatus, makeLineupIndex } from '../../domain/lineup';
 import { reduce } from '../../domain/reducer';
 import { useAppStore } from '../../store/appStore';
 import { LineupBadge } from '../player/LineupBadge';
+import { Markdown } from './Markdown';
 
 /**
  * Obiettivi (PRD §5.3): testo libero di strategia e lista dei target.
@@ -30,6 +32,9 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
   const addObjectiveTarget = useAppStore((s) => s.addObjectiveTarget);
 
   const [draft, setDraft] = useState(userData.objectives.text);
+  // Di default si legge; si passa alla scrittura cliccando il testo. Sotto
+  // asta la strategia si apre per consultarla, non per riscriverla.
+  const [editing, setEditing] = useState(isBlankMarkdown(userData.objectives.text));
   const timer = useRef<number | null>(null);
   const pending = useRef<string | null>(null);
 
@@ -83,17 +88,56 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
         )}
       </header>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs uppercase tracking-wide text-neutral-500">Strategia</span>
-        <textarea
-          value={draft}
-          onChange={(e) => handleText(e.target.value)}
-          onBlur={flush}
-          rows={6}
-          placeholder="Un portiere titolare, due punte da 100, non spendere più di 300 sul reparto..."
-          className="rounded bg-neutral-900 px-2 py-1.5 text-sm text-neutral-100 outline-none ring-1 ring-neutral-800 placeholder:text-neutral-700 focus:ring-emerald-700"
-        />
-      </label>
+      <section className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs uppercase tracking-wide text-neutral-500">Strategia</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (editing) flush();
+              setEditing(!editing);
+            }}
+            className="rounded px-1.5 py-0.5 text-[11px] text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300"
+          >
+            {editing ? 'anteprima' : 'modifica'}
+          </button>
+          {editing && (
+            <span className="text-[11px] text-neutral-600">
+              # titolo · - elenco · **grassetto** · *corsivo* · `codice`
+            </span>
+          )}
+        </div>
+
+        {editing ? (
+          <textarea
+            autoFocus
+            value={draft}
+            onChange={(e) => handleText(e.target.value)}
+            onBlur={flush}
+            rows={8}
+            placeholder="# Piano asta&#10;&#10;Non spendere più di **300** sulla difesa.&#10;- un portiere titolare&#10;- due punte vere"
+            className="rounded bg-neutral-900 px-2 py-1.5 font-mono text-xs text-neutral-100 outline-none ring-1 ring-neutral-800 placeholder:text-neutral-700 focus:ring-emerald-700"
+          />
+        ) : (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setEditing(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') setEditing(true);
+            }}
+            className="min-h-[4rem] cursor-text rounded px-2 py-1.5 ring-1 ring-neutral-900 hover:ring-neutral-800"
+          >
+            {isBlankMarkdown(draft) ? (
+              <span className="text-sm text-neutral-700">
+                Nessuna nota di strategia. Clicca per scriverne una.
+              </span>
+            ) : (
+              <Markdown text={draft} />
+            )}
+          </div>
+        )}
+      </section>
 
       <section className="flex flex-col gap-1">
         <h3 className="text-xs uppercase tracking-wide text-neutral-500">
