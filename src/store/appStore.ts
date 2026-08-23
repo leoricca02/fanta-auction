@@ -120,6 +120,8 @@ export interface AppState {
   previewBackup: (file: File) => Promise<void>;
   confirmImport: () => Promise<void>;
   cancelImport: () => void;
+  /** Cancella tutto e riporta l app allo stato di prima installazione. */
+  resetEverything: () => Promise<void>;
   notify: (kind: 'ok' | 'error', text: string) => void;
   dismiss: () => void;
 }
@@ -636,6 +638,29 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   cancelImport() {
     set({ pendingImport: null });
+  },
+
+  /**
+   * Cancella tutto: listone, formazioni, note, obiettivi, event log, squadre.
+   * L'app torna com'era alla prima apertura.
+   *
+   * Passa dalla coda come ogni altra scrittura, cosi' non puo' incrociarsi con
+   * un salvataggio in volo e lasciare in giro meta' dei dati.
+   */
+  resetEverything() {
+    return enqueue(async () => {
+      await store.wipeEverything();
+      set({
+        players: [],
+        teams: makeTeams(),
+        userData: emptyUserData(),
+        listone: null,
+        lastBackupAt: null,
+        pendingImport: null,
+        pendingListone: null,
+        message: { kind: 'ok', text: 'Tutto cancellato. Ricomincia caricando il listone.' },
+      });
+    });
   },
 
   notify(kind, text) {

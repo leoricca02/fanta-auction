@@ -206,6 +206,34 @@ export async function replacePlayers(players: readonly Player[]): Promise<void> 
 }
 
 /**
+ * Svuota il database: listone, dati utente, squadre, file sorgente, tutto.
+ * L'app torna com'era alla prima apertura.
+ *
+ * E' l'unica operazione davvero distruttiva dell'applicazione — ovunque altro
+ * si annulla, si archivia o si sovrascrive, ma non si cancella. Chi la chiama
+ * deve averla fatta confermare.
+ */
+export async function wipeEverything(): Promise<void> {
+  await db.transaction(
+    'rw',
+    [db.players, db.lineups, db.playerNotes, db.teamNotes, db.objectives, db.events, db.teams, db.sourceFiles, db.meta],
+    async () => {
+      await Promise.all([
+        db.players.clear(),
+        db.lineups.clear(),
+        db.playerNotes.clear(),
+        db.teamNotes.clear(),
+        db.objectives.clear(),
+        db.events.clear(),
+        db.teams.clear(),
+        db.sourceFiles.clear(),
+        db.meta.clear(),
+      ]);
+    },
+  );
+}
+
+/**
  * Riscrive tutti i dati utente in una sola transazione. E' il commit di un
  * import di backup: o passa tutto, o non passa niente.
  */

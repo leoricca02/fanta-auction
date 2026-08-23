@@ -370,6 +370,56 @@ describe('re-import del listone', () => {
   });
 });
 
+describe('resetEverything', () => {
+  it('riporta l app allo stato di prima installazione, su disco e in memoria', async () => {
+    await store().init();
+    await store().importListone(listoneFile());
+    const portiere = store().players.find((p) => p.role === 'P') as { id: number };
+    await store().assign(portiere.id, 'leo', 30, 'P');
+    await store().setPlayerNote(portiere.id, { text: 'nota', tag: 'obiettivo' });
+    await store().setObjectivesText('un piano');
+    await store().setTeams(
+      store().teams.map((t, i) => (i === 1 ? (['Rinominata', 'rnm'] as const) : ([t.name, t.abbr] as const))),
+    );
+
+    await store().resetEverything();
+
+    expect(store().players).toEqual([]);
+    expect(store().listone).toBeNull();
+    expect(store().userData).toEqual(emptyUserData());
+    expect(store().teams.map((t) => t.abbr)).toEqual(makeTeams().map((t) => t.abbr));
+
+    // E davvero su disco: un refresh non deve resuscitare niente.
+    await reload();
+    expect(store().players).toEqual([]);
+    expect(store().userData.events).toEqual([]);
+    expect(store().userData.playerNotes).toEqual([]);
+    expect(store().listone).toBeNull();
+    expect(await db.events.count()).toBe(0);
+    expect(await db.players.count()).toBe(0);
+    expect(await db.sourceFiles.count()).toBe(0);
+  });
+
+  it('su un app gia vuota non fa danni', async () => {
+    await store().init();
+    await store().resetEverything();
+    await reload();
+    expect(store().ready).toBe(true);
+    expect(store().players).toEqual([]);
+  });
+
+  it('dopo il reset si puo ricaricare il listone da zero', async () => {
+    await store().init();
+    await store().importListone(listoneFile());
+    await store().resetEverything();
+    await store().importListone(listoneFile());
+
+    // Torna a essere un primo import: nessuna conferma da dare.
+    expect(store().pendingListone).toBeNull();
+    expect(store().players).toHaveLength(516);
+  });
+});
+
 describe('backup', () => {
   beforeEach(async () => {
     await store().init();

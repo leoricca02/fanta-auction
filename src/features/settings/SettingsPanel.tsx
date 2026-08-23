@@ -149,6 +149,8 @@ export function SettingsPanel(): JSX.Element {
 
             <ResetAuction />
           </section>
+
+          <DangerZone />
         </div>
 
         <LeagueSetup />
@@ -224,5 +226,99 @@ function ResetAuction(): JSX.Element | null {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Cancellazione totale.
+ *
+ * E' l'unica operazione irreversibile dell'app — ovunque altro si annulla o si
+ * archivia. Sta in fondo, dietro una conferma in due passaggi, e col bottone
+ * del backup accanto: chi arriva qui dovrebbe avere una copia prima di premere.
+ */
+function DangerZone(): JSX.Element {
+  const userData = useAppStore((s) => s.userData);
+  const listone = useAppStore((s) => s.listone);
+  const resetEverything = useAppStore((s) => s.resetEverything);
+  const downloadBackup = useAppStore((s) => s.downloadBackup);
+
+  const [arming, setArming] = useState(false);
+
+  const cose = [
+    listone !== null ? `il listone (${listone.count} giocatori)` : null,
+    userData.lineups.length > 0 ? `${userData.lineups.length} formazioni` : null,
+    userData.playerNotes.length > 0 ? `${userData.playerNotes.length} note giocatore` : null,
+    userData.teamNotes.length > 0 ? `${userData.teamNotes.length} note squadra` : null,
+    userData.objectives.targets.length > 0
+      ? `${userData.objectives.targets.length} obiettivi`
+      : null,
+    userData.events.length > 0 ? `${userData.events.length} assegnazioni` : null,
+  ].filter((x): x is string => x !== null);
+
+  const vuoto = cose.length === 0;
+
+  return (
+    <section className="rounded border border-red-900/70 p-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-red-400">
+        Ricomincia da capo
+      </h2>
+      <p className="mt-1 text-sm text-neutral-400">
+        {vuoto
+          ? 'Non c’è niente da cancellare: l’app è già come appena installata.'
+          : 'Cancella tutto e riporta l’app allo stato di prima apertura. Non si annulla.'}
+      </p>
+
+      {!vuoto && (
+        <>
+          <ul className="mt-2 list-inside list-disc text-xs text-neutral-400">
+            {cose.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+
+          {arming ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-red-300">
+                Confermi? Tutto quello che c’è qui sopra sparisce.
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  void resetEverything();
+                  setArming(false);
+                }}
+                className="rounded bg-red-800 px-3 py-1 text-xs text-white hover:bg-red-700"
+              >
+                Sì, cancella tutto
+              </button>
+              <button
+                type="button"
+                onClick={() => setArming(false)}
+                className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void downloadBackup()}
+                className="rounded border border-amber-700 px-3 py-1 text-xs text-amber-200 hover:bg-amber-900/40"
+              >
+                Scarica prima un backup
+              </button>
+              <button
+                type="button"
+                onClick={() => setArming(true)}
+                className="rounded border border-red-800 px-3 py-1 text-xs text-red-300 hover:bg-red-950/50"
+              >
+                Cancella tutto
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </section>
   );
 }
