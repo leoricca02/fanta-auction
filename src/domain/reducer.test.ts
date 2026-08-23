@@ -22,7 +22,7 @@ import {
   realConfig,
   resetEventCounter,
 } from '../test/fixtures';
-import { payExpected, runAuction } from '../test/replay';
+import { payScaledByQuot, runAuction } from '../test/replay';
 
 beforeEach(() => resetEventCounter());
 
@@ -71,8 +71,8 @@ describe('assegnazione singola', () => {
   const config = tiny();
 
   it('decrementa i crediti e occupa lo slot del ruolo', () => {
-    const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price: 30, phase: 'D' })], config);
-    const t1 = teamState(state, 't1');
+    const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price: 30, phase: 'D' })], config);
+    const t1 = teamState(state, 't01');
     expect(t1.credits).toBe(70);
     expect(t1.spent).toBe(30);
     expect(t1.slotsFilledByRole).toEqual({ P: 0, D: 1, C: 0, A: 0 });
@@ -83,8 +83,8 @@ describe('assegnazione singola', () => {
   });
 
   it('non tocca le altre squadre', () => {
-    const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price: 30, phase: 'D' })], config);
-    const t2 = teamState(state, 't2');
+    const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price: 30, phase: 'D' })], config);
+    const t2 = teamState(state, 't02');
     expect(t2.credits).toBe(100);
     expect(t2.slotsFree).toBe(4);
   });
@@ -92,8 +92,8 @@ describe('assegnazione singola', () => {
   it('aggiorna i totali di lega di §4.7', () => {
     const state = reduce(
       [
-        makeEvent({ playerId: 3, teamId: 't1', price: 30, phase: 'D' }),
-        makeEvent({ playerId: 4, teamId: 't2', price: 20, phase: 'D' }),
+        makeEvent({ playerId: 3, teamId: 't01', price: 30, phase: 'D' }),
+        makeEvent({ playerId: 4, teamId: 't02', price: 20, phase: 'D' }),
       ],
       config,
     );
@@ -103,13 +103,13 @@ describe('assegnazione singola', () => {
   });
 
   it('indicizza il proprietario del giocatore', () => {
-    const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price: 30, phase: 'D' })], config);
+    const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price: 30, phase: 'D' })], config);
     expect(state.assignmentByPlayerId[3]).toEqual({
       playerId: 3,
       role: 'D',
       price: 30,
       eventId: 'e1',
-      teamId: 't1',
+      teamId: 't01',
     });
     expect(state.assignmentByPlayerId[4]).toBeUndefined();
   });
@@ -120,9 +120,9 @@ describe('undo e redo', () => {
 
   function log(): AssignmentEvent[] {
     return [
-      makeEvent({ id: 'a', playerId: 3, teamId: 't1', price: 30, phase: 'D' }),
-      makeEvent({ id: 'b', playerId: 5, teamId: 't1', price: 20, phase: 'C' }),
-      makeEvent({ id: 'c', playerId: 6, teamId: 't1', price: 10, phase: 'A' }),
+      makeEvent({ id: 'a', playerId: 3, teamId: 't01', price: 30, phase: 'D' }),
+      makeEvent({ id: 'b', playerId: 5, teamId: 't01', price: 20, phase: 'C' }),
+      makeEvent({ id: 'c', playerId: 6, teamId: 't01', price: 10, phase: 'A' }),
     ];
   }
 
@@ -132,7 +132,7 @@ describe('undo e redo', () => {
     expect(undone.find((e) => e.id === 'a')?.undone).toBe(true);
 
     const state = reduce(undone, config);
-    const t1 = teamState(state, 't1');
+    const t1 = teamState(state, 't01');
     expect(t1.credits).toBe(70); // 100 - 20 - 10, i 30 di "a" tornano indietro
     expect(t1.slotsFilledByRole).toEqual({ P: 0, D: 0, C: 1, A: 1 });
     expect(state.assignmentByPlayerId[3]).toBeUndefined();
@@ -162,9 +162,9 @@ describe('undo e redo', () => {
   it('undo di piu eventi e redo selettivo', () => {
     let events = undoEvent(log(), 'a');
     events = undoEvent(events, 'c');
-    expect(teamState(reduce(events, config), 't1').credits).toBe(80);
+    expect(teamState(reduce(events, config), 't01').credits).toBe(80);
     events = redoEvent(events, 'c');
-    expect(teamState(reduce(events, config), 't1').credits).toBe(70);
+    expect(teamState(reduce(events, config), 't01').credits).toBe(70);
   });
 
   it('undo su un id inesistente non cambia nulla', () => {
@@ -176,11 +176,11 @@ describe('undo e redo', () => {
   it('libera il giocatore per una riassegnazione a un altra squadra', () => {
     const events = [
       ...undoEvent(log(), 'a'),
-      makeEvent({ id: 'd', playerId: 3, teamId: 't2', price: 44, phase: 'D' }),
+      makeEvent({ id: 'd', playerId: 3, teamId: 't02', price: 44, phase: 'D' }),
     ];
     const state = reduce(events, config);
-    expect(state.assignmentByPlayerId[3]?.teamId).toBe('t2');
-    expect(teamState(state, 't2').credits).toBe(56);
+    expect(state.assignmentByPlayerId[3]?.teamId).toBe('t02');
+    expect(teamState(state, 't02').credits).toBe(56);
   });
 
   it('lastActiveEvent e lastUndoneEvent guidano Ctrl+Z e Ctrl+Shift+Z', () => {
@@ -200,43 +200,43 @@ describe('rifiuti', () => {
   it('rifiuta la doppia assegnazione dello stesso giocatore', () => {
     const state = reduce(
       [
-        makeEvent({ playerId: 3, teamId: 't1', price: 30, phase: 'D' }),
-        makeEvent({ playerId: 3, teamId: 't2', price: 40, phase: 'D' }),
+        makeEvent({ playerId: 3, teamId: 't01', price: 30, phase: 'D' }),
+        makeEvent({ playerId: 3, teamId: 't02', price: 40, phase: 'D' }),
       ],
       config,
     );
     expect(state.rejections).toHaveLength(1);
     expect(state.rejections[0]?.reason).toBe('PLAYER_ALREADY_ASSIGNED');
-    expect(state.rejections[0]?.detail).toMatch(/gia' assegnato a "t1" per 30/);
-    expect(teamState(state, 't2').credits).toBe(100);
+    expect(state.rejections[0]?.detail).toMatch(/gia. assegnato a "t01" per 30/);
+    expect(teamState(state, 't02').credits).toBe(100);
     expect(state.slotsFilled).toBe(1);
   });
 
   it('rifiuta l assegnazione su un ruolo con slot gia pieni', () => {
     const state = reduce(
       [
-        makeEvent({ playerId: 3, teamId: 't1', price: 10, phase: 'D' }),
-        makeEvent({ playerId: 4, teamId: 't1', price: 10, phase: 'D' }),
+        makeEvent({ playerId: 3, teamId: 't01', price: 10, phase: 'D' }),
+        makeEvent({ playerId: 4, teamId: 't01', price: 10, phase: 'D' }),
       ],
       config,
     );
     expect(state.rejections[0]?.reason).toBe('ROLE_SLOTS_FULL');
     expect(state.rejections[0]?.detail).toMatch(/tutti gli slot D occupati/);
-    expect(teamState(state, 't1').slotsFilledByRole.D).toBe(1);
+    expect(teamState(state, 't01').slotsFilledByRole.D).toBe(1);
   });
 
   it('rifiuta il prezzo che porterebbe i crediti sotto il floor di 1 per slot', () => {
     // 100 crediti, 4 slot liberi: il tetto e 100 - (4 - 1) = 97.
-    const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price: 98, phase: 'D' })], config);
+    const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price: 98, phase: 'D' })], config);
     expect(state.rejections[0]?.reason).toBe('INSUFFICIENT_CREDITS');
     expect(state.rejections[0]?.detail).toMatch(/lasciano al massimo 97/);
-    expect(teamState(state, 't1').credits).toBe(100);
+    expect(teamState(state, 't01').credits).toBe(100);
   });
 
   it('accetta esattamente il tetto e lascia 1 credito per slot', () => {
-    const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price: 97, phase: 'D' })], config);
+    const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price: 97, phase: 'D' })], config);
     expect(state.rejections).toEqual([]);
-    const t1 = teamState(state, 't1');
+    const t1 = teamState(state, 't01');
     expect(t1.credits).toBe(3);
     expect(t1.slotsFree).toBe(3);
     expect(maxBidAssoluto(t1)).toBe(1);
@@ -245,22 +245,22 @@ describe('rifiuti', () => {
   it('il floor regge fino all ultimo slot', () => {
     const state = reduce(
       [
-        makeEvent({ playerId: 3, teamId: 't1', price: 97, phase: 'D' }),
-        makeEvent({ playerId: 1, teamId: 't1', price: 1, phase: 'P' }),
-        makeEvent({ playerId: 5, teamId: 't1', price: 1, phase: 'C' }),
-        makeEvent({ playerId: 6, teamId: 't1', price: 1, phase: 'A' }),
+        makeEvent({ playerId: 3, teamId: 't01', price: 97, phase: 'D' }),
+        makeEvent({ playerId: 1, teamId: 't01', price: 1, phase: 'P' }),
+        makeEvent({ playerId: 5, teamId: 't01', price: 1, phase: 'C' }),
+        makeEvent({ playerId: 6, teamId: 't01', price: 1, phase: 'A' }),
       ],
       config,
     );
     expect(state.rejections).toEqual([]);
-    const t1 = teamState(state, 't1');
+    const t1 = teamState(state, 't01');
     expect(t1.credits).toBe(0);
     expect(t1.slotsFree).toBe(0);
     expect(maxBidAssoluto(t1)).toBe(0);
   });
 
   it('rifiuta un giocatore fuori listone', () => {
-    const state = reduce([makeEvent({ playerId: 999, teamId: 't1', price: 5, phase: 'D' })], config);
+    const state = reduce([makeEvent({ playerId: 999, teamId: 't01', price: 5, phase: 'D' })], config);
     expect(state.rejections[0]?.reason).toBe('UNKNOWN_PLAYER');
     expect(state.rejections[0]?.detail).toMatch(/#999 non presente nel listone/);
   });
@@ -272,13 +272,13 @@ describe('rifiuti', () => {
 
   it('rifiuta prezzi non interi, nulli o negativi', () => {
     for (const price of [0, -3, 2.5, Number.NaN]) {
-      const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price, phase: 'D' })], config);
+      const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price, phase: 'D' })], config);
       expect(state.rejections[0]?.reason).toBe('INVALID_PRICE');
     }
   });
 
   it('rifiuta la fase incoerente col ruolo del giocatore', () => {
-    const state = reduce([makeEvent({ playerId: 3, teamId: 't1', price: 5, phase: 'C' })], config);
+    const state = reduce([makeEvent({ playerId: 3, teamId: 't01', price: 5, phase: 'C' })], config);
     expect(state.rejections[0]?.reason).toBe('PHASE_MISMATCH');
     expect(state.rejections[0]?.detail).toMatch(/di ruolo D ma l'evento dichiara fase C/);
   });
@@ -286,8 +286,8 @@ describe('rifiuti', () => {
   it('rifiuta un id evento duplicato', () => {
     const state = reduce(
       [
-        makeEvent({ id: 'dup', playerId: 3, teamId: 't1', price: 5, phase: 'D' }),
-        makeEvent({ id: 'dup', playerId: 4, teamId: 't2', price: 5, phase: 'D' }),
+        makeEvent({ id: 'dup', playerId: 3, teamId: 't01', price: 5, phase: 'D' }),
+        makeEvent({ id: 'dup', playerId: 4, teamId: 't02', price: 5, phase: 'D' }),
       ],
       config,
     );
@@ -297,8 +297,8 @@ describe('rifiuti', () => {
   it('un evento rifiutato non ferma quelli successivi', () => {
     const state = reduce(
       [
-        makeEvent({ playerId: 999, teamId: 't1', price: 5, phase: 'D' }),
-        makeEvent({ playerId: 3, teamId: 't1', price: 5, phase: 'D' }),
+        makeEvent({ playerId: 999, teamId: 't01', price: 5, phase: 'D' }),
+        makeEvent({ playerId: 3, teamId: 't01', price: 5, phase: 'D' }),
       ],
       config,
     );
@@ -308,7 +308,7 @@ describe('rifiuti', () => {
 
   it('un evento annullato non finisce tra i rifiuti', () => {
     const state = reduce(
-      [makeEvent({ playerId: 999, teamId: 't1', price: 5, phase: 'D', undone: true })],
+      [makeEvent({ playerId: 999, teamId: 't01', price: 5, phase: 'D', undone: true })],
       config,
     );
     expect(state.rejections).toEqual([]);
@@ -321,10 +321,10 @@ describe('validateAssignment / resolveAssignment', () => {
 
   it('restituisce null su evento valido e la ragione su evento invalido', () => {
     const state = initialLeagueState(config);
-    const ok = makeEvent({ playerId: 3, teamId: 't1', price: 30, phase: 'D' });
+    const ok = makeEvent({ playerId: 3, teamId: 't01', price: 30, phase: 'D' });
     expect(validateAssignment(state, ok, index)).toBeNull();
 
-    const ko = makeEvent({ playerId: 3, teamId: 't1', price: 999, phase: 'D' });
+    const ko = makeEvent({ playerId: 3, teamId: 't01', price: 999, phase: 'D' });
     expect(validateAssignment(state, ko, index)?.reason).toBe('INSUFFICIENT_CREDITS');
   });
 
@@ -332,13 +332,13 @@ describe('validateAssignment / resolveAssignment', () => {
     const state = initialLeagueState(config);
     const resolution = resolveAssignment(
       state,
-      makeEvent({ playerId: 5, teamId: 't2', price: 12, phase: 'C' }),
+      makeEvent({ playerId: 5, teamId: 't02', price: 12, phase: 'C' }),
       index,
     );
     expect(resolution.ok).toBe(true);
     if (resolution.ok) {
       expect(resolution.player.id).toBe(5);
-      expect(resolution.team.teamId).toBe('t2');
+      expect(resolution.team.teamId).toBe('t02');
     }
   });
 });
@@ -357,8 +357,8 @@ describe('maxBidAssoluto', () => {
       creditsPerTeam: 50,
       slotsByRole: { P: 1, D: 0, C: 0, A: 0 },
     });
-    const state = reduce([makeEvent({ playerId: 1, teamId: 't1', price: 20, phase: 'P' })], config);
-    const t1 = teamState(state, 't1');
+    const state = reduce([makeEvent({ playerId: 1, teamId: 't01', price: 20, phase: 'P' })], config);
+    const t1 = teamState(state, 't01');
     expect(t1.slotsFree).toBe(0);
     expect(maxBidAssoluto(t1)).toBe(0);
   });
@@ -366,7 +366,7 @@ describe('maxBidAssoluto', () => {
 
 describe('replay di 300 eventi sul listone reale', () => {
   const config = realConfig();
-  const { events } = runAuction({ config, priceFor: payExpected });
+  const { events } = runAuction({ config, priceFor: payScaledByQuot(3) });
 
   it('genera esattamente 300 assegnazioni', () => {
     expect(events).toHaveLength(300);

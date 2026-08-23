@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import type { ListonePlayer, Role } from '../domain/types';
+import type { Player, Role } from '../domain/types';
 
 /**
  * Parser difensivo del listone .xlsx (PRD §2.1).
@@ -50,7 +50,7 @@ export interface ParseListoneOptions {
 }
 
 export interface ParseListoneResult {
-  readonly players: readonly ListonePlayer[];
+  readonly players: readonly Player[];
   /** Righe dati totali, header e righe vuote esclusi. */
   readonly totalRows: number;
   /** Righe scartate perché `Fuori lista === '*'`. */
@@ -212,7 +212,7 @@ export function parseListone(
   }
   const col = mapColumns(header);
 
-  const players: ListonePlayer[] = [];
+  const players: Player[] = [];
   const warnings: string[] = [];
   const seenIds = new Map<number, string>();
   const seenSearchKeys = new Map<string, string>();

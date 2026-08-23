@@ -4,11 +4,8 @@ import {
   DEFAULT_CREDITS_PER_TEAM,
   DEFAULT_SLOTS_BY_ROLE,
   LeagueConfigError,
-  leagueSlotsByRole,
   makeLeagueConfig,
   makeTeams,
-  phasesAfter,
-  phasesFrom,
   totalLeagueCredits,
   totalLeagueSlots,
   userTeam,
@@ -25,19 +22,30 @@ describe('makeTeams', () => {
     expect(teams[0]?.id).toBe('leo');
   });
 
+  it('tutte le sigle di default sono di 3 lettere e univoche', () => {
+    const teams = makeTeams();
+    for (const t of teams) expect(t.abbr).toHaveLength(3);
+    expect(new Set(teams.map((t) => t.abbr)).size).toBe(12);
+  });
+
   it('normalizza le sigle in minuscolo', () => {
     expect(makeTeams([['Alpha', 'ALF'], ['Beta', 'BET']])[0]?.abbr).toBe('alf');
   });
 
   it('accetta un userIndex diverso da 0', () => {
-    const teams = makeTeams([['A', 'a'], ['B', 'b']], 1);
+    const teams = makeTeams([['A', 'aaa'], ['B', 'bbb']], 1);
     expect(teams[1]?.isUser).toBe(true);
     expect(teams[0]?.isUser).toBe(false);
   });
 
+  it('rifiuta le sigle di lunghezza diversa da 3', () => {
+    expect(() => makeTeams([['A', 'ab']])).toThrowError(/attese esattamente 3 lettere/);
+    expect(() => makeTeams([['A', 'abcd']])).toThrowError(/Sigla "abcd"/);
+  });
+
   it('rifiuta le sigle duplicate, anche se differiscono solo di case', () => {
-    expect(() => makeTeams([['A', 'x'], ['B', 'X']])).toThrowError(LeagueConfigError);
-    expect(() => makeTeams([['A', 'x'], ['B', 'X']])).toThrowError(/Sigla duplicata "X"/);
+    expect(() => makeTeams([['A', 'xyz'], ['B', 'XYZ']])).toThrowError(LeagueConfigError);
+    expect(() => makeTeams([['A', 'xyz'], ['B', 'XYZ']])).toThrowError(/Sigla duplicata "XYZ"/);
   });
 
   it('rifiuta una lega senza squadre', () => {
@@ -45,8 +53,10 @@ describe('makeTeams', () => {
   });
 
   it('rifiuta un userIndex fuori range', () => {
-    expect(() => makeTeams([['A', 'a']], 5)).toThrowError(/userIndex 5 fuori range: attesi 0\.\.0/);
-    expect(() => makeTeams([['A', 'a']], -1)).toThrowError(/fuori range/);
+    expect(() => makeTeams([['A', 'aaa']], 5)).toThrowError(
+      /userIndex 5 fuori range: attesi 0\.\.0/,
+    );
+    expect(() => makeTeams([['A', 'aaa']], -1)).toThrowError(/fuori range/);
   });
 });
 
@@ -60,15 +70,11 @@ describe('totali di lega', () => {
     expect(config.slotsByRole).toEqual(DEFAULT_SLOTS_BY_ROLE);
   });
 
-  it('N_r = 36 / 96 / 96 / 72', () => {
-    expect(leagueSlotsByRole(config)).toEqual({ P: 36, D: 96, C: 96, A: 72 });
-  });
-
   it('gli override sostituiscono i default', () => {
     const custom = makeLeagueConfig([makePlayer({ id: 1, role: 'A', quot: 4 })], {
       creditsPerTeam: 500,
       slotsByRole: { P: 1, D: 2, C: 2, A: 1 },
-      teams: makeTeams([['Solo', 's']]),
+      teams: makeTeams([['Solo', 'sol']]),
     });
     expect(totalLeagueCredits(custom)).toBe(500);
     expect(totalLeagueSlots(custom)).toBe(6);
@@ -85,23 +91,11 @@ describe('userTeam', () => {
     const teams = makeTeams();
     const none = teams.map((t) => ({ ...t, isUser: false }));
     const two = teams.map((t, i) => ({ ...t, isUser: i < 2 }));
-    expect(() => userTeam({ teams: none, creditsPerTeam: 800, slotsByRole: DEFAULT_SLOTS_BY_ROLE }))
-      .toThrowError(/trovate 0/);
-    expect(() => userTeam({ teams: two, creditsPerTeam: 800, slotsByRole: DEFAULT_SLOTS_BY_ROLE }))
-      .toThrowError(/trovate 2/);
-  });
-});
-
-describe('ordine delle fasi', () => {
-  it('phasesFrom include la fase stessa', () => {
-    expect(phasesFrom('P')).toEqual(['P', 'D', 'C', 'A']);
-    expect(phasesFrom('C')).toEqual(['C', 'A']);
-    expect(phasesFrom('A')).toEqual(['A']);
-  });
-
-  it('phasesAfter esclude la fase stessa', () => {
-    expect(phasesAfter('P')).toEqual(['D', 'C', 'A']);
-    expect(phasesAfter('C')).toEqual(['A']);
-    expect(phasesAfter('A')).toEqual([]);
+    expect(() =>
+      userTeam({ teams: none, creditsPerTeam: 800, slotsByRole: DEFAULT_SLOTS_BY_ROLE }),
+    ).toThrowError(/trovate 0/);
+    expect(() =>
+      userTeam({ teams: two, creditsPerTeam: 800, slotsByRole: DEFAULT_SLOTS_BY_ROLE }),
+    ).toThrowError(/trovate 2/);
   });
 });

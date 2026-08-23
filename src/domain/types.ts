@@ -8,78 +8,121 @@
 /** Ruolo Classic. L'asta procede per ruoli sequenziali P -> D -> C -> A (PRD §1). */
 export type Role = 'P' | 'D' | 'C' | 'A';
 
-/** Ordine di fase dell'asta. L'ordine e' significativo: guida §4.3 e §4.5. */
+/** Ordine di fase dell'asta. L'ordine e' significativo. */
 export const PHASE_ORDER = ['P', 'D', 'C', 'A'] as const satisfies readonly Role[];
 
-/** Tier di scarsita', 1 = migliore. Quintili di FVM/1000 dentro il ruolo. */
-export type Tier = 1 | 2 | 3 | 4 | 5;
+/** Marcatura di studio su un giocatore (PRD §3). */
+export type Tag = 'obiettivo' | 'alternativa' | 'evita';
 
-export const TIER_COUNT = 5;
+export const TAGS = ['obiettivo', 'alternativa', 'evita'] as const satisfies readonly Tag[];
 
-/** Giocatore come esce dal parser del listone: solo campi presenti nel file. */
-export interface ListonePlayer {
-  /** Colonna `#`. ID stabile di Fantacalcio.it, chiave primaria (PRD §2.1). */
+/** Esito di §4.1. */
+export type LineupStatus = 'TITOLARE' | 'BALLOTTAGGIO' | 'PANCHINA' | 'NON_INSERITO';
+
+/**
+ * Giocatore come esce dal listone. Appartiene al listone ed e' integralmente
+ * sostituibile a ogni re-import (PRD §2).
+ *
+ * `quot` e `fvm` sono **dati grezzi**: servono a ordinare e filtrare (§5.2, §5.4).
+ * Nessun valore derivato da queste colonne esiste nel dominio — il modello di
+ * prezzo della 1.0 e' stato eliminato.
+ */
+export interface Player {
+  /** Colonna `#`. ID stabile di Fantacalcio.it: tutti i dati utente si agganciano qui. */
   readonly id: number;
   /** Colonna `Nome`, grezza, per il display. */
   readonly name: string;
-  /** `name` normalizzato per la fuzzy search: accenti rimossi, minuscolo. */
+  /** `name` normalizzato per la fuzzy search: minuscolo, senza accenti. */
   readonly searchKey: string;
-  /** Colonna `Sq.`, club di Serie A. */
+  /** Colonna `Sq.`, club di Serie A. Combacia con `Lineup.teamCode`. */
   readonly team: string;
   /** Colonna `R.`. */
   readonly role: Role;
   /** Colonna `Under`. */
   readonly under: number;
-  /** Colonna `QUOT.`, quotazione grezza. Input della normalizzazione §4.1. */
+  /** Colonna `QUOT.`, grezza. Solo ordinamento e filtro. */
   readonly quot: number;
-  /** Colonna `FVM/1000`. Metrica di tiering primaria (PRD §2.1). */
+  /** Colonna `FVM/1000`, grezza. Solo ordinamento e filtro. */
   readonly fvm: number;
 }
 
-/** Giocatore arricchito con i campi derivati di §4.1 e dal tiering. */
-export interface Player extends ListonePlayer {
-  /** `round(quot * f)` — prezzo atteso di lega, §4.1. */
-  readonly expectedPrice: number;
-  readonly tier: Tier;
+// ---------------------------------------------------------------------------
+// Dati utente — l'intero valore dell'applicazione (PRD §3.1)
+// ---------------------------------------------------------------------------
+
+/** Uno slot della formazione. Due o piu' candidati sono un ballottaggio. */
+export interface LineupSlot {
+  readonly slotId: string;
+  /** Etichetta libera del ruolo posizionale: 'POR', 'DC', 'EST', 'MED', 'TRQ', 'PC'... */
+  readonly roleLabel: string;
+  /** Id dei giocatori candidati, ordinati. 1 = titolare, 2+ = ballottaggio. */
+  readonly candidates: readonly number[];
+  readonly note: string;
 }
+
+export interface Lineup {
+  /** Club di Serie A, combacia con `Player.team`. */
+  readonly teamCode: string;
+  /** Modulo scelto, es. '4-3-3'. */
+  readonly module: string;
+  readonly slots: readonly LineupSlot[];
+  readonly updatedAt: number;
+}
+
+export interface TeamNote {
+  readonly teamCode: string;
+  readonly text: string;
+}
+
+export interface PlayerNote {
+  readonly playerId: number;
+  readonly text: string;
+  readonly tag: Tag | null;
+  /** Superstite di un re-import: il giocatore e' uscito dalla Serie A (PRD §2). */
+  readonly archived: boolean;
+}
+
+export interface ObjectiveTarget {
+  readonly playerId: number;
+  /** Ordinamento manuale. */
+  readonly priority: number;
+  readonly note: string;
+}
+
+/** Istanza unica. */
+export interface Objectives {
+  /** Note generali di strategia, testo libero. */
+  readonly text: string;
+  readonly targets: readonly ObjectiveTarget[];
+}
+
+// ---------------------------------------------------------------------------
+// Lega ed event log
+// ---------------------------------------------------------------------------
 
 export interface FantaTeam {
   readonly id: string;
   readonly name: string;
-  /** Sigla per la command bar, univoca (PRD §3.1). */
+  /** 3 lettere, univoche, per la command bar (PRD §3). */
   readonly abbr: string;
-  /** Esattamente una squadra ha `true` (PRD §3.1). */
+  /** Esattamente una squadra ha `true`. */
   readonly isUser: boolean;
 }
 
 /**
  * Evento di assegnazione. Append-only: nessun hard delete, l'annullamento
- * si esprime con `undone: true` (PRD §3.2).
+ * si esprime con `undone: true` (PRD §3).
  */
 export interface AssignmentEvent {
   readonly id: string;
   readonly ts: number;
   readonly playerId: number;
   readonly teamId: string;
+  /** Prezzo effettivamente pagato. Non e' una stima: e' il dato battuto all'asta. */
   readonly price: number;
   /** Fase in cui e' avvenuta l'assegnazione. Deve coincidere col ruolo del giocatore. */
   readonly phase: Role;
   readonly undone: boolean;
-}
-
-/**
- * Dati dell'utente. Non vengono mai toccati da un re-import del listone
- * (PRD §2.3): sono joinati su `playerId`, che e' l'ID stabile.
- */
-export interface UserNote {
-  readonly playerId: number;
-  readonly text: string;
-  /** Tetto di disciplina: "non oltre". Non e' una stima di valore. */
-  readonly maxBid: number | null;
-  /** Stima di valore personale: alimenta `valore(p)` di §4.10. */
-  readonly userValue: number | null;
-  readonly starred: boolean;
-  readonly archived: boolean;
 }
 
 /** Configurazione di lega. `reduce(events, config)` legge tutto da qui. */
@@ -89,8 +132,20 @@ export interface LeagueConfig {
   readonly creditsPerTeam: number;
   /** Slot per squadra e per ruolo (3 P, 8 D, 8 C, 6 A). */
   readonly slotsByRole: Readonly<Record<Role, number>>;
-  /** Listone gia' arricchito da §4.1 e dal tiering. */
+  /** Listone corrente. */
   readonly players: readonly Player[];
+}
+
+/**
+ * Tutto cio' che l'utente ha prodotto a mano. E' il contenuto del backup di
+ * §3.1 ed e' l'unica cosa che un re-import del listone non tocca mai.
+ */
+export interface UserData {
+  readonly lineups: readonly Lineup[];
+  readonly playerNotes: readonly PlayerNote[];
+  readonly teamNotes: readonly TeamNote[];
+  readonly objectives: Objectives;
+  readonly events: readonly AssignmentEvent[];
 }
 
 /** Un record per ruolo, sempre completo. */

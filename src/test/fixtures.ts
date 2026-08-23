@@ -5,14 +5,18 @@ import * as XLSX from 'xlsx';
 import type {
   AssignmentEvent,
   LeagueConfig,
-  ListonePlayer,
+  Lineup,
+  LineupSlot,
+  Objectives,
   Player,
+  PlayerNote,
   Role,
-  Tier,
+  Tag,
+  TeamNote,
+  UserData,
 } from '../domain/types';
 import { makeLeagueConfig, makeTeams } from '../domain/config';
-import type { BuiltListone } from '../domain/pricing';
-import { buildPlayers } from '../domain/pricing';
+import { emptyObjectives } from '../domain/backup';
 import { parseListone } from '../parse/listone';
 
 /** Helper di test. Non fa parte del bundle dell'app. */
@@ -21,34 +25,21 @@ export const LISTONE_PATH = fileURLToPath(
   new URL('../../data/lista_calciatori_classic.xlsx', import.meta.url),
 );
 
-let cachedRaw: readonly ListonePlayer[] | null = null;
-let cachedBuilt: BuiltListone | null = null;
+let cachedListone: readonly Player[] | null = null;
 
 export function readListoneBytes(): Uint8Array {
   return new Uint8Array(readFileSync(LISTONE_PATH));
 }
 
 /** Listone reale, parsato una volta sola per run. */
-export function realListone(): readonly ListonePlayer[] {
-  if (cachedRaw === null) cachedRaw = parseListone(readListoneBytes()).players;
-  return cachedRaw;
-}
-
-/** Listone reale arricchito con §4.1 e tiering, sulla lega di default. */
-export function realBuilt(): BuiltListone {
-  if (cachedBuilt === null) {
-    cachedBuilt = buildPlayers(realListone(), {
-      teams: makeTeams(),
-      creditsPerTeam: 800,
-      slotsByRole: { P: 3, D: 8, C: 8, A: 6 },
-    });
-  }
-  return cachedBuilt;
+export function realListone(): readonly Player[] {
+  if (cachedListone === null) cachedListone = parseListone(readListoneBytes()).players;
+  return cachedListone;
 }
 
 /** Config di lega completa sul listone reale: 12 squadre, 800 crediti, 25 slot. */
 export function realConfig(): LeagueConfig {
-  return makeLeagueConfig(realBuilt().players);
+  return makeLeagueConfig(realListone());
 }
 
 export function findPlayer(players: readonly Player[], name: string): Player {
@@ -67,22 +58,20 @@ export interface SyntheticPlayerSpec {
   readonly quot: number;
   readonly fvm?: number;
   readonly name?: string;
-  readonly tier?: Tier;
-  readonly expectedPrice?: number;
+  readonly team?: string;
 }
 
 export function makePlayer(spec: SyntheticPlayerSpec): Player {
+  const name = spec.name ?? `P${spec.id}`;
   return {
     id: spec.id,
-    name: spec.name ?? `P${spec.id}`,
-    searchKey: (spec.name ?? `P${spec.id}`).toLowerCase(),
-    team: 'Test FC',
+    name,
+    searchKey: name.toLowerCase(),
+    team: spec.team ?? 'Test FC',
     role: spec.role,
     under: 25,
     quot: spec.quot,
     fvm: spec.fvm ?? spec.quot * 8,
-    expectedPrice: spec.expectedPrice ?? spec.quot,
-    tier: spec.tier ?? 1,
   };
 }
 
@@ -92,10 +81,10 @@ export function makeRoster(
   count: number,
   topQuot: number,
   startId: number,
-  tier: Tier = 1,
+  team = 'Test FC',
 ): Player[] {
   return Array.from({ length: count }, (_, i) =>
-    makePlayer({ id: startId + i, role, quot: Math.max(1, topQuot - i), tier }),
+    makePlayer({ id: startId + i, role, quot: Math.max(1, topQuot - i), team }),
   );
 }
 
@@ -109,7 +98,7 @@ export function makeTinyConfig(args: {
   const teamCount = args.teamCount ?? 2;
   const seeds = Array.from(
     { length: teamCount },
-    (_, i) => [`Team ${i + 1}`, `t${i + 1}`] as const,
+    (_, i) => [`Team ${i + 1}`, `t${String(i + 1).padStart(2, '0')}`] as const,
   );
   return {
     teams: makeTeams(seeds),
@@ -147,6 +136,58 @@ export function resetEventCounter(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Dati utente sintetici
+// ---------------------------------------------------------------------------
+
+export function makeSlot(
+  slotId: string,
+  candidates: readonly number[],
+  roleLabel = 'GEN',
+  note = '',
+): LineupSlot {
+  return { slotId, roleLabel, candidates: [...candidates], note };
+}
+
+export function makeLineup(
+  teamCode: string,
+  slots: readonly LineupSlot[],
+  module = '4-3-3',
+  updatedAt = 1_700_000_000_000,
+): Lineup {
+  return { teamCode, module, slots: [...slots], updatedAt };
+}
+
+export function makePlayerNote(
+  playerId: number,
+  text = 'nota',
+  tag: Tag | null = null,
+  archived = false,
+): PlayerNote {
+  return { playerId, text, tag, archived };
+}
+
+export function makeTeamNote(teamCode: string, text = 'nota squadra'): TeamNote {
+  return { teamCode, text };
+}
+
+export function makeObjectives(
+  text: string,
+  targets: readonly { playerId: number; priority: number; note: string }[] = [],
+): Objectives {
+  return { text, targets: targets.map((t) => ({ ...t })) };
+}
+
+export function makeUserData(partial: Partial<UserData> = {}): UserData {
+  return {
+    lineups: partial.lineups ?? [],
+    playerNotes: partial.playerNotes ?? [],
+    teamNotes: partial.teamNotes ?? [],
+    objectives: partial.objectives ?? emptyObjectives(),
+    events: partial.events ?? [],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // PRNG deterministico, per i replay casuali riproducibili
 // ---------------------------------------------------------------------------
 
@@ -166,7 +207,10 @@ export function makeRng(seed: number): () => number {
 // Costruzione di .xlsx sintetici, per i test del parser
 // ---------------------------------------------------------------------------
 
-export function makeXlsx(rows: readonly (readonly unknown[])[], sheetName = 'Lista calciatori'): Uint8Array {
+export function makeXlsx(
+  rows: readonly (readonly unknown[])[],
+  sheetName = 'Lista calciatori',
+): Uint8Array {
   const ws = XLSX.utils.aoa_to_sheet(rows as unknown[][]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
