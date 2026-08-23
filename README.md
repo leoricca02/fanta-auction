@@ -35,7 +35,7 @@ Nome, prezzo, sigla. Invio. L'acquisto è registrato, i crediti scalano, la rosa
 
 ```bash
 npm install
-npm run dev          # → http://localhost:5173
+npm run dev        
 ```
 
 Alla prima apertura ci sono due cose da fare, in questo ordine:
