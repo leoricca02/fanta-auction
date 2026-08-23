@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { lineupCompletion, makeLineupIndex } from '../../domain/lineup';
 import { useAppStore } from '../../store/appStore';
+import { PlayerCard } from '../player/PlayerCard';
 import { LineupEditor } from './LineupEditor';
 
 /**
@@ -21,6 +22,7 @@ export function TeamsPage(): JSX.Element {
   );
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [cardPlayerId, setCardPlayerId] = useState<number | null>(null);
   useEffect(() => {
     setSelected((current) => current ?? teamCodes[0] ?? null);
   }, [teamCodes]);
@@ -32,6 +34,7 @@ export function TeamsPage(): JSX.Element {
   );
 
   const done = completions.filter((c) => c.hasLineup && c.filledSlots === c.totalSlots).length;
+  const cardPlayer = players.find((p) => p.id === cardPlayerId) ?? null;
 
   if (teamCodes.length === 0) {
     return (
@@ -90,6 +93,15 @@ export function TeamsPage(): JSX.Element {
           note={note}
           onUpdate={(mutate) => updateLineup(selected, mutate)}
           onNoteChange={(text) => void saveTeamNote(selected, text)}
+          onOpenCard={setCardPlayerId}
+        />
+      )}
+
+      {cardPlayer !== null && (
+        <PlayerCard
+          key={cardPlayer.id}
+          player={cardPlayer}
+          onClose={() => setCardPlayerId(null)}
         />
       )}
     </div>

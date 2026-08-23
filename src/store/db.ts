@@ -3,6 +3,7 @@ import type { EntityTable } from 'dexie';
 
 import type {
   AssignmentEvent,
+  FantaTeam,
   Lineup,
   Objectives,
   Player,
@@ -42,6 +43,19 @@ export interface MetaRow {
   readonly value: string | number;
 }
 
+/**
+ * Il .xlsx del listone esattamente come e' stato importato.
+ *
+ * Serve all'export nativo di §6.1, che ci riscrive dentro invece di
+ * rigenerare il file: le colonne che l'app non legge e le righe fuori lista
+ * non sopravvivrebbero a un giro di parsing e serializzazione.
+ */
+export interface SourceFileRow {
+  readonly key: 'listone';
+  readonly filename: string;
+  readonly bytes: Uint8Array;
+}
+
 const db = new Dexie('fanta-auction') as Dexie & {
   players: EntityTable<Player, 'id'>;
   lineups: EntityTable<Lineup, 'teamCode'>;
@@ -49,6 +63,8 @@ const db = new Dexie('fanta-auction') as Dexie & {
   teamNotes: EntityTable<TeamNote, 'teamCode'>;
   objectives: EntityTable<StoredObjectives, 'key'>;
   events: EntityTable<AssignmentEvent, 'id'>;
+  teams: EntityTable<FantaTeam, 'id'>;
+  sourceFiles: EntityTable<SourceFileRow, 'key'>;
   meta: EntityTable<MetaRow, 'key'>;
 };
 
@@ -59,6 +75,32 @@ db.version(1).stores({
   teamNotes: 'teamCode',
   objectives: 'key',
   events: 'id, ts',
+  meta: 'key',
+});
+
+// v2: i 12 partecipanti con le loro sigle. Prima erano cablati nel codice, ma
+// la command bar assegna per sigla e "sq2" non e' il nome di nessuno.
+db.version(2).stores({
+  players: 'id, team, role',
+  lineups: 'teamCode',
+  playerNotes: 'playerId',
+  teamNotes: 'teamCode',
+  objectives: 'key',
+  events: 'id, ts',
+  teams: 'id',
+  meta: 'key',
+});
+
+// v3: conserva il file sorgente del listone per l'export nativo (§6.1).
+db.version(3).stores({
+  players: 'id, team, role',
+  lineups: 'teamCode',
+  playerNotes: 'playerId',
+  teamNotes: 'teamCode',
+  objectives: 'key',
+  events: 'id, ts',
+  teams: 'id',
+  sourceFiles: 'key',
   meta: 'key',
 });
 
@@ -113,6 +155,34 @@ export async function setMeta(key: MetaKey, value: string | number): Promise<voi
 
 export async function saveLineup(lineup: Lineup): Promise<void> {
   await db.lineups.put(lineup);
+}
+
+export async function loadTeams(): Promise<FantaTeam[]> {
+  return db.teams.toArray();
+}
+
+export async function replaceTeams(teams: readonly FantaTeam[]): Promise<void> {
+  await db.transaction('rw', db.teams, async () => {
+    await db.teams.clear();
+    await db.teams.bulkPut([...teams]);
+  });
+}
+
+/**
+ * Scrive un evento d'asta. E' la scrittura piu' importante dell'app: va
+ * attesa **prima** di mostrare l'assegnazione a schermo, cosi' un crash a
+ * meta' asta non perde l'acquisto appena battuto.
+ */
+export async function saveEvent(event: AssignmentEvent): Promise<void> {
+  await db.events.put(event);
+}
+
+export async function saveSourceFile(filename: string, bytes: Uint8Array): Promise<void> {
+  await db.sourceFiles.put({ key: 'listone', filename, bytes });
+}
+
+export async function loadSourceFile(): Promise<SourceFileRow | null> {
+  return (await db.sourceFiles.get('listone')) ?? null;
 }
 
 export async function savePlayerNote(note: PlayerNote): Promise<void> {

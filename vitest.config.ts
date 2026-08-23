@@ -8,7 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'json-summary'],
-      include: ['src/domain/**/*.ts', 'src/parse/**/*.ts'],
+      include: ['src/domain/**/*.ts', 'src/parse/**/*.ts', 'src/export/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/domain/types.ts'],
       thresholds: {
         'src/domain/**/*.ts': {

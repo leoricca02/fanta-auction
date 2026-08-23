@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react';
 
 import { useAppStore } from './store/appStore';
+import { LivePage } from './features/live/LivePage';
 import { TeamsPage } from './features/teams/TeamsPage';
+import { FreeAgentsPanel } from './features/free/FreeAgentsPanel';
+import { GoalsPanel } from './features/goals/GoalsPanel';
 import { SettingsPanel } from './features/settings/SettingsPanel';
 import { ImportConfirm } from './features/settings/ImportConfirm';
 
-type Tab = 'teams' | 'settings';
+type Tab = 'live' | 'teams' | 'free' | 'goals' | 'settings';
 
-/**
- * Guscio dell'applicazione.
- *
- * M2: Squadre (editor formazioni) e Impostazioni (listone, backup).
- * Asta live, svincolati e obiettivi arrivano da M3 in poi.
- */
+const TABS: readonly (readonly [Tab, string])[] = [
+  ['live', 'Asta'],
+  ['teams', 'Squadre'],
+  ['free', 'Svincolati'],
+  ['goals', 'Obiettivi'],
+  ['settings', 'Impostazioni'],
+];
+
+/** Guscio dell'applicazione: le quattro sezioni di §5 piu' le impostazioni. */
 export function App(): JSX.Element {
   const ready = useAppStore((s) => s.ready);
   const init = useAppStore((s) => s.init);
@@ -41,18 +47,15 @@ export function App(): JSX.Element {
       <header className="flex shrink-0 items-center gap-4 border-b border-neutral-800 px-4 py-2">
         <h1 className="text-sm font-semibold tracking-wide text-neutral-100">Fanta Auction</h1>
         <nav className="flex gap-1">
-          {(
-            [
-              ['teams', 'Squadre'],
-              ['settings', 'Impostazioni'],
-            ] as const
-          ).map(([id, label]) => (
+          {TABS.map(([id, label]) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
               className={`rounded px-3 py-1 text-sm ${
-                tab === id ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-400 hover:bg-neutral-900'
+                tab === id
+                  ? 'bg-neutral-800 text-neutral-100'
+                  : 'text-neutral-400 hover:bg-neutral-900'
               }`}
             >
               {label}
@@ -64,7 +67,9 @@ export function App(): JSX.Element {
       {message !== null && (
         <div
           className={`flex shrink-0 items-center justify-between px-4 py-2 text-sm ${
-            message.kind === 'ok' ? 'bg-emerald-900/50 text-emerald-100' : 'bg-red-900/50 text-red-100'
+            message.kind === 'ok'
+              ? 'bg-emerald-900/50 text-emerald-100'
+              : 'bg-red-900/50 text-red-100'
           }`}
         >
           <span>{message.text}</span>
@@ -75,7 +80,11 @@ export function App(): JSX.Element {
       )}
 
       <main className="flex min-h-0 flex-1 overflow-hidden">
-        {tab === 'teams' ? <TeamsPage /> : <SettingsPanel />}
+        {tab === 'live' && <LivePage />}
+        {tab === 'teams' && <TeamsPage />}
+        {tab === 'free' && <FreeAgentsPanel embedded />}
+        {tab === 'goals' && <GoalsPanel embedded />}
+        {tab === 'settings' && <SettingsPanel />}
       </main>
 
       <ImportConfirm />

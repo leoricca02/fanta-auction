@@ -55,6 +55,8 @@ export interface LineupEditorProps {
   /** Applica una modifica alla formazione e restituisce quella aggiornata. */
   readonly onUpdate: (mutate: (lineup: Lineup) => Lineup) => Promise<Lineup>;
   readonly onNoteChange: (text: string) => void;
+  /** Apre la scheda di §5.1 sul giocatore cliccato. */
+  readonly onOpenCard: (playerId: number) => void;
 }
 
 export function LineupEditor({
@@ -64,6 +66,7 @@ export function LineupEditor({
   note,
   onUpdate,
   onNoteChange,
+  onOpenCard,
 }: LineupEditorProps): JSX.Element {
   const [noteDraft, setNoteDraft] = useState(note);
   const [dropped, setDropped] = useState<readonly string[]>([]);
@@ -222,6 +225,7 @@ export function LineupEditor({
                 else slotRefs.current.set(slot.slotId, el);
               }}
               onOpen={() => openPicker(slot.slotId)}
+              onOpenCard={onOpenCard}
               onRemove={(playerId) =>
                 mutate((l) => removeCandidate(l, slot.slotId, playerId, Date.now()))
               }
@@ -270,6 +274,7 @@ interface SlotRowProps {
   readonly pickerOpen: boolean;
   readonly registerRef: (el: HTMLButtonElement | null) => void;
   readonly onOpen: () => void;
+  readonly onOpenCard: (playerId: number) => void;
   readonly onRemove: (playerId: number) => void;
   readonly onClear: () => void;
   readonly onNote: (text: string) => void;
@@ -283,6 +288,7 @@ function SlotRow({
   pickerOpen,
   registerRef,
   onOpen,
+  onOpenCard,
   onRemove,
   onClear,
   onNote,
@@ -336,7 +342,18 @@ function SlotRow({
                 contested ? 'bg-amber-900/60 text-amber-100' : 'bg-emerald-900/60 text-emerald-100'
               } ${duplicated.has(id) ? 'ring-1 ring-red-500' : ''}`}
             >
-              {byId.get(id)?.name ?? `#${id}`}
+              <span
+                role="button"
+                tabIndex={-1}
+                title="Apri la scheda"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenCard(id);
+                }}
+                className="cursor-pointer underline decoration-dotted underline-offset-2"
+              >
+                {byId.get(id)?.name ?? `#${id}`}
+              </span>
               <span
                 role="button"
                 tabIndex={-1}
