@@ -10,6 +10,7 @@ import { useAppStore } from '../../store/appStore';
 import { PlayerCard } from '../player/PlayerCard';
 import { FreeAgentsPanel } from '../free/FreeAgentsPanel';
 import { GoalsPanel } from '../goals/GoalsPanel';
+import { StatsPanel } from './StatsPanel';
 import type { CommandBarHandle } from './CommandBar';
 import { CommandBar } from './CommandBar';
 import { AssignPanel } from './AssignPanel';
@@ -22,10 +23,12 @@ import { AssignPanel } from './AssignPanel';
  * risposta a "chi puo' ancora battermi".
  *
  * Overlay da tastiera: `?` scheda del giocatore evidenziato, `o` obiettivi,
- * `s` svincolati, `Esc` chiude e il focus torna alla barra col testo intatto.
+ * `s` svincolati, `t` statistiche dell'asta, `Esc` chiude e il focus torna alla
+ * barra col testo intatto. Ognuno ha anche il suo bottone: all'asta si sta con
+ * tastiera **e** mouse, e obbligare a ricordare una lettera non e' un servizio.
  */
 
-type Overlay = 'card' | 'goals' | 'free' | null;
+type Overlay = 'card' | 'goals' | 'free' | 'stats' | null;
 
 export function LivePage(): JSX.Element {
   const players = useAppStore((s) => s.players);
@@ -97,6 +100,7 @@ export function LivePage(): JSX.Element {
       if (typing) return;
       if (event.key === 'o') setOverlay('goals');
       if (event.key === 's') setOverlay('free');
+      if (event.key === 't') setOverlay('stats');
     }
 
     window.addEventListener('keydown', onKey);
@@ -143,10 +147,15 @@ export function LivePage(): JSX.Element {
             onPriceChange={setCurrentPrice}
           />
 
-          <p className="text-[11px] text-neutral-600">
-            <kbd>?</kbd> scheda · <kbd>o</kbd> obiettivi · <kbd>s</kbd> svincolati ·{' '}
-            <kbd>Ctrl+Z</kbd> annulla · <kbd>Ctrl+Shift+Z</kbd> ripristina
-          </p>
+          <nav className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <OverlayButton label="Scheda" hint="?" onClick={() => setOverlay('card')} />
+            <OverlayButton label="Obiettivi" hint="o" onClick={() => setOverlay('goals')} />
+            <OverlayButton label="Svincolati" hint="s" onClick={() => setOverlay('free')} />
+            <OverlayButton label="Statistiche" hint="t" onClick={() => setOverlay('stats')} />
+            <span className="ml-1 text-neutral-600">
+              <kbd>Ctrl+Z</kbd> annulla · <kbd>Ctrl+Shift+Z</kbd> ripristina
+            </span>
+          </nav>
 
 
           <RecentEvents />
@@ -177,7 +186,33 @@ export function LivePage(): JSX.Element {
           <FreeAgentsPanel onClose={closeOverlay} />
         </OverlayShell>
       )}
+      {overlay === 'stats' && (
+        <OverlayShell onClose={closeOverlay}>
+          <StatsPanel onClose={closeOverlay} />
+        </OverlayShell>
+      )}
     </div>
+  );
+}
+
+/** Ogni overlay ha un bottone oltre alla lettera: mouse e tastiera pari grado. */
+function OverlayButton({
+  label,
+  hint,
+  onClick,
+}: {
+  readonly label: string;
+  readonly hint: string;
+  readonly onClick: () => void;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded border border-neutral-800 bg-neutral-900/60 px-2 py-1 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800 hover:text-neutral-100"
+    >
+      {label} <kbd className="text-neutral-500">{hint}</kbd>
+    </button>
   );
 }
 

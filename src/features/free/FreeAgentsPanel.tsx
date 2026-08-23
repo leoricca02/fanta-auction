@@ -8,6 +8,7 @@ import { reduce } from '../../domain/reducer';
 import { normalizeQuery } from '../../domain/search';
 import { useAppStore } from '../../store/appStore';
 import { LineupBadge } from '../player/LineupBadge';
+import { PlayerCard } from '../player/PlayerCard';
 
 /**
  * Svincolati (PRD §5.4).
@@ -15,7 +16,19 @@ import { LineupBadge } from '../player/LineupBadge';
  * Tabella di chi non e' ancora stato assegnato, divisa per ruolo, ordinabile e
  * filtrabile. Si apre anche in overlay dall'asta con `s`, e i filtri restano
  * fra un'apertura e l'altra perche' vivono in un modulo, non nel componente.
+ *
+ * L'ordine di default e' `QUOT.` decrescente — il listone, non l'alfabeto — e
+ * ogni riga porta con se' tag e nota: la tabella deve bastare da sola, senza
+ * aprire nient'altro. Quando invece serve tutto, la riga e' cliccabile e apre
+ * la scheda: all'asta si sta con tastiera **e** mouse.
  */
+
+/** Ogni tag ha il suo segno: la stellina uguale per tutti non diceva niente. */
+const TAG_STYLE: Readonly<Record<Tag, { readonly mark: string; readonly cls: string }>> = {
+  obiettivo: { mark: '★', cls: 'text-emerald-400' },
+  alternativa: { mark: '◇', cls: 'text-sky-400' },
+  evita: { mark: '⨯', cls: 'text-rose-400' },
+};
 
 type SortKey = 'quot' | 'fvm' | 'name' | 'team' | 'status';
 
@@ -56,6 +69,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
   const leagueConfig = useAppStore((s) => s.leagueConfig);
 
   const [filters, setFilters] = useState<Filters>(persistedFilters);
+  const [cardPlayerId, setCardPlayerId] = useState<number | null>(null);
   function update(patch: Partial<Filters>): void {
     const next = { ...filters, ...patch };
     persistedFilters = next;
@@ -105,12 +119,20 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
     return [...filtered].sort(sorters[filters.sort]);
   }, [players, state, notes, lineups, filters]);
 
+  const cardPlayer = useMemo(
+    () => (cardPlayerId === null ? null : (players.find((p) => p.id === cardPlayerId) ?? null)),
+    [cardPlayerId, players],
+  );
+
   return (
-    <div
-      className={`flex flex-col gap-2 bg-neutral-950 p-3 ${
-        embedded ? 'min-h-0 flex-1' : 'h-full w-[46rem] border-l border-neutral-800'
-      }`}
-    >
+    // La scheda vive accanto alla tabella, non sopra: aprirla non deve nascondere
+    // la riga da cui sei partito ne' i filtri che hai appena messo.
+    <div className={`flex max-w-full ${embedded ? 'min-h-0 flex-1' : 'h-full'}`}>
+      <div
+        className={`flex min-w-0 flex-col gap-2 bg-neutral-950 p-3 ${
+          embedded ? 'min-h-0 flex-1' : 'h-full w-[46rem] border-l border-neutral-800'
+        }`}
+      >
       <header className="flex items-center gap-2">
         <h2 className="text-sm font-semibold text-neutral-100">Svincolati</h2>
         <span className="text-xs tabular-nums text-neutral-500">{rows.length} giocatori</span>
@@ -220,11 +242,13 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                 <th
                   key={key}
                   onClick={() => update({ sort: key })}
-                  className={`cursor-pointer py-1 text-left font-normal ${
-                    filters.sort === key ? 'text-neutral-200 underline' : ''
+                  title="Ordina per questa colonna"
+                  className={`cursor-pointer py-1 text-left font-normal hover:text-neutral-300 ${
+                    filters.sort === key ? 'text-neutral-200' : ''
                   } ${key === 'quot' || key === 'fvm' ? 'text-right' : ''}`}
                 >
                   {label}
+                  {filters.sort === key && <span className="ml-0.5 text-neutral-500">↓</span>}
                 </th>
               ))}
               <th className="text-left font-normal">nota</th>
@@ -234,7 +258,12 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
             {rows.map((p) => {
               const note = notes.get(p.id);
               return (
-                <tr key={p.id} className="border-t border-neutral-900">
+                <tr
+                  key={p.id}
+                  onClick={() => setCardPlayerId(p.id)}
+                  title="Apri la scheda"
+                  className="cursor-pointer border-t border-neutral-900 hover:bg-neutral-900"
+                >
                   <td className="max-w-[10rem] truncate py-1 text-neutral-100">{p.name}</td>
                   <td className="truncate py-1 text-neutral-500">{p.team}</td>
                   <td className="py-1">
@@ -242,8 +271,15 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                   </td>
                   <td className="py-1 text-right tabular-nums text-neutral-300">{p.quot}</td>
                   <td className="py-1 text-right tabular-nums text-neutral-500">{p.fvm}</td>
-                  <td className="max-w-[14rem] truncate py-1 text-neutral-500">
-                    {note?.tag != null && <span className="mr-1 text-emerald-400">★</span>}
+                  <td
+                    className="max-w-[14rem] truncate py-1 text-neutral-500"
+                    title={note?.text ?? ''}
+                  >
+                    {note?.tag != null && (
+                      <span className={`mr-1 ${TAG_STYLE[note.tag].cls}`} title={note.tag}>
+                        {TAG_STYLE[note.tag].mark}
+                      </span>
+                    )}
                     {note?.text ?? ''}
                   </td>
                 </tr>
@@ -258,7 +294,12 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
             )}
           </tbody>
         </table>
+        </div>
       </div>
+
+      {cardPlayer !== null && (
+        <PlayerCard key={cardPlayer.id} player={cardPlayer} onClose={() => setCardPlayerId(null)} />
+      )}
     </div>
   );
 }

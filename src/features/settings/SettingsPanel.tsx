@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { reduce } from '../../domain/reducer';
 import { useAppStore } from '../../store/appStore';
 import { LeagueSetup } from './LeagueSetup';
+import { ReadinessCheck } from './ReadinessCheck';
 
 /**
  * Impostazioni: backup, export, partecipanti, listone (PRD §2, §3.1, §6).
@@ -33,6 +34,8 @@ export function SettingsPanel(): JSX.Element {
     <div className="min-h-0 flex-1 overflow-y-auto p-6">
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-2">
         <div className="flex flex-col gap-6">
+          <ReadinessCheck />
+
           <section className="rounded border border-amber-800/60 bg-amber-950/20 p-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-400">
               Backup dei dati

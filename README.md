@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-484%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-550%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -109,6 +109,7 @@ Dimarco        D   Inter   [TITOLARE]   quot 32   ★obiettivo
 | `?` | Scheda del giocatore evidenziato |
 | `o` | Obiettivi |
 | `s` | Svincolati |
+| `t` | **L'asta in numeri** |
 | `Esc` | Chiude l'overlay — **il testo digitato resta** |
 | `Ctrl`+`Z` | Annulla, anche un'assegnazione che non è l'ultima |
 | `Ctrl`+`Shift`+`Z` | Ripristina |
@@ -146,17 +147,46 @@ I due modi convivono e si alimentano: se digiti `dimarco 60`, il 60 compare già
 prezzo e ti resta solo da cliccare la squadra quando sai chi ha vinto. Se hai fretta,
 `dimarco 60 mrc` + `Invio` fa tutto in una riga come prima.
 
+### 📊 L'asta in numeri — `t`
+
+Tutto misurato, niente stimato. Nessun prezzo previsto: quello è morto con la 1.0 e non torna.
+
+| | Risponde a |
+| --- | --- |
+| **Termometro del tavolo** | Quota di crediti bruciati ÷ quota di slot riempiti. Sopra 1 si sta pagando caro e conviene aspettare, sotto 1 gli affari sono adesso |
+| **Ritmo** | Chiamate al minuto, e la fine stimata — l'unica proiezione della schermata, ed è dichiarata |
+| **Dove vanno i crediti** | Spesa, medie e colpo più caro reparto per reparto |
+| **Che roba è uscita** | Quanti dei giocatori già andati sono **titolari nelle formazioni che hai compilato tu**. È il dato che nessun altro al tavolo ha |
+| **Le due classifiche** | Colpi più cari, e chi è stato pagato più sopra la propria `QUOT.` |
+| **Squadra per squadra** | Crediti, max bid, **crediti per slot ancora libero** — la potenza di fuoco vera di chi ha 200 crediti e diciotto buchi. Ordinabile da qualsiasi colonna |
+
 ### 📋 Svincolati
 
-Chi non è ancora stato assegnato, diviso per ruolo. Ordinabile per nome, squadra, stato di
-formazione, `QUOT.`, `FVM`. Filtri combinabili su squadra, tag, stato, presenza di nota,
-quotazione minima — e **restano come li lasci** fra un'apertura e l'altra.
+Chi non è ancora stato assegnato, diviso per ruolo, **ordinato per `QUOT.` decrescente** come
+il listone. Ogni riga porta con sé tag e appunto: `★` obiettivo, `◇` alternativa, `⨯` da evitare.
+La riga è cliccabile e apre la scheda accanto alla tabella, senza coprirla.
+
+Ordinabile anche per nome, squadra, stato di formazione, `FVM`. Filtri combinabili su squadra,
+tag, stato, presenza di nota, quotazione minima — e **restano come li lasci** fra un'apertura
+e l'altra.
 
 ### 🎯 Obiettivi
 
 Strategia in markdown semplice (titoli, elenchi, **grassetto**, *corsivo*, `codice`) e lista
 dei target con priorità riordinabile. Ogni riga dice se il giocatore è ancora libero o già
 andato, e a chi.
+
+---
+
+### ✅ Sei pronto? — la checklist pre-asta
+
+In cima alle **Impostazioni**, sei pallini e una riga. Il lavoro di questo progetto non si perde
+per un errore: si perde per un'omissione — tre club senza formazione fra i venti non si notano
+finché non te ne chiamano uno.
+
+Listone · partecipanti e sigle · **club senza formazione, elencati per nome** · obiettivi senza
+nota · appunti · età dell'ultimo backup. Ogni voce ha il suo numero e cosa fare adesso; gli
+avvisi non bloccano, le cose mancanti sì.
 
 ---
 
@@ -217,7 +247,7 @@ aspettare settembre.
 
 ```
 src/
-├── domain/      logica pura — reducer, formazioni, ricerca, backup, diff, markdown
+├── domain/      logica pura — reducer, formazioni, ricerca, statistiche, checklist, backup
 ├── parse/       parser difensivo del listone .xlsx
 ├── store/       Zustand + Dexie
 ├── features/    live · teams · free · goals · player · settings
@@ -260,7 +290,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 484 test
+npm test              # 550 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```
