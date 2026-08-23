@@ -14,11 +14,16 @@ import { normalizeName } from '../../parse/listone';
  * successivo, Maiusc+Invio per restare sullo slot e aggiungere il ballottaggio,
  * Esc per chiudere.
  *
- * **Fuori ruolo.** Appena si digita, sotto ai compatibili compare la sezione
- * dei giocatori del club di ruolo diverso che corrispondono alla ricerca: il
- * listone elenca Dimarco difensore, ma nel 3-5-2 gioca esterno di centrocampo.
- * Restano in coda e solo con la ricerca attiva, cosi' la cima dell'elenco — e
- * quindi il flusso a raffica di Invii — non cambia mai.
+ * **Fuori ruolo.** Nessuno slot e' chiuso: sotto ai compatibili puo' comparire
+ * il resto della rosa del club, qualsiasi ruolo — un portiere in attacco se e'
+ * quello che serve. Il listone elenca Dimarco difensore, ma nel 3-5-2 gioca
+ * esterno di centrocampo: il ruolo di listino e' la lista da cui lo compri, non
+ * la posizione in cui la sua squadra lo schiera.
+ *
+ * La sezione compare in due modi, entrambi in coda ai compatibili: appena si
+ * digita, ristretta a chi corrisponde alla ricerca; oppure per intero con
+ * `Tab`, per sfogliare la rosa quando il nome non lo si ricorda. Mai in cima e
+ * mai a riposo, cosi' il flusso a raffica di Invii non cambia.
  */
 
 export interface SlotPickerProps {
@@ -53,6 +58,8 @@ export function SlotPicker({
 }: SlotPickerProps): JSX.Element {
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState(0);
+  /** `Tab`: mostra tutta la rosa del club anche senza cercare. */
+  const [showAll, setShowAll] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -61,13 +68,13 @@ export function SlotPicker({
     return candidates.filter((p) => matches(p, normalized));
   }, [candidates, query]);
 
-  // A ricerca vuota il fuori ruolo sarebbe mezza rosa: comparirebbe rumore
-  // sotto ogni slot senza che nessuno l'abbia chiesto.
+  // A ricerca vuota e senza `Tab` il fuori ruolo sarebbe mezza rosa sotto ogni
+  // slot: rumore che nessuno ha chiesto. Serve un gesto, cercare o premere Tab.
   const outOfRole = useMemo(() => {
-    if (query === '') return [];
+    if (query === '' && !showAll) return [];
     const normalized = normalizeName(query);
     return offRole.filter((p) => matches(p, normalized));
-  }, [offRole, query]);
+  }, [offRole, query, showAll]);
 
   // Un solo elenco per la tastiera: l'indice scorre i compatibili e prosegue
   // nel fuori ruolo, cosi' le frecce attraversano l'intestazione senza saltarla.
@@ -82,6 +89,7 @@ export function SlotPicker({
   useEffect(() => {
     setQuery('');
     setIndex(0);
+    setShowAll(false);
     inputRef.current?.focus();
   }, [slotId]);
 
@@ -93,6 +101,14 @@ export function SlotPicker({
   }, [index, visible.length]);
 
   function handleKey(event: React.KeyboardEvent): void {
+    // Tab non sposta il focus: qui apre e chiude il resto della rosa. Uscire dal
+    // picker si fa con Esc, che riporta il focus sullo slot.
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      setShowAll((v) => !v);
+      setIndex(0);
+      return;
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       onClose();
@@ -120,14 +136,32 @@ export function SlotPicker({
       className="flex w-80 shrink-0 flex-col rounded border border-neutral-700 bg-neutral-900"
       onKeyDown={handleKey}
     >
-      <div className="border-b border-neutral-800 p-2">
+      <div className="flex items-center gap-2 border-b border-neutral-800 p-2">
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={`${label} — digita per filtrare`}
-          className="w-full rounded bg-neutral-800 px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+          className="min-w-0 flex-1 rounded bg-neutral-800 px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
         />
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-pressed={showAll}
+          onClick={() => {
+            setShowAll((v) => !v);
+            setIndex(0);
+            inputRef.current?.focus();
+          }}
+          title="Mostra tutta la rosa, ruoli compresi quelli non compatibili (Tab)"
+          className={`shrink-0 rounded px-2 py-1 text-[11px] ${
+            showAll
+              ? 'bg-amber-800/70 text-amber-100'
+              : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200'
+          }`}
+        >
+          tutta la rosa
+        </button>
       </div>
 
       <ul ref={listRef} className="max-h-[60vh] flex-1 overflow-y-auto">
@@ -135,7 +169,7 @@ export function SlotPicker({
           <Fragment key={player.id}>
             {i === inRole.length && (
               <li className="border-t border-neutral-800 px-2 pb-0.5 pt-2 text-[11px] uppercase tracking-wide text-amber-600/90">
-                Fuori ruolo
+                Fuori ruolo — {label} non e' il loro ruolo di listino
               </li>
             )}
             <li>
@@ -172,19 +206,21 @@ export function SlotPicker({
         {visible.length === 0 && (
           <li className="px-2 py-3 text-sm text-neutral-500">
             {query === ''
-              ? 'Nessun giocatore compatibile.'
+              ? 'Nessun giocatore disponibile in questo club.'
               : 'Nessun giocatore, in nessun ruolo, corrisponde.'}
           </li>
         )}
-        {outOfRole.length === 0 && inRole.length === 0 && query !== '' && (
-          <li className="px-2 pb-2 text-[11px] text-neutral-600">
-            La ricerca guarda anche gli altri ruoli del club.
+        {outOfRole.length === 0 && !showAll && (
+          <li className="border-t border-neutral-800 px-2 py-1.5 text-[11px] text-neutral-600">
+            Cerca un nome, o premi <span className="text-neutral-400">Tab</span>, per schierare
+            qui chiunque altro della rosa.
           </li>
         )}
       </ul>
 
       <div className="border-t border-neutral-800 px-2 py-1 text-[11px] text-neutral-500">
-        Invio assegna e passa oltre · Maiusc+Invio aggiunge il ballottaggio · Esc chiude
+        Invio assegna e passa oltre · Maiusc+Invio aggiunge il ballottaggio · Tab tutta la
+        rosa · Esc chiude
       </div>
     </div>
   );

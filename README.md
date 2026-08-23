@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-483%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-484%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -58,26 +58,32 @@ Il collo di bottiglia del progetto: venti squadre da compilare a mano, ed è lav
 il giorno dell'asta non recuperi.
 
 Scegli il modulo, premi **Compila dal primo slot vuoto** e batti `Invio` undici volte.
-Ogni slot propone **solo i giocatori di quel club**, già filtrati per ruolo compatibile
-e ordinati per `QUOT.` decrescente — chi gioca sta quasi sempre in cima.
+Ogni slot propone **solo i giocatori di quel club**, con in cima i consigliati — quelli
+di ruolo compatibile, ordinati per `QUOT.` decrescente: chi gioca sta quasi sempre lì.
+Il resto della rosa resta raggiungibile, in qualsiasi slot (vedi sotto).
 
 | Tasto | Effetto |
 | --- | --- |
 | `Invio` | Assegna e passa allo slot successivo |
 | `Maiusc`+`Invio` | Assegna e resta: è così che si crea un **ballottaggio** |
+| `Tab` | Mostra tutta la rosa del club, ruoli non compatibili compresi |
 | `Esc` | Chiude il picker |
 | `Canc` | Svuota lo slot selezionato |
 
 Cambiare modulo conserva tutto ciò che continua a starci, e ti dice chi resta fuori.
 
 > [!TIP]
-> **Fuori ruolo.** Il listone elenca Dimarco ed Estupinán tra i difensori, ma nel 3-5-2
-> giocano esterni nei cinque di centrocampo. Digita il nome nel picker: sotto ai
-> compatibili compare la sezione **fuori ruolo**, con il resto della rosa che
-> corrisponde alla ricerca e il ruolo di listino in evidenza. `Invio` lo schiera lì.
-> Compare solo mentre cerchi, così la cima dell'elenco — quella che consuma la raffica
-> di `Invio` — non cambia mai. In formazione quel giocatore porta un bollino ambra con
-> la sua lettera, per ricordarti che lo compri da difensore.
+> **Fuori ruolo — nessuno slot è chiuso.** I giocatori compatibili di ruolo sono solo i
+> **consigliati**, quelli che stanno in cima e che la raffica di `Invio` consuma. Sotto
+> c'è il resto della rosa del club, qualsiasi ruolo: un difensore a centrocampo, un
+> portiere in attacco, quello che serve. Il listone elenca Dimarco ed Estupinán tra i
+> difensori, ma nel 3-5-2 giocano esterni nei cinque di centrocampo — il ruolo di
+> listino è la lista da cui li compri, non la posizione in cui giocano.
+>
+> Il resto della rosa compare in due modi, sempre in coda ai consigliati:
+> **digitando** un nome, oppure con `Tab` (o il pulsante *tutta la rosa*) per sfogliarla
+> tutta quando il nome non te lo ricordi. In formazione quel giocatore porta un bollino
+> ambra con la sua lettera di listino, così sai da che lista lo compri.
 
 ### 🔴 Asta — la command bar
 
@@ -254,7 +260,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 483 test
+npm test              # 484 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```

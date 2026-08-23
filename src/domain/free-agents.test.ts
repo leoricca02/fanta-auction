@@ -180,6 +180,16 @@ describe('offRoleCandidates — chi gioca dove il listone non lo mette', () => {
     expect(fuoriRuolo.map((p) => p.id)).toEqual(atteso.map((p) => p.id));
   });
 
+  it('non chiude nessuna porta: il portiere puo finire in attacco', () => {
+    // Il vincolo e' l'utente, non il ruolo di listino: ogni giocatore del club
+    // deve poter entrare in ogni slot della formazione.
+    const fuoriRuolo = offRoleCandidates(players, 'Inter', ['A'], new Set());
+    expect(fuoriRuolo.some((p) => p.role === 'P')).toBe(true);
+    const rosa = playersOfTeam(players, 'Inter');
+    const attaccanti = playersOfTeam(players, 'Inter', ['A']);
+    expect(fuoriRuolo).toHaveLength(rosa.length - attaccanti.length);
+  });
+
   it('si svuota quando lo slot ammette ogni ruolo', () => {
     expect(offRoleCandidates(players, 'Inter', ['P', 'D', 'C', 'A'], new Set())).toEqual([]);
   });
