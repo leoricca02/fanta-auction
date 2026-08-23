@@ -9,6 +9,7 @@ import {
   leagueSlotsFreeByRole,
   makeNoteIndex,
   playersOfTeam,
+  offRoleCandidates,
   slotCandidates,
   sortByQuotDesc,
   tagOf,
@@ -144,6 +145,43 @@ describe('slotCandidates — chi il picker propone davvero', () => {
     const portieri = playersOfTeam(players, 'Inter', ['P']);
     const tutti = new Set(portieri.map((p) => p.id));
     expect(slotCandidates(players, 'Inter', ['P'], tutti)).toEqual([]);
+  });
+});
+
+describe('offRoleCandidates — chi gioca dove il listone non lo mette', () => {
+  const players = realListone();
+
+  it('e il complemento esatto di slotCandidates sul club', () => {
+    const rosa = playersOfTeam(players, 'Inter');
+    const compatibili = slotCandidates(players, 'Inter', ['C'], new Set());
+    const fuoriRuolo = offRoleCandidates(players, 'Inter', ['C'], new Set());
+
+    expect(compatibili.length + fuoriRuolo.length).toBe(rosa.length);
+    expect(fuoriRuolo.every((p) => p.role !== 'C')).toBe(true);
+    expect(new Set([...compatibili, ...fuoriRuolo].map((p) => p.id)).size).toBe(rosa.length);
+  });
+
+  it('propone i difensori a uno slot di centrocampo', () => {
+    // Il caso reale: Dimarco e' listato D e nel 3-5-2 gioca esterno sinistro
+    // di centrocampo. Senza questa lista lo slot EST non lo puo' contenere.
+    const fuoriRuolo = offRoleCandidates(players, 'Inter', ['C'], new Set());
+    expect(fuoriRuolo.some((p) => p.role === 'D')).toBe(true);
+  });
+
+  it('esclude chi e gia schierato altrove, come il picker compatibile', () => {
+    const primo = offRoleCandidates(players, 'Inter', ['C'], new Set())[0] as Player;
+    const dopo = offRoleCandidates(players, 'Inter', ['C'], new Set([primo.id]));
+    expect(dopo.some((p) => p.id === primo.id)).toBe(false);
+  });
+
+  it('e ordinato per QUOT. desc come tutti gli elenchi del picker', () => {
+    const fuoriRuolo = offRoleCandidates(players, 'Inter', ['C'], new Set());
+    const atteso = sortByQuotDesc(fuoriRuolo);
+    expect(fuoriRuolo.map((p) => p.id)).toEqual(atteso.map((p) => p.id));
+  });
+
+  it('si svuota quando lo slot ammette ogni ruolo', () => {
+    expect(offRoleCandidates(players, 'Inter', ['P', 'D', 'C', 'A'], new Set())).toEqual([]);
   });
 });
 

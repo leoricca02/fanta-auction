@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import type { Lineup, LineupSlot, Player } from '../../domain/types';
+import type { Lineup, LineupSlot, Player, Role } from '../../domain/types';
 import {
   DEFAULT_MODULE,
   MODULE_NAMES,
@@ -14,7 +14,7 @@ import {
   setSlotNote,
 } from '../../domain/modules';
 import { duplicatedCandidates } from '../../domain/lineup';
-import { slotCandidates } from '../../domain/free-agents';
+import { offRoleCandidates, slotCandidates } from '../../domain/free-agents';
 import { SlotPicker } from './SlotPicker';
 
 /**
@@ -110,17 +110,18 @@ export function LineupEditor({
   const duplicated = new Set(duplicatedCandidates(current));
   const activeSlot = current.slots.find((s) => s.slotId === openSlot) ?? null;
 
+  const activeRoles =
+    activeSlot === null ? [] : rolesForSlot(current.module, activeSlot.slotId);
+
   // Chi e' gia' schierato altrove esce dalla lista: riproporlo in cima
   // farebbe spostare quel giocatore invece di riempire lo slot nuovo.
   const pickerCandidates =
-    activeSlot === null
-      ? []
-      : slotCandidates(
-          players,
-          teamCode,
-          rolesForSlot(current.module, activeSlot.slotId),
-          usedIds,
-        );
+    activeSlot === null ? [] : slotCandidates(players, teamCode, activeRoles, usedIds);
+
+  // Il resto della rosa, per il fuori ruolo del picker: Dimarco e' listato
+  // difensore ma nel 3-5-2 dell'Inter gioca esterno di centrocampo.
+  const pickerOffRole =
+    activeSlot === null ? [] : offRoleCandidates(players, teamCode, activeRoles, usedIds);
 
   function openPicker(slotId: string | null): void {
     openSlotRef.current = slotId;
@@ -216,6 +217,7 @@ export function LineupEditor({
             <SlotRow
               key={slot.slotId}
               slot={slot}
+              roles={rolesForSlot(current.module, slot.slotId)}
               byId={byId}
               duplicated={duplicated}
               active={openSlot === slot.slotId}
@@ -240,6 +242,7 @@ export function LineupEditor({
             slotId={activeSlot.slotId}
             label={activeSlot.roleLabel}
             candidates={pickerCandidates}
+            offRole={pickerOffRole}
             usedIds={usedIds}
             onPick={handlePick}
             onClose={closePicker}
@@ -266,6 +269,8 @@ export function LineupEditor({
 
 interface SlotRowProps {
   readonly slot: LineupSlot;
+  /** Ruoli compatibili con lo slot: chi non c'e' dentro e' schierato fuori ruolo. */
+  readonly roles: readonly Role[];
   readonly byId: ReadonlyMap<number, Player>;
   readonly duplicated: ReadonlySet<number>;
   /** Slot servito dal picker in questo momento. */
@@ -282,6 +287,7 @@ interface SlotRowProps {
 
 function SlotRow({
   slot,
+  roles,
   byId,
   duplicated,
   active,
@@ -297,6 +303,7 @@ function SlotRow({
   useEffect(() => setNoteDraft(slot.note), [slot.note]);
 
   const contested = slot.candidates.length > 1;
+  const allowed = new Set<Role>(roles);
 
   return (
     <li className="flex items-center gap-2">
@@ -342,6 +349,18 @@ function SlotRow({
                 contested ? 'bg-amber-900/60 text-amber-100' : 'bg-emerald-900/60 text-emerald-100'
               } ${duplicated.has(id) ? 'ring-1 ring-red-500' : ''}`}
             >
+              {(() => {
+                const role = byId.get(id)?.role;
+                if (role === undefined || allowed.has(role)) return null;
+                return (
+                  <span
+                    className="shrink-0 rounded bg-amber-800/70 px-1 text-[10px] font-semibold text-amber-100"
+                    title={`Listato ${role}, schierato qui fuori ruolo`}
+                  >
+                    {role}
+                  </span>
+                );
+              })()}
               <span
                 role="button"
                 tabIndex={-1}

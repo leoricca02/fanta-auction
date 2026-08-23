@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-478%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-483%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -69,6 +69,15 @@ e ordinati per `QUOT.` decrescente — chi gioca sta quasi sempre in cima.
 | `Canc` | Svuota lo slot selezionato |
 
 Cambiare modulo conserva tutto ciò che continua a starci, e ti dice chi resta fuori.
+
+> [!TIP]
+> **Fuori ruolo.** Il listone elenca Dimarco ed Estupinán tra i difensori, ma nel 3-5-2
+> giocano esterni nei cinque di centrocampo. Digita il nome nel picker: sotto ai
+> compatibili compare la sezione **fuori ruolo**, con il resto della rosa che
+> corrisponde alla ricerca e il ruolo di listino in evidenza. `Invio` lo schiera lì.
+> Compare solo mentre cerchi, così la cima dell'elenco — quella che consuma la raffica
+> di `Invio` — non cambia mai. In formazione quel giocatore porta un bollino ambra con
+> la sua lettera, per ricordarti che lo compri da difensore.
 
 ### 🔴 Asta — la command bar
 
@@ -245,7 +254,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 478 test
+npm test              # 483 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```

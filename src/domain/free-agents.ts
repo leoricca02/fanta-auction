@@ -87,6 +87,34 @@ export function slotCandidates(
   return playersOfTeam(players, teamCode, roles).filter((p) => !alreadyPlaced.has(p.id));
 }
 
+/**
+ * Il complemento di `slotCandidates`: i giocatori del club che allo slot **non**
+ * sono compatibili di ruolo, esclusi quelli gia' schierati altrove.
+ *
+ * Serve al fuori ruolo del picker (§5.2). Il listone Classic elenca Dimarco ed
+ * Estupinan come difensori mentre giocano da esterni nei cinque di centrocampo,
+ * e Spence lo stesso: il ruolo del listone e' la lista da cui li compri, non la
+ * posizione in cui la loro squadra li schiera. Senza questa lista la formazione
+ * reale non e' rappresentabile.
+ *
+ * Resta separata da `slotCandidates` invece di allargare i ruoli dello slot:
+ * l'elenco compatibile deve restare corto e ordinato per `QUOT.` desc, perche'
+ * e' quello che il flusso a raffica di Invii consuma dalla cima.
+ */
+export function offRoleCandidates(
+  players: readonly Player[],
+  teamCode: string,
+  roles: readonly Role[],
+  alreadyPlaced: ReadonlySet<number>,
+): Player[] {
+  const allowed = new Set<Role>(roles);
+  return sortByQuotDesc(
+    players.filter(
+      (p) => p.team === teamCode && !allowed.has(p.role) && !alreadyPlaced.has(p.id),
+    ),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Note utente
 // ---------------------------------------------------------------------------
