@@ -9,6 +9,7 @@ import {
   leagueSlotsFreeByRole,
   makeNoteIndex,
   playersOfTeam,
+  slotCandidates,
   sortByQuotDesc,
   tagOf,
 } from './free-agents';
@@ -101,6 +102,48 @@ describe('playersOfTeam — picker dell editor formazioni (§5.2)', () => {
 
   it('restituisce vuoto su un club inesistente', () => {
     expect(playersOfTeam(players, 'Real Madrid')).toEqual([]);
+  });
+});
+
+describe('slotCandidates — chi il picker propone davvero', () => {
+  const players = realListone();
+
+  it('esclude i giocatori gia schierati nella formazione', () => {
+    const difensori = playersOfTeam(players, 'Inter', ['D']);
+    const primo = difensori[0] as Player;
+    const secondo = difensori[1] as Player;
+
+    const liberi = slotCandidates(players, 'Inter', ['D'], new Set());
+    expect(liberi[0]?.id).toBe(primo.id);
+
+    const dopoUno = slotCandidates(players, 'Inter', ['D'], new Set([primo.id]));
+    expect(dopoUno[0]?.id).toBe(secondo.id);
+    expect(dopoUno.some((p) => p.id === primo.id)).toBe(false);
+    expect(dopoUno).toHaveLength(difensori.length - 1);
+  });
+
+  it('riempiendo gli slot uno per uno propone sempre un nome nuovo', () => {
+    // E' la garanzia del flusso "batti Invio undici volte": senza di essa
+    // addCandidate sposterebbe lo stesso giocatore lungo tutto il reparto.
+    const placed = new Set<number>();
+    const scelti: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      const proposto = slotCandidates(players, 'Inter', ['D'], placed)[0] as Player;
+      scelti.push(proposto.id);
+      placed.add(proposto.id);
+    }
+    expect(new Set(scelti).size).toBe(4);
+  });
+
+  it('rispetta il filtro di ruolo dello slot', () => {
+    const ali = slotCandidates(players, 'Inter', ['A', 'C'], new Set());
+    expect(ali.every((p) => p.role === 'A' || p.role === 'C')).toBe(true);
+  });
+
+  it('si svuota quando il reparto e esaurito', () => {
+    const portieri = playersOfTeam(players, 'Inter', ['P']);
+    const tutti = new Set(portieri.map((p) => p.id));
+    expect(slotCandidates(players, 'Inter', ['P'], tutti)).toEqual([]);
   });
 });
 

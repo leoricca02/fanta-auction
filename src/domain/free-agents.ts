@@ -69,6 +69,24 @@ export function playersOfTeam(
   );
 }
 
+/**
+ * Candidati proposti per uno slot: quelli del club, compatibili di ruolo,
+ * **esclusi i giocatori gia' schierati altrove nella formazione**.
+ *
+ * L'esclusione non e' cosmetica. `addCandidate` sposta chi e' gia' altrove
+ * invece di duplicarlo, quindi senza questo filtro il picker riproporrebbe
+ * sempre lo stesso nome in cima e battere Invio undici volte trascinerebbe un
+ * solo giocatore lungo tutti gli slot del reparto, lasciandoli vuoti.
+ */
+export function slotCandidates(
+  players: readonly Player[],
+  teamCode: string,
+  roles: readonly Role[],
+  alreadyPlaced: ReadonlySet<number>,
+): Player[] {
+  return playersOfTeam(players, teamCode, roles).filter((p) => !alreadyPlaced.has(p.id));
+}
+
 // ---------------------------------------------------------------------------
 // Note utente
 // ---------------------------------------------------------------------------

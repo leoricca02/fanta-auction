@@ -162,19 +162,25 @@ export function makePlayerNote(
   text = 'nota',
   tag: Tag | null = null,
   archived = false,
+  updatedAt = 1_700_000_000_000,
 ): PlayerNote {
-  return { playerId, text, tag, archived };
+  return { playerId, text, tag, archived, updatedAt };
 }
 
-export function makeTeamNote(teamCode: string, text = 'nota squadra'): TeamNote {
-  return { teamCode, text };
+export function makeTeamNote(
+  teamCode: string,
+  text = 'nota squadra',
+  updatedAt = 1_700_000_000_000,
+): TeamNote {
+  return { teamCode, text, updatedAt };
 }
 
 export function makeObjectives(
   text: string,
   targets: readonly { playerId: number; priority: number; note: string }[] = [],
+  updatedAt = 1_700_000_000_000,
 ): Objectives {
-  return { text, targets: targets.map((t) => ({ ...t })) };
+  return { text, targets: targets.map((t) => ({ ...t })), updatedAt };
 }
 
 export function makeUserData(partial: Partial<UserData> = {}): UserData {

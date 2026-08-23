@@ -13,44 +13,80 @@ import {
   shouldAutoBackup,
 } from './backup';
 import type { ImportResult } from './backup';
-import type { UserData } from './types';
+import type { LeagueConfig, UserData } from './types';
 import { reduce } from './reducer';
+import { makeLeagueConfig, makeTeams } from './config';
 import {
   makeEvent,
   makeLineup,
   makeObjectives,
+  makePlayer,
   makePlayerNote,
   makeSlot,
   makeTeamNote,
   makeUserData,
-  realConfig,
   resetEventCounter,
 } from '../test/fixtures';
 
 beforeEach(() => resetEventCounter());
 
 const NOW = 1_760_000_000_000;
+const OLD = NOW - 1_000_000;
+const NEWER = NOW + 1_000_000;
+
+/**
+ * Lega di prova con un listone piccolo ma coerente: serve al dry-run del
+ * reducer, che senza giocatori scarterebbe tutto per UNKNOWN_PLAYER.
+ */
+const CONFIG: LeagueConfig = makeLeagueConfig(
+  [
+    makePlayer({ id: 1, role: 'P', quot: 16, team: 'Inter' }),
+    makePlayer({ id: 2, role: 'D', quot: 12, team: 'Inter' }),
+    makePlayer({ id: 3, role: 'D', quot: 9, team: 'Inter' }),
+    makePlayer({ id: 4, role: 'C', quot: 14, team: 'Inter' }),
+    makePlayer({ id: 5, role: 'C', quot: 11, team: 'Milan' }),
+    makePlayer({ id: 6, role: 'A', quot: 20, team: 'Milan' }),
+    makePlayer({ id: 7, role: 'A', quot: 18, team: 'Milan' }),
+    makePlayer({ id: 8, role: 'D', quot: 7, team: 'Roma' }),
+    makePlayer({ id: 9, role: 'C', quot: 6, team: 'Roma' }),
+    makePlayer({ id: 10, role: 'P', quot: 8, team: 'Milan' }),
+    makePlayer({ id: 50, role: 'P', quot: 5, team: 'Roma' }),
+  ],
+  { teams: makeTeams([['Leo', 'leo'], ['Due', 'sq2'], ['Tre', 'sq3']]) },
+);
 
 /** Dati utente pieni: una di ogni cosa che il backup deve trasportare. */
 function populated(): UserData {
   return makeUserData({
     lineups: [
-      makeLineup('Inter', [
-        makeSlot('por', [1], 'POR', 'sempre lui'),
-        makeSlot('dc1', [2, 3], 'DC', 'ballottaggio aperto'),
-      ]),
+      makeLineup(
+        'Inter',
+        [
+          makeSlot('por', [1], 'POR', 'sempre lui'),
+          makeSlot('dc1', [2, 3], 'DC', 'ballottaggio aperto'),
+        ],
+        '4-3-3',
+        NOW,
+      ),
       makeLineup('Milan', [makeSlot('por', [10], 'POR')], '3-5-2', NOW - 5),
     ],
     playerNotes: [
-      makePlayerNote(1, 'para tutto', 'obiettivo'),
-      makePlayerNote(2, 'rientra dopo la sosta', 'alternativa'),
-      makePlayerNote(3, 'fuori rosa', 'evita', true),
+      makePlayerNote(1, 'para tutto', 'obiettivo', false, NOW),
+      makePlayerNote(2, 'rientra dopo la sosta', 'alternativa', false, NOW),
+      makePlayerNote(3, 'fuori rosa', 'evita', true, NOW),
     ],
-    teamNotes: [makeTeamNote('Inter', 'gioca a tre dietro'), makeTeamNote('Milan', '')],
-    objectives: makeObjectives('prendo un portiere titolare e due punte', [
-      { playerId: 1, priority: 1, note: 'prioritario' },
-      { playerId: 10, priority: 2, note: 'ripiego' },
-    ]),
+    teamNotes: [
+      makeTeamNote('Inter', 'gioca a tre dietro', NOW),
+      makeTeamNote('Milan', '', NOW),
+    ],
+    objectives: makeObjectives(
+      'prendo un portiere titolare e due punte',
+      [
+        { playerId: 1, priority: 1, note: 'prioritario' },
+        { playerId: 10, priority: 2, note: 'ripiego' },
+      ],
+      NOW,
+    ),
     events: [
       makeEvent({ id: 'ev1', playerId: 1, teamId: 'leo', price: 30, phase: 'P', ts: NOW - 100 }),
       makeEvent({ id: 'ev2', playerId: 2, teamId: 'sq2', price: 12, phase: 'D', ts: NOW - 50 }),
@@ -61,6 +97,16 @@ function populated(): UserData {
 function unwrap(result: ImportResult): UserData {
   if (!result.ok) throw new Error(`Import fallito: ${result.error.reason} — ${result.error.detail}`);
   return result.data;
+}
+
+function envelope(data: unknown, extra: Record<string, unknown> = {}): string {
+  return JSON.stringify({
+    app: BACKUP_FORMAT,
+    schemaVersion: USER_DATA_SCHEMA_VERSION,
+    exportedAt: NOW,
+    data,
+    ...extra,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +137,14 @@ describe('§3.1 — export', () => {
     expect(backup.data.objectives.targets).toHaveLength(2);
   });
 
+  it('trasporta gli updatedAt di ogni record', () => {
+    const backup = exportUserData(populated(), NOW);
+    expect(backup.data.objectives.updatedAt).toBe(NOW);
+    expect(backup.data.playerNotes[0]?.updatedAt).toBe(NOW);
+    expect(backup.data.teamNotes[0]?.updatedAt).toBe(NOW);
+    expect(backup.data.lineups[1]?.updatedAt).toBe(NOW - 5);
+  });
+
   it('copia in profondita: mutare il backup non tocca lo stato di partenza', () => {
     const data = populated();
     const backup = exportUserData(data, NOW);
@@ -102,78 +156,85 @@ describe('§3.1 — export', () => {
 
   it('serializeUserData produce JSON rileggibile', () => {
     const json = serializeUserData(populated(), NOW);
-    expect(typeof json).toBe('string');
     expect(json).toContain('"app": "fanta-auction-assistant"');
     expect(() => JSON.parse(json)).not.toThrow();
   });
 
-  it('backupFilename e ordinabile cronologicamente e non contiene caratteri illegali', () => {
-    const name = backupFilename(NOW);
-    expect(name).toMatch(/^fanta-auction-backup-[\dT-]+\.json$/);
+  it('backupFilename e ordinabile cronologicamente', () => {
+    expect(backupFilename(NOW)).toMatch(/^fanta-auction-backup-[\dT-]+\.json$/);
     expect(backupFilename(NOW) < backupFilename(NOW + 86_400_000)).toBe(true);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Round-trip — il test che conta
+// Round-trip
 // ---------------------------------------------------------------------------
 
 describe('§3.1 — round-trip', () => {
   it('export -> import su store vuoto restituisce lo stato identico', () => {
     const data = populated();
-    const restored = unwrap(importUserData(emptyUserData(), serializeUserData(data, NOW)));
+    const restored = unwrap(
+      importUserData(emptyUserData(), serializeUserData(data, NOW), CONFIG),
+    );
     expect(restored).toEqual(data);
   });
 
   it('regge anche passando l oggetto invece della stringa', () => {
     const data = populated();
-    const restored = unwrap(importUserData(emptyUserData(), exportUserData(data, NOW)));
+    const restored = unwrap(importUserData(emptyUserData(), exportUserData(data, NOW), CONFIG));
     expect(restored).toEqual(data);
   });
 
   it('e idempotente: reimportare lo stesso file non cambia nulla', () => {
     const data = populated();
     const json = serializeUserData(data, NOW);
-    const once = unwrap(importUserData(emptyUserData(), json));
-    const twice = unwrap(importUserData(once, json));
+    const once = unwrap(importUserData(emptyUserData(), json, CONFIG));
+    const twice = unwrap(importUserData(once, json, CONFIG));
     expect(twice).toEqual(once);
   });
 
-  it('sopravvive a un giro completo di serializzazione su dati vuoti', () => {
-    const restored = unwrap(importUserData(emptyUserData(), serializeUserData(emptyUserData(), NOW)));
+  it('sopravvive a un giro completo su dati vuoti', () => {
+    const restored = unwrap(
+      importUserData(emptyUserData(), serializeUserData(emptyUserData(), NOW), CONFIG),
+    );
     expect(restored).toEqual(emptyUserData());
   });
 
   it('conserva l event log in modo che il reducer ripieghi lo stesso stato', () => {
-    const config = realConfig();
-    const lautaro = config.players.find((p) => p.name === 'Martinez L.');
-    const dimarco = config.players.find((p) => p.name === 'Dimarco');
     const data = makeUserData({
       events: [
-        makeEvent({ id: 'a', playerId: lautaro?.id ?? 0, teamId: 'leo', price: 140, phase: 'A' }),
-        makeEvent({ id: 'b', playerId: dimarco?.id ?? 0, teamId: 'sq2', price: 90, phase: 'D' }),
+        makeEvent({ id: 'a', playerId: 6, teamId: 'leo', price: 140, phase: 'A' }),
+        makeEvent({ id: 'b', playerId: 2, teamId: 'sq2', price: 90, phase: 'D' }),
       ],
     });
-    const restored = unwrap(importUserData(emptyUserData(), serializeUserData(data, NOW)));
-    expect(reduce(restored.events, config)).toEqual(reduce(data.events, config));
+    const restored = unwrap(
+      importUserData(emptyUserData(), serializeUserData(data, NOW), CONFIG),
+    );
+    expect(reduce(restored.events, CONFIG)).toEqual(reduce(data.events, CONFIG));
   });
 
   it('conserva i campi che JSON tende a perdere: tag null, stringhe vuote, archived', () => {
     const data = makeUserData({
-      playerNotes: [makePlayerNote(5, '', null, false), makePlayerNote(6, 'x', 'evita', true)],
-      teamNotes: [makeTeamNote('Como', '')],
-      objectives: makeObjectives(''),
+      playerNotes: [
+        makePlayerNote(5, '', null, false, NOW),
+        makePlayerNote(6, 'x', 'evita', true, NOW),
+      ],
+      teamNotes: [makeTeamNote('Como', '', NOW)],
+      objectives: makeObjectives('', [], NOW),
     });
-    const restored = unwrap(importUserData(emptyUserData(), serializeUserData(data, NOW)));
+    const restored = unwrap(
+      importUserData(emptyUserData(), serializeUserData(data, NOW), CONFIG),
+    );
     expect(restored.playerNotes[0]).toEqual({
       playerId: 5,
       text: '',
       tag: null,
       archived: false,
+      updatedAt: NOW,
     });
     expect(restored.playerNotes[1]?.archived).toBe(true);
     expect(restored.teamNotes[0]?.text).toBe('');
-    expect(restored.objectives).toEqual(emptyObjectives());
+    expect(restored.objectives).toEqual(emptyObjectives(NOW));
   });
 });
 
@@ -184,57 +245,32 @@ describe('§3.1 — round-trip', () => {
 describe('§3.1 — merge non distruttivo', () => {
   it('cio che esiste e non e nel file resta', () => {
     const current = makeUserData({
-      lineups: [makeLineup('Roma', [makeSlot('por', [50], 'POR')])],
-      playerNotes: [makePlayerNote(50, 'nota locale', 'obiettivo')],
-      teamNotes: [makeTeamNote('Roma', 'gioca a due punte')],
+      lineups: [makeLineup('Roma', [makeSlot('por', [50], 'POR')], '4-3-3', NOW)],
+      playerNotes: [makePlayerNote(50, 'nota locale', 'obiettivo', false, NOW)],
+      teamNotes: [makeTeamNote('Roma', 'gioca a due punte', NOW)],
       events: [makeEvent({ id: 'locale', playerId: 50, teamId: 'leo', price: 5, phase: 'P' })],
     });
     const incoming = makeUserData({
-      lineups: [makeLineup('Inter', [makeSlot('por', [1], 'POR')])],
-      playerNotes: [makePlayerNote(1, 'dal file')],
-      teamNotes: [makeTeamNote('Inter', 'dal file')],
+      lineups: [makeLineup('Inter', [makeSlot('por', [1], 'POR')], '4-3-3', NOW)],
+      playerNotes: [makePlayerNote(1, 'dal file', null, false, NOW)],
+      teamNotes: [makeTeamNote('Inter', 'dal file', NOW)],
       events: [makeEvent({ id: 'dal-file', playerId: 1, teamId: 'sq2', price: 9, phase: 'P' })],
     });
 
-    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW)));
+    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW), CONFIG));
     expect(merged.lineups.map((l) => l.teamCode).sort()).toEqual(['Inter', 'Roma']);
     expect(merged.playerNotes.map((n) => n.playerId).sort()).toEqual([1, 50]);
     expect(merged.teamNotes.map((n) => n.teamCode).sort()).toEqual(['Inter', 'Roma']);
     expect(merged.events.map((e) => e.id).sort()).toEqual(['dal-file', 'locale']);
   });
 
-  it('cio che e presente nel file sovrascrive', () => {
-    const current = makeUserData({
-      lineups: [makeLineup('Inter', [makeSlot('por', [1], 'POR')], '4-3-3', 1)],
-      playerNotes: [makePlayerNote(1, 'vecchia', 'evita')],
-      teamNotes: [makeTeamNote('Inter', 'vecchia')],
-    });
-    const incoming = makeUserData({
-      lineups: [makeLineup('Inter', [makeSlot('por', [1]), makeSlot('pc', [9])], '3-5-2', 2)],
-      playerNotes: [makePlayerNote(1, 'nuova', 'obiettivo')],
-      teamNotes: [makeTeamNote('Inter', 'nuova')],
-    });
-
-    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW)));
-    expect(merged.lineups).toHaveLength(1);
-    expect(merged.lineups[0]?.module).toBe('3-5-2');
-    expect(merged.lineups[0]?.slots).toHaveLength(2);
-    expect(merged.playerNotes).toHaveLength(1);
-    expect(merged.playerNotes[0]?.text).toBe('nuova');
-    expect(merged.playerNotes[0]?.tag).toBe('obiettivo');
-    expect(merged.teamNotes[0]?.text).toBe('nuova');
-  });
-
   it('un import parziale non cancella le collezioni assenti dal file', () => {
     const current = populated();
-    const partial = {
-      app: BACKUP_FORMAT,
-      schemaVersion: USER_DATA_SCHEMA_VERSION,
-      exportedAt: NOW,
-      data: { playerNotes: [{ playerId: 1, text: 'aggiornata', tag: null, archived: false }] },
-    };
-
-    const result = importUserData(current, JSON.stringify(partial));
+    const result = importUserData(
+      current,
+      envelope({ playerNotes: [{ playerId: 1, text: 'aggiornata', updatedAt: NEWER }] }),
+      CONFIG,
+    );
     const merged = unwrap(result);
 
     expect(merged.lineups).toEqual(current.lineups);
@@ -247,56 +283,34 @@ describe('§3.1 — merge non distruttivo', () => {
 
     if (result.ok) {
       expect(result.summary.lineups.untouched).toBe(true);
-      expect(result.summary.playerNotes).toEqual({ added: 0, updated: 1, untouched: false });
+      expect(result.summary.playerNotes).toEqual({
+        added: 0,
+        updated: 1,
+        skipped: 0,
+        untouched: false,
+      });
       expect(result.summary.objectivesReplaced).toBe(false);
     }
   });
 
-  it('un file con collezioni vuote esplicite non cancella comunque nulla di suo', () => {
-    // `[]` significa "il file non porta record", non "svuota".
+  it('un file con collezioni vuote esplicite non cancella nulla', () => {
     const current = populated();
-    const emptyPayload = {
-      app: BACKUP_FORMAT,
-      schemaVersion: USER_DATA_SCHEMA_VERSION,
-      exportedAt: NOW,
-      data: { lineups: [], playerNotes: [], teamNotes: [], events: [] },
-    };
-    const merged = unwrap(importUserData(current, JSON.stringify(emptyPayload)));
+    const merged = unwrap(
+      importUserData(
+        current,
+        envelope({ lineups: [], playerNotes: [], teamNotes: [], events: [] }),
+        CONFIG,
+      ),
+    );
     expect(merged.lineups).toEqual(current.lineups);
     expect(merged.playerNotes).toEqual(current.playerNotes);
     expect(merged.events).toEqual(current.events);
   });
 
-  it('gli obiettivi sono istanza unica: presenti sostituiscono, assenti restano', () => {
-    const current = makeUserData({
-      objectives: makeObjectives('piano vecchio', [{ playerId: 1, priority: 1, note: 'a' }]),
-    });
-    const withObjectives = unwrap(
-      importUserData(
-        current,
-        serializeUserData(makeUserData({ objectives: makeObjectives('piano nuovo') }), NOW),
-      ),
-    );
-    expect(withObjectives.objectives).toEqual({ text: 'piano nuovo', targets: [] });
-
-    const without = unwrap(
-      importUserData(
-        current,
-        JSON.stringify({
-          app: BACKUP_FORMAT,
-          schemaVersion: USER_DATA_SCHEMA_VERSION,
-          exportedAt: NOW,
-          data: {},
-        }),
-      ),
-    );
-    expect(without.objectives).toEqual(current.objectives);
-  });
-
   it('non muta lo stato corrente passato in ingresso', () => {
     const current = populated();
     const snapshot = JSON.parse(JSON.stringify(current)) as UserData;
-    importUserData(current, serializeUserData(populated(), NOW));
+    importUserData(current, serializeUserData(populated(), NOW), CONFIG);
     expect(current).toEqual(snapshot);
   });
 
@@ -305,39 +319,352 @@ describe('§3.1 — merge non distruttivo', () => {
       playerNotes: [makePlayerNote(3), makePlayerNote(1), makePlayerNote(2)],
     });
     const incoming = makeUserData({
-      playerNotes: [makePlayerNote(9, 'nuovo'), makePlayerNote(1, 'aggiornato')],
+      playerNotes: [
+        makePlayerNote(9, 'nuovo', null, false, NEWER),
+        makePlayerNote(1, 'aggiornato', null, false, NEWER),
+      ],
     });
-    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW)));
+    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW), CONFIG));
     expect(merged.playerNotes.map((n) => n.playerId)).toEqual([3, 1, 2, 9]);
   });
 
   it('riordina l event log per ts, poi per id: la piega dipende dall ordine', () => {
     const current = makeUserData({
-      events: [makeEvent({ id: 'c', playerId: 3, teamId: 'leo', price: 1, phase: 'P', ts: 300 })],
+      events: [makeEvent({ id: 'c', playerId: 3, teamId: 'leo', price: 1, phase: 'D', ts: 300 })],
     });
     const incoming = makeUserData({
       events: [
-        makeEvent({ id: 'b', playerId: 2, teamId: 'leo', price: 1, phase: 'P', ts: 200 }),
+        makeEvent({ id: 'b', playerId: 2, teamId: 'leo', price: 1, phase: 'D', ts: 200 }),
         makeEvent({ id: 'a', playerId: 1, teamId: 'leo', price: 1, phase: 'P', ts: 100 }),
-        makeEvent({ id: 'a2', playerId: 4, teamId: 'leo', price: 1, phase: 'P', ts: 100 }),
+        makeEvent({ id: 'a2', playerId: 4, teamId: 'leo', price: 1, phase: 'C', ts: 100 }),
       ],
     });
-    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW)));
+    const merged = unwrap(importUserData(current, serializeUserData(incoming, NOW), CONFIG));
     expect(merged.events.map((e) => e.id)).toEqual(['a', 'a2', 'b', 'c']);
   });
+});
 
-  it('il summary conta correttamente aggiunti e aggiornati', () => {
-    const current = makeUserData({ playerNotes: [makePlayerNote(1), makePlayerNote(2)] });
-    const incoming = makeUserData({
-      playerNotes: [makePlayerNote(2, 'agg'), makePlayerNote(7), makePlayerNote(8)],
+// ---------------------------------------------------------------------------
+// Correzione 2 — updatedAt: vince il piu' recente, i saltati si dichiarano
+// ---------------------------------------------------------------------------
+
+describe('§3.1 — risoluzione per updatedAt', () => {
+  it('un file piu recente sovrascrive', () => {
+    const current = makeUserData({
+      playerNotes: [makePlayerNote(1, 'vecchia', 'evita', false, OLD)],
+      teamNotes: [makeTeamNote('Inter', 'vecchia', OLD)],
+      lineups: [makeLineup('Inter', [makeSlot('por', [1])], '4-3-3', OLD)],
     });
-    const result = importUserData(current, serializeUserData(incoming, NOW));
+    const incoming = makeUserData({
+      playerNotes: [makePlayerNote(1, 'nuova', 'obiettivo', false, NEWER)],
+      teamNotes: [makeTeamNote('Inter', 'nuova', NEWER)],
+      lineups: [
+        makeLineup('Inter', [makeSlot('por', [1]), makeSlot('pc', [6])], '3-5-2', NEWER),
+      ],
+    });
+
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    const merged = unwrap(result);
+    expect(merged.playerNotes[0]?.text).toBe('nuova');
+    expect(merged.playerNotes[0]?.tag).toBe('obiettivo');
+    expect(merged.teamNotes[0]?.text).toBe('nuova');
+    expect(merged.lineups[0]?.module).toBe('3-5-2');
+    expect(merged.lineups[0]?.slots).toHaveLength(2);
+    if (result.ok) expect(result.summary.skippedRecords).toEqual([]);
+  });
+
+  it('un file piu VECCHIO non sovrascrive, e il record salta', () => {
+    const current = makeUserData({
+      playerNotes: [makePlayerNote(1, 'lavoro nuovo', 'obiettivo', false, NEWER)],
+      teamNotes: [makeTeamNote('Inter', 'nota nuova', NEWER)],
+      lineups: [makeLineup('Inter', [makeSlot('por', [1])], '4-3-3', NEWER)],
+    });
+    const incoming = makeUserData({
+      playerNotes: [makePlayerNote(1, 'backup di ieri', null, false, OLD)],
+      teamNotes: [makeTeamNote('Inter', 'nota di ieri', OLD)],
+      lineups: [makeLineup('Inter', [], '3-5-2', OLD)],
+    });
+
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    const merged = unwrap(result);
+
+    expect(merged.playerNotes[0]?.text).toBe('lavoro nuovo');
+    expect(merged.teamNotes[0]?.text).toBe('nota nuova');
+    expect(merged.lineups[0]?.module).toBe('4-3-3');
+
+    if (result.ok) {
+      expect(result.summary.playerNotes).toEqual({
+        added: 0,
+        updated: 0,
+        skipped: 1,
+        untouched: false,
+      });
+      expect(result.summary.skippedRecords).toEqual([
+        { collection: 'lineups', key: 'Inter', currentUpdatedAt: NEWER, incomingUpdatedAt: OLD },
+        { collection: 'playerNotes', key: '1', currentUpdatedAt: NEWER, incomingUpdatedAt: OLD },
+        { collection: 'teamNotes', key: 'Inter', currentUpdatedAt: NEWER, incomingUpdatedAt: OLD },
+      ]);
+    }
+  });
+
+  it('a parita di updatedAt vince lo store: reimportare e un no-op', () => {
+    const current = makeUserData({
+      playerNotes: [makePlayerNote(1, 'corrente', 'evita', false, NOW)],
+    });
+    const incoming = makeUserData({
+      playerNotes: [makePlayerNote(1, 'dal file', 'obiettivo', false, NOW)],
+    });
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    const merged = unwrap(result);
+    expect(merged.playerNotes[0]?.text).toBe('corrente');
+    if (result.ok) expect(result.summary.skippedRecords).toHaveLength(1);
+  });
+
+  it('un record senza updatedAt vale 0 e perde contro qualsiasi cosa esista', () => {
+    const current = makeUserData({ playerNotes: [makePlayerNote(1, 'corrente', null, false, 1)] });
+    const result = importUserData(
+      current,
+      envelope({ playerNotes: [{ playerId: 1, text: 'senza timestamp' }] }),
+      CONFIG,
+    );
+    const merged = unwrap(result);
+    expect(merged.playerNotes[0]?.text).toBe('corrente');
+    if (result.ok) {
+      expect(result.summary.skippedRecords[0]).toEqual({
+        collection: 'playerNotes',
+        key: '1',
+        currentUpdatedAt: 1,
+        incomingUpdatedAt: 0,
+      });
+    }
+  });
+
+  it('la regola si applica record per record, non a tutta la collezione', () => {
+    const current = makeUserData({
+      playerNotes: [
+        makePlayerNote(1, 'corrente recente', null, false, NEWER),
+        makePlayerNote(2, 'corrente vecchia', null, false, OLD),
+      ],
+    });
+    const incoming = makeUserData({
+      playerNotes: [
+        makePlayerNote(1, 'file vecchio', null, false, OLD),
+        makePlayerNote(2, 'file recente', null, false, NEWER),
+        makePlayerNote(3, 'file nuovo record', null, false, OLD),
+      ],
+    });
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    const merged = unwrap(result);
+    expect(merged.playerNotes.find((n) => n.playerId === 1)?.text).toBe('corrente recente');
+    expect(merged.playerNotes.find((n) => n.playerId === 2)?.text).toBe('file recente');
+    expect(merged.playerNotes.find((n) => n.playerId === 3)?.text).toBe('file nuovo record');
+    if (result.ok) {
+      expect(result.summary.playerNotes).toEqual({
+        added: 1,
+        updated: 1,
+        skipped: 1,
+        untouched: false,
+      });
+    }
+  });
+
+  it('gli obiettivi seguono la stessa regola: piu recenti vincono', () => {
+    const current = makeUserData({
+      objectives: makeObjectives('piano corrente', [{ playerId: 1, priority: 1, note: 'a' }], NOW),
+    });
+
+    const newer = importUserData(
+      current,
+      serializeUserData(makeUserData({ objectives: makeObjectives('piano nuovo', [], NEWER) }), NOW),
+      CONFIG,
+    );
+    expect(unwrap(newer).objectives.text).toBe('piano nuovo');
+    if (newer.ok) expect(newer.summary.objectivesReplaced).toBe(true);
+
+    const older = importUserData(
+      current,
+      serializeUserData(
+        makeUserData({ objectives: makeObjectives('piano di ieri', [], OLD) }),
+        NOW,
+      ),
+      CONFIG,
+    );
+    expect(unwrap(older).objectives.text).toBe('piano corrente');
+    if (older.ok) {
+      expect(older.summary.objectivesReplaced).toBe(false);
+      expect(older.summary.skippedRecords).toEqual([
+        {
+          collection: 'objectives',
+          key: 'objectives',
+          currentUpdatedAt: NOW,
+          incomingUpdatedAt: OLD,
+        },
+      ]);
+    }
+  });
+
+  it('obiettivi assenti dal file restano quelli correnti, senza finire tra i saltati', () => {
+    const current = makeUserData({ objectives: makeObjectives('piano corrente', [], NOW) });
+    const result = importUserData(current, envelope({}), CONFIG);
+    expect(unwrap(result).objectives).toEqual(current.objectives);
+    if (result.ok) {
+      expect(result.summary.objectivesReplaced).toBe(false);
+      expect(result.summary.skippedRecords).toEqual([]);
+    }
+  });
+
+  it('gli eventi non seguono updatedAt: sono immutabili, si fondono per id', () => {
+    const current = makeUserData({
+      events: [makeEvent({ id: 'ev1', playerId: 1, teamId: 'leo', price: 30, phase: 'P' })],
+    });
+    const incoming = makeUserData({
+      events: [makeEvent({ id: 'ev1', playerId: 1, teamId: 'leo', price: 30, phase: 'P' })],
+    });
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    if (result.ok) {
+      expect(result.summary.events).toEqual({
+        added: 0,
+        updated: 1,
+        skipped: 0,
+        untouched: false,
+      });
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Correzione 1 — dry-run del reducer prima di applicare
+// ---------------------------------------------------------------------------
+
+describe('§3.1 — dry-run dei conflitti prima di applicare', () => {
+  it('un import pulito non segnala conflitti', () => {
+    const result = importUserData(emptyUserData(), serializeUserData(populated(), NOW), CONFIG);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.summary.playerNotes).toEqual({ added: 2, updated: 1, untouched: false });
-      expect(result.summary.schemaVersion).toBe(USER_DATA_SCHEMA_VERSION);
-      expect(result.summary.exportedAt).toBe(NOW);
+      expect(result.conflicts.rejectedCount).toBe(0);
+      expect(result.conflicts.appliedCount).toBe(2);
+      expect(result.conflicts.rejected).toEqual([]);
+      expect(result.conflicts.newlyRejected).toEqual([]);
     }
+  });
+
+  it('dichiara quanti eventi verranno scartati, PRIMA di applicare', () => {
+    // Stesso giocatore assegnato a due squadre diverse, con id evento diversi:
+    // il merge non puo' scartarne nessuno, il reducer ne applica uno solo.
+    const current = makeUserData({
+      events: [
+        makeEvent({ id: 'mio', playerId: 6, teamId: 'leo', price: 100, phase: 'A', ts: 1000 }),
+      ],
+    });
+    const incoming = makeUserData({
+      events: [
+        makeEvent({ id: 'file', playerId: 6, teamId: 'sq2', price: 80, phase: 'A', ts: 2000 }),
+      ],
+    });
+
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.conflicts.rejectedCount).toBe(1);
+    expect(result.conflicts.appliedCount).toBe(1);
+    expect(result.conflicts.rejected[0]?.eventId).toBe('file');
+    expect(result.conflicts.rejected[0]?.reason).toBe('PLAYER_ALREADY_ASSIGNED');
+    expect(result.conflicts.fromFile).toBe(1);
+    expect(result.conflicts.fromCurrent).toBe(0);
+
+    // Il dato e' comunque completo: nessun evento e' stato buttato via.
+    expect(result.data.events.map((e) => e.id)).toEqual(['mio', 'file']);
+  });
+
+  it('segnala il caso grave: un import che invalida assegnazioni gia registrate', () => {
+    // L'evento del file ha ts anteriore, quindi dopo il riordino passa per primo
+    // e a essere scartato e' quello che l'utente aveva gia' in casa.
+    const current = makeUserData({
+      events: [
+        makeEvent({ id: 'mio', playerId: 6, teamId: 'leo', price: 100, phase: 'A', ts: 5000 }),
+      ],
+    });
+    const incoming = makeUserData({
+      events: [
+        makeEvent({ id: 'file', playerId: 6, teamId: 'sq2', price: 80, phase: 'A', ts: 1000 }),
+      ],
+    });
+
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.conflicts.rejectedCount).toBe(1);
+    expect(result.conflicts.rejected[0]?.eventId).toBe('mio');
+    expect(result.conflicts.fromCurrent).toBe(1);
+    expect(result.conflicts.fromFile).toBe(0);
+    expect(result.conflicts.newlyRejected.map((r) => r.eventId)).toEqual(['mio']);
+  });
+
+  it('non conta come nuovo un conflitto che esisteva gia nello store', () => {
+    const current = makeUserData({
+      events: [
+        makeEvent({ id: 'a', playerId: 6, teamId: 'leo', price: 100, phase: 'A', ts: 1000 }),
+        makeEvent({ id: 'b', playerId: 6, teamId: 'sq2', price: 90, phase: 'A', ts: 2000 }),
+      ],
+    });
+    const result = importUserData(current, envelope({ playerNotes: [] }), CONFIG);
+    if (!result.ok) return;
+    expect(result.conflicts.rejectedCount).toBe(1);
+    expect(result.conflicts.newlyRejected).toEqual([]);
+  });
+
+  it('segnala gli eventi di giocatori che il listone corrente non conosce', () => {
+    const incoming = makeUserData({
+      events: [
+        makeEvent({ id: 'ignoto', playerId: 9999, teamId: 'leo', price: 10, phase: 'A' }),
+      ],
+    });
+    const result = importUserData(emptyUserData(), serializeUserData(incoming, NOW), CONFIG);
+    if (!result.ok) return;
+    expect(result.conflicts.rejectedCount).toBe(1);
+    expect(result.conflicts.rejected[0]?.reason).toBe('UNKNOWN_PLAYER');
+    expect(result.conflicts.fromFile).toBe(1);
+    // Il dato resta nel log: sara' valido di nuovo dopo il re-import del listone.
+    expect(result.data.events).toHaveLength(1);
+  });
+
+  it('il dry-run non applica niente: lo stato corrente e intatto', () => {
+    const current = makeUserData({
+      events: [
+        makeEvent({ id: 'mio', playerId: 6, teamId: 'leo', price: 100, phase: 'A', ts: 5000 }),
+      ],
+    });
+    const snapshot = JSON.parse(JSON.stringify(current)) as UserData;
+    const incoming = makeUserData({
+      events: [
+        makeEvent({ id: 'file', playerId: 6, teamId: 'sq2', price: 80, phase: 'A', ts: 1000 }),
+      ],
+    });
+    importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    expect(current).toEqual(snapshot);
+  });
+
+  it('appliedCount combacia con la piega vera dei dati restituiti', () => {
+    const current = makeUserData({
+      events: [
+        makeEvent({ id: 'a', playerId: 1, teamId: 'leo', price: 10, phase: 'P', ts: 1 }),
+        makeEvent({ id: 'b', playerId: 2, teamId: 'leo', price: 10, phase: 'D', ts: 2 }),
+      ],
+    });
+    const incoming = makeUserData({
+      events: [
+        makeEvent({ id: 'c', playerId: 4, teamId: 'sq2', price: 10, phase: 'C', ts: 3 }),
+        makeEvent({ id: 'd', playerId: 2, teamId: 'sq3', price: 10, phase: 'D', ts: 4 }),
+      ],
+    });
+    const result = importUserData(current, serializeUserData(incoming, NOW), CONFIG);
+    if (!result.ok) return;
+    const state = reduce(result.data.events, CONFIG);
+    expect(result.conflicts.appliedCount).toBe(state.appliedEventIds.length);
+    expect(result.conflicts.rejectedCount).toBe(state.rejections.length);
+    expect(result.conflicts.rejectedCount).toBe(1);
   });
 });
 
@@ -348,10 +675,9 @@ describe('§3.1 — merge non distruttivo', () => {
 describe('§3.1 — import che fallisce non corrompe lo stato', () => {
   const current = populated();
 
-  /** Ogni caso di errore riceve lo stesso stato di partenza e non deve toccarlo. */
   function expectRejected(raw: unknown, reason: string, detail: RegExp): void {
     const before = JSON.parse(JSON.stringify(current)) as UserData;
-    const result = importUserData(current, raw);
+    const result = importUserData(current, raw, CONFIG);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.reason).toBe(reason);
@@ -396,38 +722,22 @@ describe('§3.1 — import che fallisce non corrompe lo stato', () => {
   });
 
   it('versione di schema illeggibile', () => {
-    expectRejected(
-      JSON.stringify({ app: BACKUP_FORMAT, schemaVersion: 'uno', data: {} }),
-      'UNSUPPORTED_SCHEMA',
-      /Versione di schema illeggibile/,
-    );
-    expectRejected(
-      JSON.stringify({ app: BACKUP_FORMAT, schemaVersion: 1.5, data: {} }),
-      'UNSUPPORTED_SCHEMA',
-      /illeggibile/,
-    );
-    expectRejected(
-      JSON.stringify({ app: BACKUP_FORMAT, data: {} }),
-      'UNSUPPORTED_SCHEMA',
-      /illeggibile/,
-    );
+    for (const schemaVersion of ['uno', 1.5, undefined]) {
+      expectRejected(
+        JSON.stringify({ app: BACKUP_FORMAT, schemaVersion, data: {} }),
+        'UNSUPPORTED_SCHEMA',
+        /illeggibile/,
+      );
+    }
   });
 
   it('payload con collezione del tipo sbagliato', () => {
     expectRejected(
-      JSON.stringify({
-        app: BACKUP_FORMAT,
-        schemaVersion: 1,
-        data: { lineups: 'non un array' },
-      }),
+      envelope({ lineups: 'non un array' }),
       'INVALID_PAYLOAD',
       /data\.lineups: atteso un array/,
     );
-    expectRejected(
-      JSON.stringify({ app: BACKUP_FORMAT, schemaVersion: 1, data: 7 }),
-      'INVALID_PAYLOAD',
-      /data: atteso un oggetto/,
-    );
+    expectRejected(envelope(7), 'INVALID_PAYLOAD', /data: atteso un oggetto/);
   });
 
   it('record malformato, con il percorso esatto nel messaggio', () => {
@@ -441,6 +751,7 @@ describe('§3.1 — import che fallisce non corrompe lo stato', () => {
         { lineups: [{ teamCode: 'Inter', slots: [{ slotId: 'a', candidates: ['x'] }] }] },
         /candidates\[0\]: atteso un id intero/,
       ],
+      [{ lineups: [{ teamCode: 'Inter', updatedAt: 1.5 }] }, /\.updatedAt: atteso un intero/],
       [{ playerNotes: [{ text: 'orfana' }] }, /data\.playerNotes\[0\]\.playerId/],
       [
         { playerNotes: [{ playerId: 1, tag: 'sconosciuto' }] },
@@ -467,87 +778,31 @@ describe('§3.1 — import che fallisce non corrompe lo stato', () => {
     ];
 
     for (const [data, detail] of cases) {
-      expectRejected(
-        JSON.stringify({ app: BACKUP_FORMAT, schemaVersion: 1, data }),
-        'INVALID_PAYLOAD',
-        detail,
-      );
+      expectRejected(envelope(data), 'INVALID_PAYLOAD', detail);
     }
   });
 
   it('un record malformato annulla TUTTO l import, non solo quel record', () => {
     const result = importUserData(
       current,
-      JSON.stringify({
-        app: BACKUP_FORMAT,
-        schemaVersion: 1,
-        data: {
-          playerNotes: [
-            { playerId: 1, text: 'buona', tag: null, archived: false },
-            { text: 'rotta' },
-          ],
-          teamNotes: [{ teamCode: 'Lazio', text: 'buona anche questa' }],
-        },
+      envelope({
+        playerNotes: [
+          { playerId: 1, text: 'buona', tag: null, archived: false, updatedAt: NEWER },
+          { text: 'rotta' },
+        ],
+        teamNotes: [{ teamCode: 'Lazio', text: 'buona anche questa', updatedAt: NEWER }],
       }),
+      CONFIG,
     );
     expect(result.ok).toBe(false);
     expect(current.teamNotes.some((n) => n.teamCode === 'Lazio')).toBe(false);
-  });
-
-  it('accetta i campi opzionali assenti con default sensati', () => {
-    const merged = unwrap(
-      importUserData(
-        emptyUserData(),
-        JSON.stringify({
-          app: BACKUP_FORMAT,
-          schemaVersion: 1,
-          data: {
-            lineups: [{ teamCode: 'Inter' }],
-            playerNotes: [{ playerId: 1 }],
-            teamNotes: [{ teamCode: 'Inter' }],
-            objectives: {},
-            events: [],
-          },
-        }),
-      ),
-    );
-    expect(merged.lineups[0]).toEqual({
-      teamCode: 'Inter',
-      module: '',
-      slots: [],
-      updatedAt: 0,
-    });
-    expect(merged.playerNotes[0]).toEqual({
-      playerId: 1,
-      text: '',
-      tag: null,
-      archived: false,
-    });
-    expect(merged.teamNotes[0]).toEqual({ teamCode: 'Inter', text: '' });
-    expect(merged.objectives).toEqual(emptyObjectives());
-  });
-
-  it('una priority assente ricade sull ordine di lettura', () => {
-    const merged = unwrap(
-      importUserData(
-        emptyUserData(),
-        JSON.stringify({
-          app: BACKUP_FORMAT,
-          schemaVersion: 1,
-          data: { objectives: { text: 'x', targets: [{ playerId: 7 }, { playerId: 8 }] } },
-        }),
-      ),
-    );
-    expect(merged.objectives.targets).toEqual([
-      { playerId: 7, priority: 0, note: '' },
-      { playerId: 8, priority: 1, note: '' },
-    ]);
   });
 
   it('un backup senza la chiave data non cancella niente e non fallisce', () => {
     const result = importUserData(
       current,
       JSON.stringify({ app: BACKUP_FORMAT, schemaVersion: 1, exportedAt: NOW }),
+      CONFIG,
     );
     const merged = unwrap(result);
     expect(merged).toEqual(current);
@@ -559,9 +814,6 @@ describe('§3.1 — import che fallisce non corrompe lo stato', () => {
   });
 
   it('nemmeno un errore inatteso esce dalla funzione', () => {
-    // Un oggetto gia' deserializzato puo' arrivare da qualsiasi parte: se una
-    // sua property esplode in lettura, l'import deve comunque fallire in modo
-    // pulito invece di propagare l'eccezione dentro la UI.
     const boobyTrapped = {
       app: BACKUP_FORMAT,
       schemaVersion: 1,
@@ -581,10 +833,56 @@ describe('§3.1 — import che fallisce non corrompe lo stato', () => {
     expectRejected(throwsNonError, 'INVALID_PAYLOAD', /illeggibile: stringa nuda/);
   });
 
+  it('accetta i campi opzionali assenti con default sensati', () => {
+    const merged = unwrap(
+      importUserData(
+        emptyUserData(),
+        envelope({
+          lineups: [{ teamCode: 'Inter' }],
+          playerNotes: [{ playerId: 1 }],
+          teamNotes: [{ teamCode: 'Inter' }],
+          objectives: {},
+          events: [],
+        }),
+        CONFIG,
+      ),
+    );
+    expect(merged.lineups[0]).toEqual({
+      teamCode: 'Inter',
+      module: '',
+      slots: [],
+      updatedAt: 0,
+    });
+    expect(merged.playerNotes[0]).toEqual({
+      playerId: 1,
+      text: '',
+      tag: null,
+      archived: false,
+      updatedAt: 0,
+    });
+    expect(merged.teamNotes[0]).toEqual({ teamCode: 'Inter', text: '', updatedAt: 0 });
+    expect(merged.objectives).toEqual(emptyObjectives());
+  });
+
+  it('una priority assente ricade sull ordine di lettura', () => {
+    const merged = unwrap(
+      importUserData(
+        emptyUserData(),
+        envelope({ objectives: { text: 'x', targets: [{ playerId: 7 }, { playerId: 8 }] } }),
+        CONFIG,
+      ),
+    );
+    expect(merged.objectives.targets).toEqual([
+      { playerId: 7, priority: 0, note: '' },
+      { playerId: 8, priority: 1, note: '' },
+    ]);
+  });
+
   it('exportedAt illeggibile non fa fallire l import, va a 0', () => {
     const result = importUserData(
       emptyUserData(),
       JSON.stringify({ app: BACKUP_FORMAT, schemaVersion: 1, exportedAt: 'ieri', data: {} }),
+      CONFIG,
     );
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.summary.exportedAt).toBe(0);

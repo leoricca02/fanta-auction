@@ -72,6 +72,8 @@ export interface Lineup {
 export interface TeamNote {
   readonly teamCode: string;
   readonly text: string;
+  /** Ultima modifica. In import vince il record piu' recente, non il file. */
+  readonly updatedAt: number;
 }
 
 export interface PlayerNote {
@@ -80,6 +82,8 @@ export interface PlayerNote {
   readonly tag: Tag | null;
   /** Superstite di un re-import: il giocatore e' uscito dalla Serie A (PRD §2). */
   readonly archived: boolean;
+  /** Ultima modifica. In import vince il record piu' recente, non il file. */
+  readonly updatedAt: number;
 }
 
 export interface ObjectiveTarget {
@@ -94,6 +98,8 @@ export interface Objectives {
   /** Note generali di strategia, testo libero. */
   readonly text: string;
   readonly targets: readonly ObjectiveTarget[];
+  /** Ultima modifica. In import vince il record piu' recente, non il file. */
+  readonly updatedAt: number;
 }
 
 // ---------------------------------------------------------------------------

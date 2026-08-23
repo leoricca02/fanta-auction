@@ -1,5 +1,6 @@
 import type {
   AssignmentEvent,
+  LeagueConfig,
   Lineup,
   LineupSlot,
   Objectives,
@@ -11,6 +12,8 @@ import type {
   UserData,
 } from './types';
 import { PHASE_ORDER, TAGS } from './types';
+import type { EventRejection } from './reducer';
+import { reduce } from './reducer';
 
 /**
  * Backup dei dati utente (PRD §3.1) — **il requisito piu' importante del
@@ -25,10 +28,12 @@ import { PHASE_ORDER, TAGS } from './types';
  *   lo store a meta' strada, perche' lo store nuovo si costruisce tutto in
  *   memoria e viene restituito solo se la validazione e' passata per intero.
  * - Il merge e' **non distruttivo**: cio' che esiste e non e' nel file resta.
- * - Ogni collezione assente dal file e' "nessun dato", non "cancella tutto".
- *
- * Questo modulo e' puro: serializza e valida. Scriverlo su disco e leggerlo da
- * IndexedDB e' compito di /src/store e /src/export.
+ * - A parita' di chiave vince il record con `updatedAt` piu' recente, **non**
+ *   il file: importare un backup vecchio non deve sovrascrivere lavoro nuovo.
+ *   I record scartati per questo motivo sono elencati in `skippedRecords`.
+ * - Il risultato e' una **anteprima**: contiene lo stato che si otterrebbe e i
+ *   conflitti che l'event log produrrebbe, ottenuti da un dry-run del reducer.
+ *   Nulla e' applicato finche' il chiamante non persiste `result.data`.
  */
 
 /** Marcatore di formato. Serve a rifiutare un JSON di un'altra applicazione. */
@@ -57,11 +62,48 @@ export interface ImportError {
   readonly detail: string;
 }
 
+export type UserCollection = 'lineups' | 'playerNotes' | 'teamNotes' | 'objectives';
+
+/** Un record del file scartato perche' lo store ne ha una versione piu' recente. */
+export interface SkippedRecord {
+  readonly collection: UserCollection;
+  /** `teamCode` oppure `playerId`; `'objectives'` per l'istanza unica. */
+  readonly key: string;
+  readonly currentUpdatedAt: number;
+  readonly incomingUpdatedAt: number;
+}
+
 export interface ImportCollectionSummary {
   readonly added: number;
   readonly updated: number;
+  /** Record del file ignorati perche' piu' vecchi di quelli gia' presenti. */
+  readonly skipped: number;
   /** `true` se la collezione era assente dal file e quindi lasciata intatta. */
   readonly untouched: boolean;
+}
+
+/**
+ * Esito del dry-run del reducer sul log risultante dal merge.
+ *
+ * Il merge non distruttivo non puo' scartare eventi: se il file e lo store
+ * contengono due assegnazioni incompatibili, dopo l'import ci sono entrambe e
+ * il reducer ne applica una sola. L'utente deve vederlo **prima** di confermare.
+ */
+export interface ImportConflicts {
+  /** Eventi che il reducer scarterebbe sul log risultante. */
+  readonly rejected: readonly EventRejection[];
+  readonly rejectedCount: number;
+  /** Eventi che verrebbero applicati. */
+  readonly appliedCount: number;
+  /** Scartati che arrivano dal file. */
+  readonly fromFile: number;
+  /** Scartati che erano gia' nello store. */
+  readonly fromCurrent: number;
+  /**
+   * Eventi che il reducer applicava **prima** dell'import e scarterebbe dopo.
+   * E' il caso grave: importare invalida assegnazioni gia' registrate.
+   */
+  readonly newlyRejected: readonly EventRejection[];
 }
 
 export interface ImportSummary {
@@ -69,22 +111,31 @@ export interface ImportSummary {
   readonly playerNotes: ImportCollectionSummary;
   readonly teamNotes: ImportCollectionSummary;
   readonly events: ImportCollectionSummary;
-  /** `true` se il file conteneva gli obiettivi e li ha sostituiti. */
+  /** `true` se il file conteneva gli obiettivi ed erano piu' recenti. */
   readonly objectivesReplaced: boolean;
+  /** Ogni record del file ignorato perche' superato, con i due timestamp. */
+  readonly skippedRecords: readonly SkippedRecord[];
   readonly schemaVersion: number;
   readonly exportedAt: number;
 }
 
 export type ImportResult =
-  | { readonly ok: true; readonly data: UserData; readonly summary: ImportSummary }
+  | {
+      readonly ok: true;
+      /** Stato che si otterrebbe. Non e' ancora applicato. */
+      readonly data: UserData;
+      readonly summary: ImportSummary;
+      readonly conflicts: ImportConflicts;
+    }
   | { readonly ok: false; readonly error: ImportError };
 
 // ---------------------------------------------------------------------------
 // Stato vuoto
 // ---------------------------------------------------------------------------
 
-export function emptyObjectives(): Objectives {
-  return { text: '', targets: [] };
+/** `updatedAt` a 0: uno stato vuoto perde sempre contro qualsiasi file. */
+export function emptyObjectives(updatedAt = 0): Objectives {
+  return { text: '', targets: [], updatedAt };
 }
 
 export function emptyUserData(): UserData {
@@ -114,6 +165,7 @@ export function exportUserData(data: UserData, now: number = Date.now()): UserDa
       objectives: {
         text: data.objectives.text,
         targets: data.objectives.targets.map((t) => ({ ...t })),
+        updatedAt: data.objectives.updatedAt,
       },
       events: data.events.map((e) => ({ ...e })),
     },
@@ -191,6 +243,11 @@ function readInt(source: Record<string, unknown>, key: string, path: string): nu
   return value;
 }
 
+/** `updatedAt` assente vale 0: un record senza timestamp perde ogni confronto. */
+function readUpdatedAt(source: Record<string, unknown>, path: string): number {
+  return source['updatedAt'] === undefined ? 0 : readInt(source, 'updatedAt', path);
+}
+
 function readBoolean(source: Record<string, unknown>, key: string, path: string): boolean {
   const value = source[key];
   if (value === undefined) return false;
@@ -250,7 +307,7 @@ function parseLineup(raw: unknown, path: string): Lineup {
     teamCode: readString(o, 'teamCode', path),
     module: readOptionalString(o, 'module', path),
     slots,
-    updatedAt: o['updatedAt'] === undefined ? 0 : readInt(o, 'updatedAt', path),
+    updatedAt: readUpdatedAt(o, path),
   };
 }
 
@@ -261,6 +318,7 @@ function parsePlayerNote(raw: unknown, path: string): PlayerNote {
     text: readOptionalString(o, 'text', path),
     tag: readTag(o, path),
     archived: readBoolean(o, 'archived', path),
+    updatedAt: readUpdatedAt(o, path),
   };
 }
 
@@ -269,6 +327,7 @@ function parseTeamNote(raw: unknown, path: string): TeamNote {
   return {
     teamCode: readString(o, 'teamCode', path),
     text: readOptionalString(o, 'text', path),
+    updatedAt: readUpdatedAt(o, path),
   };
 }
 
@@ -283,7 +342,11 @@ function parseObjectives(raw: unknown, path: string): Objectives {
       note: readOptionalString(target, 'note', targetPath),
     };
   });
-  return { text: readOptionalString(o, 'text', path), targets };
+  return {
+    text: readOptionalString(o, 'text', path),
+    targets,
+    updatedAt: readUpdatedAt(o, path),
+  };
 }
 
 function parseEvent(raw: unknown, path: string): AssignmentEvent {
@@ -306,51 +369,143 @@ function parseEvent(raw: unknown, path: string): AssignmentEvent {
 interface MergeOutcome<T> {
   readonly merged: T[];
   readonly summary: ImportCollectionSummary;
+  readonly skipped: readonly SkippedRecord[];
 }
 
-const UNTOUCHED: ImportCollectionSummary = { added: 0, updated: 0, untouched: true };
+const UNTOUCHED: ImportCollectionSummary = {
+  added: 0,
+  updated: 0,
+  skipped: 0,
+  untouched: true,
+};
 
 /**
- * Merge non distruttivo per chiave: cio' che c'e' e non arriva dal file resta,
- * cio' che arriva dal file sovrascrive. L'ordine e' quello corrente, con le
- * novita' in coda: importare non deve rimescolare una lista gia' ordinata.
+ * Merge non distruttivo per chiave, con risoluzione per `updatedAt`.
+ *
+ * - chiave assente nello store  -> il record del file entra
+ * - `incoming.updatedAt > current.updatedAt` -> il file vince
+ * - altrimenti (piu' vecchio o pari) -> **lo store vince** e il record del file
+ *   finisce in `skipped`. La parita' tiene il record corrente, cosi' reimportare
+ *   lo stesso file e' un no-op.
+ *
+ * L'ordine e' quello corrente, con le novita' in coda: importare non deve
+ * rimescolare una lista gia' ordinata a mano.
  */
-function mergeByKey<T, K>(
+function mergeByKey<T>(
+  collection: UserCollection,
   current: readonly T[],
   incoming: readonly T[] | null,
-  keyOf: (item: T) => K,
+  keyOf: (item: T) => string,
+  updatedAtOf: (item: T) => number,
 ): MergeOutcome<T> {
-  if (incoming === null) return { merged: [...current], summary: UNTOUCHED };
+  if (incoming === null) return { merged: [...current], summary: UNTOUCHED, skipped: [] };
 
-  const byKey = new Map<K, T>();
-  const order: K[] = [];
+  const byKey = new Map<string, T>();
+  const order: string[] = [];
   for (const item of current) {
     const key = keyOf(item);
     if (!byKey.has(key)) order.push(key);
     byKey.set(key, item);
   }
 
+  const skipped: SkippedRecord[] = [];
   let added = 0;
   let updated = 0;
+
   for (const item of incoming) {
     const key = keyOf(item);
-    if (byKey.has(key)) updated += 1;
-    else {
+    const existing = byKey.get(key);
+    if (existing === undefined) {
       order.push(key);
+      byKey.set(key, item);
       added += 1;
+      continue;
     }
-    byKey.set(key, item);
+    if (updatedAtOf(item) > updatedAtOf(existing)) {
+      byKey.set(key, item);
+      updated += 1;
+      continue;
+    }
+    skipped.push({
+      collection,
+      key,
+      currentUpdatedAt: updatedAtOf(existing),
+      incomingUpdatedAt: updatedAtOf(item),
+    });
   }
 
   return {
     merged: order.map((key) => byKey.get(key) as T),
-    summary: { added, updated, untouched: false },
+    summary: { added, updated, skipped: skipped.length, untouched: false },
+    skipped,
   };
 }
 
-/** L'event log si riordina per `ts`, poi per `id`: la piega dipende dall'ordine. */
-function sortEvents(events: readonly AssignmentEvent[]): AssignmentEvent[] {
-  return [...events].sort((a, b) => (a.ts !== b.ts ? a.ts - b.ts : a.id.localeCompare(b.id)));
+/**
+ * L'event log si fonde per `id` senza confronto di `updatedAt`: un evento e'
+ * immutabile, quindi due record con lo stesso id sono lo stesso fatto e il file
+ * puo' solo confermarlo. Il riordino per `ts`, poi per `id`, e' necessario
+ * perche' la piega del reducer dipende dall'ordine.
+ */
+function mergeEvents(
+  current: readonly AssignmentEvent[],
+  incoming: readonly AssignmentEvent[] | null,
+): MergeOutcome<AssignmentEvent> {
+  if (incoming === null) return { merged: [...current], summary: UNTOUCHED, skipped: [] };
+
+  const byId = new Map<string, AssignmentEvent>(current.map((e) => [e.id, e]));
+  let added = 0;
+  let updated = 0;
+  for (const event of incoming) {
+    if (byId.has(event.id)) updated += 1;
+    else added += 1;
+    byId.set(event.id, event);
+  }
+
+  const merged = [...byId.values()].sort((a, b) =>
+    a.ts !== b.ts ? a.ts - b.ts : a.id.localeCompare(b.id),
+  );
+  return { merged, summary: { added, updated, skipped: 0, untouched: false }, skipped: [] };
+}
+
+// ---------------------------------------------------------------------------
+// Dry-run del reducer
+// ---------------------------------------------------------------------------
+
+/**
+ * Ripiega il log risultante **senza applicare niente** e riporta cosa il
+ * reducer scarterebbe. E' il "2 eventi verranno scartati" che l'utente deve
+ * leggere prima di confermare l'import.
+ */
+function dryRun(
+  currentEvents: readonly AssignmentEvent[],
+  mergedEvents: readonly AssignmentEvent[],
+  incomingIds: ReadonlySet<string>,
+  config: LeagueConfig,
+): ImportConflicts {
+  const after = reduce(mergedEvents, config);
+  const before = reduce(currentEvents, config);
+  const rejectedBefore = new Set(before.rejections.map((r) => r.eventId));
+
+  let fromFile = 0;
+  let fromCurrent = 0;
+  const newlyRejected: EventRejection[] = [];
+  for (const rejection of after.rejections) {
+    if (incomingIds.has(rejection.eventId)) fromFile += 1;
+    else fromCurrent += 1;
+    if (!rejectedBefore.has(rejection.eventId) && !incomingIds.has(rejection.eventId)) {
+      newlyRejected.push(rejection);
+    }
+  }
+
+  return {
+    rejected: after.rejections,
+    rejectedCount: after.rejections.length,
+    appliedCount: after.appliedEventIds.length,
+    fromFile,
+    fromCurrent,
+    newlyRejected,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -358,15 +513,23 @@ function sortEvents(events: readonly AssignmentEvent[]): AssignmentEvent[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Importa un backup dentro lo stato corrente.
+ * Calcola l'anteprima di un import. **Non applica niente**: restituisce lo
+ * stato che si otterrebbe, cosa e' stato saltato e quali eventi il reducer
+ * scarterebbe. Sta al chiamante mostrarli, farli confermare e poi persistere
+ * `result.data`.
  *
  * Non lancia e non muta `current`: in caso di errore restituisce
  * `{ ok: false }` e lo stato di partenza resta esattamente com'era.
  *
  * @param current stato utente attuale (usa `emptyUserData()` per uno store vuoto).
  * @param raw il JSON come stringa, oppure un oggetto gia' deserializzato.
+ * @param config lega e listone, necessari al dry-run del reducer.
  */
-export function importUserData(current: UserData, raw: unknown): ImportResult {
+export function importUserData(
+  current: UserData,
+  raw: unknown,
+  config: LeagueConfig,
+): ImportResult {
   let parsed: unknown = raw;
 
   if (typeof raw === 'string') {
@@ -437,10 +600,53 @@ export function importUserData(current: UserData, raw: unknown): ImportResult {
         ? null
         : parseObjectives(payload['objectives'], 'data.objectives');
 
-    const mergedLineups = mergeByKey(current.lineups, lineups, (l) => l.teamCode);
-    const mergedPlayerNotes = mergeByKey(current.playerNotes, playerNotes, (n) => n.playerId);
-    const mergedTeamNotes = mergeByKey(current.teamNotes, teamNotes, (n) => n.teamCode);
-    const mergedEvents = mergeByKey(current.events, events, (e) => e.id);
+    const mergedLineups = mergeByKey(
+      'lineups',
+      current.lineups,
+      lineups,
+      (l) => l.teamCode,
+      (l) => l.updatedAt,
+    );
+    const mergedPlayerNotes = mergeByKey(
+      'playerNotes',
+      current.playerNotes,
+      playerNotes,
+      (n) => String(n.playerId),
+      (n) => n.updatedAt,
+    );
+    const mergedTeamNotes = mergeByKey(
+      'teamNotes',
+      current.teamNotes,
+      teamNotes,
+      (n) => n.teamCode,
+      (n) => n.updatedAt,
+    );
+    const mergedEvents = mergeEvents(current.events, events);
+
+    // Istanza unica, stessa regola: vince il piu' recente, non il file.
+    //
+    // `updatedAt === 0` sullo store significa "obiettivi mai toccati": e'
+    // l'equivalente singleton di una chiave assente dalla collezione, quindi il
+    // file entra come aggiunta invece di perdere il confronto per pareggio.
+    const objectivesPristine = current.objectives.updatedAt === 0;
+    const objectivesWins =
+      objectives !== null &&
+      (objectivesPristine || objectives.updatedAt > current.objectives.updatedAt);
+    const skippedRecords = [
+      ...mergedLineups.skipped,
+      ...mergedPlayerNotes.skipped,
+      ...mergedTeamNotes.skipped,
+    ];
+    if (objectives !== null && !objectivesWins) {
+      skippedRecords.push({
+        collection: 'objectives',
+        key: 'objectives',
+        currentUpdatedAt: current.objectives.updatedAt,
+        incomingUpdatedAt: objectives.updatedAt,
+      });
+    }
+
+    const incomingIds = new Set((events ?? []).map((e) => e.id));
 
     return {
       ok: true,
@@ -448,22 +654,23 @@ export function importUserData(current: UserData, raw: unknown): ImportResult {
         lineups: mergedLineups.merged,
         playerNotes: mergedPlayerNotes.merged,
         teamNotes: mergedTeamNotes.merged,
-        // Istanza unica: se il file la porta, sostituisce; altrimenti resta la corrente.
-        objectives: objectives ?? current.objectives,
-        events: sortEvents(mergedEvents.merged),
+        objectives: objectivesWins && objectives !== null ? objectives : current.objectives,
+        events: mergedEvents.merged,
       },
       summary: {
         lineups: mergedLineups.summary,
         playerNotes: mergedPlayerNotes.summary,
         teamNotes: mergedTeamNotes.summary,
         events: mergedEvents.summary,
-        objectivesReplaced: objectives !== null,
+        objectivesReplaced: objectivesWins,
+        skippedRecords,
         schemaVersion,
         exportedAt:
           typeof parsed['exportedAt'] === 'number' && Number.isFinite(parsed['exportedAt'])
             ? parsed['exportedAt']
             : 0,
       },
+      conflicts: dryRun(current.events, mergedEvents.merged, incomingIds, config),
     };
   } catch (cause) {
     // Nessuna eccezione esce da qui, nemmeno una inattesa: un import che
