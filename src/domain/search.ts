@@ -107,6 +107,47 @@ export function searchPlayers(
   return hits.slice(0, limit);
 }
 
+export interface PhaseSearch {
+  readonly hits: readonly SearchHit[];
+  /**
+   * `true` se i risultati vengono da fuori la fase attiva. La command bar deve
+   * dirlo: assegnare un portiere mentre si battono i difensori e' legittimo,
+   * ma dev'essere una scelta, non una sorpresa.
+   */
+  readonly outOfPhase: boolean;
+}
+
+/**
+ * Cerca nella fase attiva e, **se non trova niente, allarga a tutti i ruoli**.
+ *
+ * §5.1 vuole la ricerca "filtrata *di default* sul ruolo della fase attiva":
+ * di default, non sempre. Senza questo allargamento l'inserimento retroattivo
+ * che lo stesso §5.1 chiede — recuperare un'assegnazione persa — sarebbe
+ * impossibile per ogni ruolo gia' chiuso: sei in fase D e il portiere che ti
+ * sei dimenticato di registrare non compare da nessuna parte.
+ *
+ * L'allargamento scatta solo a mani vuote, quindi durante l'asta normale non
+ * cambia niente: finche' un difensore corrisponde, vedi solo difensori.
+ */
+export function searchInPhase(
+  players: readonly Player[],
+  rawQuery: string,
+  options: SearchOptions & { readonly phase?: Role | null } = {},
+): PhaseSearch {
+  const { phase, ...rest } = options;
+
+  if (phase !== null && phase !== undefined) {
+    const inPhase = searchPlayers(players, rawQuery, { ...rest, role: phase });
+    if (inPhase.length > 0) return { hits: inPhase, outOfPhase: false };
+  }
+
+  const anywhere = searchPlayers(players, rawQuery, rest);
+  return {
+    hits: anywhere,
+    outOfPhase: anywhere.length > 0 && phase !== null && phase !== undefined,
+  };
+}
+
 /** Il primo risultato, quello che `Invio` conferma. */
 export function bestMatch(
   players: readonly Player[],

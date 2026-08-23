@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState }
 
 import type { Player, Role, Tag } from '../../domain/types';
 import { parseCommand } from '../../domain/command';
-import { isAmbiguous, searchPlayers } from '../../domain/search';
+import { isAmbiguous, searchInPhase } from '../../domain/search';
 import { lineupStatus, makeLineupIndex } from '../../domain/lineup';
 import { useAppStore } from '../../store/appStore';
 import { LineupBadge } from '../player/LineupBadge';
@@ -61,15 +61,11 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const query = command.kind === 'error' || command.kind === 'empty' ? '' : command.query;
   const price = command.kind === 'evaluate' || command.kind === 'assign' ? command.price : null;
 
-  const hits = useMemo(
-    () =>
-      searchPlayers(players, query, {
-        ...(phase !== null ? { role: phase } : {}),
-        excludeIds: assignedIds,
-        limit: 8,
-      }),
+  const search = useMemo(
+    () => searchInPhase(players, query, { phase, excludeIds: assignedIds, limit: 8 }),
     [players, query, phase, assignedIds],
   );
+  const hits = search.hits;
 
   const ambiguous = isAmbiguous(hits);
   const selected = hits[Math.min(index, hits.length - 1)]?.player ?? null;
@@ -102,12 +98,19 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       return;
     }
 
-    const outcome = await assign(selected.id, command.abbr, command.price, selected.role);
+    // La sigla e' cio' che si digita; l'acquisto si aggancia all'id, che non
+    // cambia se piu' avanti la squadra viene rinominata.
+    const team = teams.find((t) => t.abbr === command.abbr);
+    if (team === undefined) {
+      setFeedback({ kind: 'error', text: `Sigla "${command.abbr}" non trovata in lega.` });
+      return;
+    }
+
+    const outcome = await assign(selected.id, team.id, command.price, selected.role);
     if (outcome.ok) {
-      const team = teams.find((t) => t.id === command.abbr);
       setFeedback({
         kind: 'ok',
-        text: `${selected.name} → ${team?.name ?? command.abbr} per ${command.price}.`,
+        text: `${selected.name} → ${team.name} per ${command.price}.`,
       });
       setText('');
       setIndex(0);
@@ -209,10 +212,17 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         })}
         {hits.length === 0 && query !== '' && (
           <li className="px-2 py-2 text-sm text-neutral-500">
-            Nessun {phase ?? 'giocatore'} libero corrisponde a “{query}”.
+            Nessun giocatore libero corrisponde a “{query}”.
           </li>
         )}
       </ul>
+
+      {search.outOfPhase && (
+        <p className="px-1 text-xs text-amber-400">
+          Nessun {phase} corrisponde: questi sono di altri ruoli. Assegnarli e legittimo — serve a
+          recuperare una chiamata persa — ma controlla il ruolo prima di confermare.
+        </p>
+      )}
 
       {ambiguous && (
         <p className="px-1 text-xs text-amber-400">

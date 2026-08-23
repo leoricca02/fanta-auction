@@ -19,7 +19,7 @@ import {
   serializeUserData,
   shouldAutoBackup,
 } from '../domain/backup';
-import { makeLeagueConfig, makeTeams } from '../domain/config';
+import { makeLeagueConfig, makeTeams, updateTeams } from '../domain/config';
 import type { EventRejection } from '../domain/reducer';
 import {
   lastActiveEvent,
@@ -266,7 +266,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       userData.teamNotes.length > 0 ||
       userData.events.length > 0;
     if (hasWork && shouldAutoBackup(readNumberMeta(lastBackupAt))) {
-      await get().downloadBackup();
+      // Un auto-backup che fallisce non deve impedire l'avvio: e' una rete di
+      // sicurezza, non un prerequisito. Senza questo catch un download bloccato
+      // lascerebbe l'app ferma su "Carico i dati..." con tutto il lavoro
+      // dentro e nessun modo di arrivarci.
+      try {
+        await get().downloadBackup();
+      } catch (cause) {
+        set({
+          message: {
+            kind: 'error',
+            text:
+              `Backup automatico non riuscito (${
+                cause instanceof Error ? cause.message : String(cause)
+              }). Scaricane uno a mano da Impostazioni.`,
+          },
+        });
+      }
     }
   },
 
@@ -342,7 +358,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setTeams(seeds, userIndex = 0) {
     return enqueue(async () => {
-      const teams = makeTeams(seeds, userIndex);
+      // Rinominare non deve staccare gli acquisti gia' registrati: gli id
+      // restano quelli, cambiano solo nome e sigla.
+      const teams = updateTeams(get().teams, seeds, userIndex);
       await store.replaceTeams(teams);
       set({ teams });
     });

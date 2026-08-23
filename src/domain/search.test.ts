@@ -7,6 +7,7 @@ import {
   isSubsequence,
   normalizeQuery,
   rankMatch,
+  searchInPhase,
   searchPlayers,
 } from './search';
 import { findPlayer, makePlayer, realListone } from '../test/fixtures';
@@ -113,6 +114,72 @@ describe('searchPlayers sul listone reale', () => {
     const stessoGradino = hits.filter((h) => h.rank === hits[0]?.rank);
     const quots = stessoGradino.map((h) => h.player.quot);
     expect([...quots].sort((a, b) => b - a)).toEqual(quots);
+  });
+});
+
+describe('searchInPhase — inserimento retroattivo di §5.1', () => {
+  const players = realListone();
+
+  it('durante l asta normale mostra solo il ruolo della fase', () => {
+    const result = searchInPhase(players, 'a', { phase: 'D', limit: 8 });
+    expect(result.outOfPhase).toBe(false);
+    expect(result.hits.every((h) => h.player.role === 'D')).toBe(true);
+  });
+
+  it('allarga a tutti i ruoli se nella fase non c e nessun match', () => {
+    // Il caso vero: sei in fase D e ti accorgi che un portiere e' gia' andato.
+    const result = searchInPhase(players, 'martinez l', { phase: 'D', limit: 8 });
+    expect(result.hits.length).toBeGreaterThan(0);
+    expect(result.outOfPhase).toBe(true);
+    expect(result.hits[0]?.player.name).toBe('Martinez L.');
+    expect(result.hits[0]?.player.role).toBe('A');
+  });
+
+  it('non allarga se il match nella fase esiste, anche debole', () => {
+    const dimarco = findPlayer(players, 'Dimarco');
+    expect(dimarco.role).toBe('D');
+    const result = searchInPhase(players, 'dimarco', { phase: 'D' });
+    expect(result.outOfPhase).toBe(false);
+    expect(result.hits[0]?.player.id).toBe(dimarco.id);
+  });
+
+  it('senza fase attiva cerca ovunque senza segnalare niente', () => {
+    const conNull = searchInPhase(players, 'martinez l', { phase: null });
+    expect(conNull.outOfPhase).toBe(false);
+    expect(conNull.hits.length).toBeGreaterThan(0);
+
+    const senzaCampo = searchInPhase(players, 'martinez l');
+    expect(senzaCampo.outOfPhase).toBe(false);
+    expect(senzaCampo.hits.length).toBeGreaterThan(0);
+  });
+
+  it('nessun match da nessuna parte non e fuori fase, e vuoto', () => {
+    const result = searchInPhase(players, 'qwertyuiopzxcvbnm', { phase: 'D' });
+    expect(result.hits).toEqual([]);
+    expect(result.outOfPhase).toBe(false);
+  });
+
+  it('rispetta le esclusioni anche quando allarga', () => {
+    const lautaro = findPlayer(players, 'Martinez L.');
+    const result = searchInPhase(players, 'martinez l', {
+      phase: 'D',
+      excludeIds: new Set([lautaro.id]),
+    });
+    expect(result.hits.some((h) => h.player.id === lautaro.id)).toBe(false);
+  });
+
+  it('rispetta il limite anche quando allarga', () => {
+    // Listone controllato: nessun portiere corrisponde, tre attaccanti si'.
+    const piccolo = [
+      makePlayer({ id: 1, role: 'P', quot: 10, name: 'Portiere Uno' }),
+      makePlayer({ id: 2, role: 'A', quot: 30, name: 'Rossi A' }),
+      makePlayer({ id: 3, role: 'A', quot: 20, name: 'Rossi B' }),
+      makePlayer({ id: 4, role: 'A', quot: 10, name: 'Rossi C' }),
+    ];
+    const result = searchInPhase(piccolo, 'rossi', { phase: 'P', limit: 2 });
+    expect(result.outOfPhase).toBe(true);
+    expect(result.hits).toHaveLength(2);
+    expect(result.hits.map((h) => h.player.quot)).toEqual([30, 20]);
   });
 });
 

@@ -38,11 +38,14 @@ export class LeagueConfigError extends Error {
 export type LeagueShape = Omit<LeagueConfig, 'players'>;
 
 /**
- * Costruisce le squadre. Quella all'indice `userIndex` e' l'utente.
+ * Crea squadre nuove. Quella all'indice `userIndex` e' l'utente.
  *
- * Fallisce su sigle duplicate o di lunghezza diversa da 3: la command bar le
- * usa come chiave di assegnazione, e un prefisso ambiguo sotto asta e' un
+ * Fallisce su sigle duplicate o di lunghezza diversa da 3: la sigla e' quello
+ * che si digita nella command bar, e un prefisso ambiguo sotto asta e' un
  * acquisto assegnato alla squadra sbagliata.
+ *
+ * Alla creazione l'id coincide con la sigla, ma **non e' la sigla**: per
+ * rinominare una squadra conservando i suoi acquisti serve `updateTeams`.
  */
 export function makeTeams(
   seeds: readonly (readonly [name: string, abbr: string])[] = DEFAULT_TEAM_SEEDS,
@@ -68,6 +71,45 @@ export function makeTeams(
     seenAbbr.add(key);
     return { id: key, name, abbr: key, isUser: i === userIndex };
   });
+}
+
+/**
+ * Aggiorna nomi e sigle **conservando gli id** delle squadre esistenti.
+ *
+ * L'id di una squadra e' la chiave a cui punta ogni `AssignmentEvent`. Alla
+ * creazione coincide con la sigla, ma da quel momento in poi e' immutabile:
+ * rigenerarlo quando l'utente rinomina una squadra farebbe puntare tutti i suoi
+ * acquisti a un id inesistente, e il reducer li scarterebbe in silenzio come
+ * `UNKNOWN_TEAM`.
+ *
+ * L'accoppiamento e' **posizionale**: la riga `i` dell'elenco resta la stessa
+ * squadra, comunque la si chiami.
+ */
+export function updateTeams(
+  current: readonly FantaTeam[],
+  seeds: readonly (readonly [name: string, abbr: string])[],
+  userIndex = 0,
+): FantaTeam[] {
+  // Valida sigle e cardinalita' con le stesse regole della creazione.
+  const validated = makeTeams(seeds, userIndex);
+  const usedIds = new Set<string>();
+
+  return validated.map((team, i) => {
+    const existing = current[i];
+    const id = existing?.id ?? freshId(usedIds, i);
+    usedIds.add(id);
+    return { ...team, id };
+  });
+}
+
+/**
+ * Id per una squadra che prima non c'era. Il prefisso `team-` non puo'
+ * collidere con una sigla, che e' di tre lettere.
+ */
+function freshId(used: ReadonlySet<string>, index: number): string {
+  let n = index + 1;
+  while (used.has(`team-${n}`)) n += 1;
+  return `team-${n}`;
 }
 
 export function makeLeagueConfig(

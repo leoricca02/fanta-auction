@@ -56,9 +56,10 @@ export function LeagueSetup(): JSX.Element {
       </p>
 
       {eventsCount > 0 && (
-        <p className="mt-2 rounded border border-amber-800 bg-amber-950/30 px-2 py-1 text-xs text-amber-200">
-          Ci sono già {eventsCount} assegnazioni registrate. Cambiare una sigla non le sposta:
-          restano agganciate all’identificativo di squadra, non al nome.
+        <p className="mt-2 rounded border border-neutral-700 px-2 py-1 text-xs text-neutral-400">
+          Ci sono già {eventsCount} assegnazioni registrate. Rinominare una squadra o cambiarne la
+          sigla non le tocca: restano agganciate alla <em>riga</em> di questo elenco, non al nome.
+          Non riordinare le righe.
         </p>
       )}
 
