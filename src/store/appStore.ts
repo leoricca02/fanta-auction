@@ -21,12 +21,21 @@ import {
 } from '../domain/backup';
 import { makeLeagueConfig, makeTeams } from '../domain/config';
 import type { EventRejection } from '../domain/reducer';
-import { lastActiveEvent, lastUndoneEvent, redoEvent, reduce, undoEvent } from '../domain/reducer';
+import {
+  lastActiveEvent,
+  lastUndoneEvent,
+  redoEvent,
+  reduce,
+  undoAll,
+  undoEvent,
+} from '../domain/reducer';
 import { DEFAULT_MODULE, emptyLineup } from '../domain/modules';
 import type { PlayerNotePatch } from '../domain/notes';
 import { applyNotePatch, isNoOpPatch } from '../domain/notes';
 import type { AddTargetOptions } from '../domain/objectives';
 import { addTarget, removeTarget } from '../domain/objectives';
+import type { ListoneImportPlan } from '../domain/listone-diff';
+import { planListoneImport } from '../domain/listone-diff';
 import { assignmentsFromState, buildNativeXlsx, nativeExportFilename } from '../export/native';
 import { buildReportXlsx, reportFilename } from '../export/report';
 import { downloadRosterPdf } from '../export/pdf';
@@ -56,6 +65,15 @@ export interface PendingImport {
   readonly result: Extract<ImportResult, { ok: true }>;
 }
 
+/** Re-import del listone in attesa di conferma (§2). */
+export interface PendingListone {
+  readonly filename: string;
+  readonly plan: ListoneImportPlan;
+  readonly players: readonly Player[];
+  readonly bytes: Uint8Array;
+  readonly excludedCount: number;
+}
+
 /** Esito di un tentativo di assegnazione dalla command bar. */
 export type AssignOutcome =
   | { readonly ok: true; readonly event: AssignmentEvent }
@@ -69,6 +87,7 @@ export interface AppState {
   readonly listone: ListoneInfo | null;
   readonly lastBackupAt: number | null;
   readonly pendingImport: PendingImport | null;
+  readonly pendingListone: PendingListone | null;
   readonly message: { readonly kind: 'ok' | 'error'; readonly text: string } | null;
 
   /** Lega corrente: squadre, crediti, slot, listone. */
@@ -76,6 +95,8 @@ export interface AppState {
 
   init: () => Promise<void>;
   importListone: (file: File) => Promise<void>;
+  confirmListoneImport: () => Promise<void>;
+  cancelListoneImport: () => void;
   setTeams: (
     seeds: readonly (readonly [name: string, abbr: string])[],
     userIndex?: number,
@@ -85,6 +106,7 @@ export interface AppState {
   redoAssignment: (eventId: string) => Promise<void>;
   undoLast: () => Promise<void>;
   redoLast: () => Promise<void>;
+  undoAllAssignments: () => Promise<void>;
   updateLineup: (teamCode: string, mutate: (lineup: Lineup) => Lineup) => Promise<Lineup>;
   saveTeamNote: (teamCode: string, text: string) => Promise<void>;
   setPlayerNote: (playerId: number, patch: PlayerNotePatch) => Promise<void>;
@@ -152,6 +174,46 @@ function upsert<T>(list: readonly T[], item: T, sameKey: (candidate: T) => boole
   return list.some(sameKey) ? list.map((x) => (sameKey(x) ? item : x)) : [...list, item];
 }
 
+type SetState = (partial: Partial<AppState>) => void;
+
+/**
+ * Commit di un re-import (§2): listone nuovo e dati utente ripuliti, in una
+ * sola passata. I dati utente si riscrivono per primi, perche' e' quello che
+ * non si puo' ricostruire; il listone e' sempre riscaricabile.
+ */
+async function applyListone(pending: PendingListone, set: SetState): Promise<void> {
+  const { plan, players, bytes, filename, excludedCount } = pending;
+  const now = Date.now();
+
+  await store.replaceUserData(plan.nextUserData);
+  await store.replacePlayers(players);
+  // Il file originale resta com'e': l'export nativo di §6.1 ci riscrive dentro
+  // invece di rigenerarlo.
+  await store.saveSourceFile(filename, bytes);
+  await store.setMeta('listoneFilename', filename);
+  await store.setMeta('listoneImportedAt', now);
+  await store.setMeta('listoneCount', players.length);
+
+  const { diff, impact } = plan;
+  const parts = [`${players.length} giocatori, ${excludedCount} fuori lista esclusi`];
+  if (!plan.firstImport) {
+    parts.push(`${diff.added.length} nuovi, ${diff.removed.length} usciti`);
+    if (impact.removedWithData.length > 0) {
+      parts.push(`${impact.removedWithData.length} note archiviate`);
+    }
+    if (impact.slotsEmptied > 0) parts.push(`${impact.slotsEmptied} slot svuotati`);
+  }
+
+  set({
+    players,
+    userData: plan.nextUserData,
+    pendingListone: null,
+    listone: { filename, importedAt: now, count: players.length },
+    message: { kind: 'ok', text: `Listone caricato: ${parts.join(' · ')}.` },
+  });
+
+}
+
 export const useAppStore = create<AppState>((set, get) => ({
   ready: false,
   players: [],
@@ -160,6 +222,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   listone: null,
   lastBackupAt: null,
   pendingImport: null,
+  pendingListone: null,
   message: null,
 
   leagueConfig() {
@@ -207,38 +270,74 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  /**
+   * Legge un listone e ne calcola il piano di import (§2).
+   *
+   * Non applica niente: mette il piano in `pendingListone` e aspetta conferma.
+   * Solo il primo caricamento passa diretto, perche' non c'e' un listone
+   * precedente con cui confrontarlo.
+   */
   async importListone(file) {
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       const parsed = parseListone(bytes);
-      const now = Date.now();
 
-      await store.replacePlayers(parsed.players);
-      // Il file originale resta com'e': l'export nativo di §6.1 ci riscrive
-      // dentro invece di rigenerarlo.
-      await store.saveSourceFile(file.name, bytes);
-      await store.setMeta('listoneFilename', file.name);
-      await store.setMeta('listoneImportedAt', now);
-      await store.setMeta('listoneCount', parsed.players.length);
-
-      set({
-        players: parsed.players,
-        listone: { filename: file.name, importedAt: now, count: parsed.players.length },
-        message: {
-          kind: 'ok',
-          text:
-            `Listone caricato: ${parsed.players.length} giocatori, ` +
-            `${parsed.excludedCount} fuori lista esclusi.`,
-        },
+      const plan = planListoneImport({
+        current: get().players,
+        next: parsed.players,
+        data: get().userData,
+        state: reduce(get().userData.events, get().leagueConfig()),
       });
+
+      if (plan.blocked !== null) {
+        set({
+          pendingListone: null,
+          message: {
+            kind: 'error',
+            text:
+              `Re-import bloccato: ci sono ${plan.blocked.count} assegnazioni attive. ` +
+              `Cambiare il listone ad asta iniziata invaliderebbe l'event log. ` +
+              `Usa "Annulla tutte le assegnazioni" qui sotto, poi riprova.`,
+          },
+        });
+        return;
+      }
+
+      const pending: PendingListone = {
+        filename: file.name,
+        plan,
+        players: parsed.players,
+        bytes,
+        excludedCount: parsed.excludedCount,
+      };
+
+      // §2 vuole che il diff si mostri e si applichi su conferma, sempre.
+      // L'unica eccezione e' il primo caricamento: non c'e' un prima con cui
+      // confrontare, e far confermare "516 nuovi" sarebbe solo attrito.
+      if (plan.firstImport) {
+        await applyListone(pending, set);
+        return;
+      }
+      set({ pendingListone: pending, message: null });
     } catch (cause) {
       set({
+        pendingListone: null,
         message: {
           kind: 'error',
           text: cause instanceof Error ? cause.message : String(cause),
         },
       });
     }
+  },
+
+  async confirmListoneImport() {
+    const pending = get().pendingListone;
+    if (pending === null) return;
+    await applyListone(pending, set);
+  },
+
+  cancelListoneImport() {
+    set({ pendingListone: null });
   },
 
   setTeams(seeds, userIndex = 0) {
@@ -299,6 +398,33 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (changed === undefined) return;
       await store.saveEvent(changed);
       set((current) => ({ userData: { ...current.userData, events } }));
+    });
+  },
+
+  /**
+   * Annulla ogni assegnazione attiva. Soft delete come tutti gli altri: gli
+   * eventi restano nel log e si ripristinano uno per uno dall'asta.
+   *
+   * Serve a sbloccare il re-import del listone (§2). Senza, il blocco lascia
+   * in un vicolo cieco: fermo, e senza un modo per sbloccarsi.
+   */
+  undoAllAssignments() {
+    return enqueue(async () => {
+      const before = get().userData.events;
+      const events = undoAll(before);
+      const changed = events.filter((event, i) => event !== before[i]);
+      if (changed.length === 0) return;
+
+      for (const event of changed) await store.saveEvent(event);
+      set((current) => ({
+        userData: { ...current.userData, events },
+        message: {
+          kind: 'ok',
+          text:
+            `${changed.length} assegnazioni annullate. Restano nel log: ` +
+            `puoi ripristinarle una per una dall'asta.`,
+        },
+      }));
     });
   },
 

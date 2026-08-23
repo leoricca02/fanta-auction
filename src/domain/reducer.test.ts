@@ -11,6 +11,7 @@ import {
   reduce,
   resolveAssignment,
   teamState,
+  undoAll,
   undoEvent,
   validateAssignment,
 } from './reducer';
@@ -181,6 +182,29 @@ describe('undo e redo', () => {
     const state = reduce(events, config);
     expect(state.assignmentByPlayerId[3]?.teamId).toBe('t02');
     expect(teamState(state, 't02').credits).toBe(56);
+  });
+
+  it('undoAll annulla tutto restando un soft delete', () => {
+    const events = undoAll(log());
+    expect(events).toHaveLength(3);
+    expect(events.every((e) => e.undone)).toBe(true);
+
+    const state = reduce(events, config);
+    expect(teamState(state, 't01').credits).toBe(100);
+    expect(state.slotsFilled).toBe(0);
+    expect(state.rejections).toEqual([]);
+
+    // Reversibile uno per uno, come ogni altro annullamento.
+    expect(teamState(reduce(redoEvent(events, 'b'), config), 't01').credits).toBe(80);
+  });
+
+  it('undoAll non tocca gli eventi gia annullati e non muta il log', () => {
+    const events = undoEvent(log(), 'a');
+    const before = JSON.parse(JSON.stringify(events)) as unknown;
+    const result = undoAll(events);
+    expect(events).toEqual(before);
+    expect(result.find((e) => e.id === 'a')).toBe(events.find((e) => e.id === 'a'));
+    expect(undoAll([])).toEqual([]);
   });
 
   it('lastActiveEvent e lastUndoneEvent guidano Ctrl+Z e Ctrl+Shift+Z', () => {

@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
+import { reduce } from '../../domain/reducer';
 import { useAppStore } from '../../store/appStore';
 import { LeagueSetup } from './LeagueSetup';
 
@@ -145,11 +146,83 @@ export function SettingsPanel(): JSX.Element {
                 }}
               />
             </div>
+
+            <ResetAuction />
           </section>
         </div>
 
         <LeagueSetup />
       </div>
+    </div>
+  );
+}
+
+/**
+ * Annulla tutte le assegnazioni (§2).
+ *
+ * Il re-import si blocca ad asta iniziata, e senza questo bottone il blocco
+ * sarebbe un vicolo cieco. Conferma in due passaggi perche' e' un gesto grosso,
+ * anche se reversibile: gli eventi restano nel log come annullati.
+ */
+function ResetAuction(): JSX.Element | null {
+  const userData = useAppStore((s) => s.userData);
+  const leagueConfig = useAppStore((s) => s.leagueConfig);
+  const undoAllAssignments = useAppStore((s) => s.undoAllAssignments);
+  const downloadBackup = useAppStore((s) => s.downloadBackup);
+
+  const [arming, setArming] = useState(false);
+
+  const active = reduce(userData.events, leagueConfig()).appliedEventIds.length;
+  if (active === 0) return null;
+
+  return (
+    <div className="mt-4 rounded border border-amber-800/60 bg-amber-950/20 p-3">
+      <p className="text-xs text-amber-200">
+        {active} assegnazioni attive. Il re-import del listone resta bloccato finché ce ne sono:
+        cambiare il listone ad asta iniziata invaliderebbe l’event log.
+      </p>
+
+      {arming ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-amber-200">
+            Confermi? Restano nel log e le puoi ripristinare una per una dall’asta.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              void undoAllAssignments();
+              setArming(false);
+            }}
+            className="rounded bg-amber-700 px-3 py-1 text-xs text-white hover:bg-amber-600"
+          >
+            Sì, annullale tutte
+          </button>
+          <button
+            type="button"
+            onClick={() => setArming(false)}
+            className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+          >
+            No
+          </button>
+        </div>
+      ) : (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setArming(true)}
+            className="rounded border border-amber-700 px-3 py-1 text-xs text-amber-200 hover:bg-amber-900/40"
+          >
+            Annulla tutte le assegnazioni
+          </button>
+          <button
+            type="button"
+            onClick={() => void downloadBackup()}
+            className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+          >
+            Scarica prima un backup
+          </button>
+        </div>
+      )}
     </div>
   );
 }

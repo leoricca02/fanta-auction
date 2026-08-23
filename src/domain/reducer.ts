@@ -300,6 +300,18 @@ export function redoEvent(events: readonly AssignmentEvent[], eventId: string): 
   return setUndone(events, eventId, false);
 }
 
+/**
+ * Annulla tutte le assegnazioni attive in un colpo solo.
+ *
+ * Serve a sbloccare il re-import del listone (§2), che si rifiuta di partire
+ * ad asta iniziata. Resta un soft delete come ogni altro annullamento: gli
+ * eventi restano nel log con `undone: true` e `redoEvent` li riporta indietro
+ * uno per uno.
+ */
+export function undoAll(events: readonly AssignmentEvent[]): AssignmentEvent[] {
+  return events.map((e) => (e.undone ? e : { ...e, undone: true }));
+}
+
 /** Ultimo evento attivo del log, quello che `Ctrl+Z` annulla (PRD §5.1). */
 export function lastActiveEvent(events: readonly AssignmentEvent[]): AssignmentEvent | null {
   for (let i = events.length - 1; i >= 0; i--) {

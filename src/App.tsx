@@ -7,6 +7,7 @@ import { FreeAgentsPanel } from './features/free/FreeAgentsPanel';
 import { GoalsPanel } from './features/goals/GoalsPanel';
 import { SettingsPanel } from './features/settings/SettingsPanel';
 import { ImportConfirm } from './features/settings/ImportConfirm';
+import { ListoneConfirm } from './features/settings/ListoneConfirm';
 
 type Tab = 'live' | 'teams' | 'free' | 'goals' | 'settings';
 
@@ -88,6 +89,7 @@ export function App(): JSX.Element {
       </main>
 
       <ImportConfirm />
+      <ListoneConfirm />
     </div>
   );
 }
