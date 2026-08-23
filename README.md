@@ -29,12 +29,6 @@ dimarco 60 mrc
 
 Nome, prezzo, sigla. Invio. L'acquisto è registrato, i crediti scalano, la rosa si aggiorna.
 
-> [!NOTE]
-> La versione 1.0 costruiva un modello di prezzo — quotazioni normalizzate, ricalibrazione
-> live, soglie di rilancio. **È stato eliminato per intero**: i prezzi variano troppo tra un
-> tavolo e l'altro perché una previsione derivata dal listone sia affidabile, e la precisione
-> che produceva era illusoria. Il valore si è spostato sulle informazioni che inserisci tu.
-
 ---
 
 ## Avvio
