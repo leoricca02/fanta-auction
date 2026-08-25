@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
+  BarChart3,
+  CornerUpRight,
+  Crosshair,
   Eye,
   Gem,
+  Goal,
   ListOrdered,
   Pencil,
   ShieldCheck,
@@ -19,7 +23,14 @@ import { TAGS } from '../../domain/types';
 import { lineupPlacement, makeLineupIndex } from '../../domain/lineup';
 import { isTarget } from '../../domain/objectives';
 import { makeTierIndex, tierOf } from '../../domain/tiers';
+import type { SeasonStats } from '../../domain/player-stats';
+import { formatAvg, formatPenalties, statsOf } from '../../domain/player-stats';
+import type { SetPiece, SpecialistRole } from '../../domain/specialists';
+import { makeSpecialistIndex, specialistLabel, specialistsOf } from '../../domain/specialists';
 import { TIER_BLOCKS } from '../../data/tiers';
+import { SPECIALIST_BLOCKS } from '../../data/specialists';
+import { STATS_SEASON } from '../../data/stats';
+import { STATS_INDEX } from '../../data/stats-index';
 import { useAppStore } from '../../store/appStore';
 import { Markdown } from '../goals/Markdown';
 import { cn } from '../../ui/cn';
@@ -38,7 +49,8 @@ import { TierBadge } from './TierBadge';
  * Vive qui, fuori da /features/live, perche' M3 la riusa nell'overlay `?`.
  *
  * **Le cifre della griglia sono tutte grezze** — QUOT., FVM, under, fascia
- * della guida. Non c'e' nessun "prezzo massimo consigliato" e non ci sara':
+ * della guida, e le statistiche della scorsa stagione, che sono misurate una
+ * per una. Non c'e' nessun "prezzo massimo consigliato" e non ci sara':
  * il modello di prezzo della 1.0 e' morto con la 1.0 (PRD §2), e una cifra
  * inventata accanto a quattro misurate sarebbe la piu' pericolosa delle cinque.
  */
@@ -62,6 +74,12 @@ const TAG_ICON: Readonly<Record<Tag, typeof Target>> = {
  * quindi non esiste una battuta che possa andare persa.
  */
 const NOTE_DEBOUNCE_MS = 250;
+
+/**
+ * Sotto questa soglia la fantamedia e' rumore e la scheda lo dice.
+ * Un terzo di campionato: meno di cosi' e' un campione, non una stagione.
+ */
+const FEW_MATCHES = 12;
 
 export interface PlayerCardProps {
   readonly player: Player;
@@ -123,6 +141,14 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
   // Le fasce dipendono solo dal listone: un re-import le ricalcola, nient'altro.
   const tierIndex = useMemo(() => makeTierIndex(players, TIER_BLOCKS), [players]);
   const tier = tierOf(player.id, tierIndex);
+  // L'aggancio e' per id: o e' lui, o non c'e'.
+  const stats = statsOf(player.id, STATS_INDEX);
+  // Come le fasce, dipende dal listone: cambia rosa, cambiano gli incarichi.
+  const specialistIndex = useMemo(
+    () => makeSpecialistIndex(players, SPECIALIST_BLOCKS),
+    [players],
+  );
+  const specialists = specialistsOf(player.id, specialistIndex);
 
   const target = isTarget(userData, player.id);
   const activeSlots = new Set(placement.slots.map((s) => s.slotId));
@@ -173,6 +199,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
         tier={tier}
         tag={note?.tag ?? null}
         target={target}
+        specialists={specialists}
       />
 
       {/* Griglia dei numeri: quattro cifre grezze, mono tabellare. */}
@@ -186,6 +213,10 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
         />
         <Stat label="under" value={player.under === 0 ? '—' : player.under} />
       </section>
+
+      <SpecialistSection roles={specialists} />
+
+      <SeasonSection player={player} stats={stats} />
 
       <section className="flex flex-col gap-1.5">
         <SectionTitle icon={<Star size={12} />}>Tag</SectionTitle>
@@ -361,6 +392,163 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
   );
 }
 
+const SET_PIECE_ICON: Readonly<Record<SetPiece, typeof Target>> = {
+  rigori: Crosshair,
+  punizioni: Goal,
+  corner: CornerUpRight,
+};
+
+/**
+ * Oltre il terzo posto la gerarchia e' teorica: la fonte elenca fino a sei
+ * nomi per i corner, ma il quinto non li batte mai. Il dato resta nel dataset,
+ * la scheda si ferma qui.
+ */
+const SPECIALIST_RANK_SHOWN = 3;
+
+/**
+ * Specialisti dei piazzati (SosFanta).
+ *
+ * La gerarchia e' tutto: il primo rigorista ha un bonus quasi garantito addosso,
+ * il terzo no. Percio' il primo posto e' acceso e gli altri sono spenti — la
+ * differenza si deve vedere prima di leggere il numero.
+ *
+ * La sezione sparisce del tutto quando non c'e' niente da dire: un riquadro
+ * vuoto in una scheda che si legge in cinque secondi e' peggio di nessun
+ * riquadro.
+ */
+function SpecialistSection({ roles }: { readonly roles: readonly SpecialistRole[] }): JSX.Element | null {
+  const shown = roles.filter((r) => r.rank <= SPECIALIST_RANK_SHOWN);
+  if (shown.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-1.5">
+      <SectionTitle icon={<Crosshair size={12} />}>Piazzati</SectionTitle>
+      <div className="flex flex-wrap gap-1">
+        {shown.map((role) => {
+          const Icon = SET_PIECE_ICON[role.kind];
+          const first = role.rank === 1;
+          return (
+            <Chip
+              key={role.kind}
+              icon={<Icon size={11} />}
+              className={cn(
+                first
+                  ? 'border-emerald-500/40 text-emerald-300'
+                  : 'border-white/[0.08] text-zinc-400',
+              )}
+            >
+              {specialistLabel(role)}
+            </Chip>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Statistiche della scorsa stagione (Fantacalcio.it).
+ *
+ * Tre casi, tutti e tre da dire ad alta voce: ha giocato, era in Serie A ma non
+ * ha mai preso un voto, non c'era. Il terzo non e' un buco della scheda — e' il
+ * neoacquisto dall'estero o il promosso dalla B, e sapere che non esiste uno
+ * storico e' esattamente quello che serve sapere prima di rilanciare.
+ *
+ * La fantamedia sta accanto alle presenze sempre, e sotto le dodici presenze la
+ * scheda dice apertamente che non significa granche': una fantamedia da 9 su
+ * tre partite e' la trappola piu' vecchia dell'asta.
+ */
+function SeasonSection({
+  player,
+  stats,
+}: {
+  readonly player: Player;
+  readonly stats: SeasonStats | null;
+}): JSX.Element {
+  const keeper = player.role === 'P';
+  return (
+    <section className="flex flex-col gap-1.5">
+      <SectionTitle
+        icon={<BarChart3 size={12} />}
+        right={
+          stats === null || stats.played === 0 ? undefined : (
+            <span className="text-[11px] text-zinc-500">
+              {stats.team !== player.team && <span className="text-amber-500/90">{stats.team} · </span>}
+              <span className="num">{stats.played}</span> presenze
+            </span>
+          )
+        }
+      >
+        Stagione {STATS_SEASON}
+      </SectionTitle>
+
+      {stats === null ? (
+        <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-3 text-center text-xs text-zinc-500">
+          In Serie A nel {STATS_SEASON} non ha giocato: nessuno storico su cui basarsi.
+        </p>
+      ) : stats.played === 0 ? (
+        <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-3 text-center text-xs text-zinc-500">
+          A referto con {stats.team} nel {STATS_SEASON}, ma senza mai prendere un voto.
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-2">
+            <Stat label="fantamedia" value={formatAvg(stats.fantaAvg)} accent="text-emerald-300" />
+            <Stat label="media voto" value={formatAvg(stats.avg)} />
+            <Stat label="presenze" value={stats.played} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-1">
+            {keeper ? (
+              <>
+                <MicroStat label="porte inviolate" value={stats.cleanSheets ?? '—'} />
+                <MicroStat label="gol subiti" value={stats.conceded} />
+                <MicroStat label="rigori parati" value={stats.penSaved} />
+              </>
+            ) : (
+              <>
+                <MicroStat label="gol" value={stats.goals} />
+                <MicroStat label="assist" value={stats.assists} />
+                {stats.penTaken > 0 && (
+                  <MicroStat label="rigori segn./tir." value={formatPenalties(stats)} />
+                )}
+              </>
+            )}
+            <MicroStat label="ammonizioni" value={stats.yellow} />
+            <MicroStat label="espulsioni" value={stats.red} />
+          </div>
+
+          {stats.played < FEW_MATCHES && (
+            <p className="text-[11px] text-amber-500/90">
+              Solo {stats.played} presenze: la fantamedia e’ un campione piccolo, non una stagione.
+            </p>
+          )}
+          {stats.role !== player.role && (
+            <p className="text-[11px] text-zinc-500">
+              Nel {STATS_SEASON} era di ruolo {stats.role}: le cifre sono di un altro mestiere.
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Riga minore delle statistiche: etichetta a sinistra, cifra a destra. */
+function MicroStat({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: React.ReactNode;
+}): JSX.Element {
+  return (
+    <div className="flex items-baseline justify-between gap-2 rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1">
+      <span className="truncate text-[11px] text-zinc-500">{label}</span>
+      <span className="num shrink-0 text-xs font-medium text-zinc-200">{value}</span>
+    </div>
+  );
+}
+
 /** Una cifra della griglia. `mono` spegne il font tabellare per i contenuti non numerici. */
 function Stat({
   label,
@@ -400,15 +588,25 @@ function QuickBadges({
   tier,
   tag,
   target,
+  specialists,
 }: {
   readonly placement: ReturnType<typeof lineupPlacement>;
   readonly tier: ReturnType<typeof tierOf>;
   readonly tag: Tag | null;
   readonly target: boolean;
+  readonly specialists: readonly SpecialistRole[];
 }): JSX.Element {
+  const penaltyTaker = specialists.some((r) => r.kind === 'rigori' && r.rank === 1);
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <LineupBadge status={placement.status} />
+
+      {/* Il fatto piu' pesante della scheda dopo lo stato di formazione. */}
+      {penaltyTaker && (
+        <Chip icon={<Crosshair size={11} />} className="border-emerald-500/40 text-emerald-300">
+          rigorista
+        </Chip>
+      )}
 
       {placement.status === 'TITOLARE' && (
         <Chip icon={<ShieldCheck size={11} />} className="border-emerald-500/30 text-emerald-400">

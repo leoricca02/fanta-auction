@@ -2,6 +2,9 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 
 import type { Player } from '../../domain/types';
+import { listFantaAvg } from '../../domain/player-stats';
+import { STATS_SEASON } from '../../data/stats';
+import { STATS_INDEX } from '../../data/stats-index';
 import { normalizeName } from '../../parse/listone';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
@@ -28,6 +31,10 @@ import { Kbd } from '../../ui/primitives';
  * digita, ristretta a chi corrisponde alla ricerca; oppure per intero con
  * `Tab`, per sfogliare la rosa quando il nome non lo si ricorda. Mai in cima e
  * mai a riposo, cosi' il flusso a raffica di Invii non cambia.
+ *
+ * In coda a ogni riga la fantamedia della scorsa stagione (in verde) e la
+ * QUOT.: compilando una formazione dire chi ha reso l'anno scorso e' meta' del
+ * lavoro. Il trattino e' "non ha giocato in Serie A", non uno zero.
  */
 
 export interface SlotPickerProps {
@@ -217,6 +224,12 @@ export function SlotPicker({
                     ●
                   </span>
                 )}
+                <span
+                  className="num w-10 shrink-0 text-right text-xs text-emerald-300/80"
+                  title={`Fantamedia ${STATS_SEASON}`}
+                >
+                  {listFantaAvg(player.id, STATS_INDEX) ?? '—'}
+                </span>
                 <span className="num w-8 shrink-0 text-right text-xs text-zinc-400">
                   {player.quot}
                 </span>

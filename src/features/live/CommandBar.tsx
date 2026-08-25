@@ -6,6 +6,9 @@ import type { Player, Role, Tag } from '../../domain/types';
 import { parseCommand } from '../../domain/command';
 import { isAmbiguous, normalizeQuery, searchInPhase } from '../../domain/search';
 import { lineupStatus, makeLineupIndex } from '../../domain/lineup';
+import { listFantaAvg } from '../../domain/player-stats';
+import { STATS_SEASON } from '../../data/stats';
+import { STATS_INDEX } from '../../data/stats-index';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
@@ -19,6 +22,10 @@ import { LineupBadge } from '../player/LineupBadge';
  * di formazione e la prima riga della nota: e' l'informazione che serve nei
  * cinque secondi della chiamata, e cercarla altrove costa piu' del tempo che
  * c'e'.
+ *
+ * Le due cifre in coda alla riga sono, nell'ordine, la fantamedia della scorsa
+ * stagione (in verde) e la QUOT. Il trattino al posto della fantamedia vuol
+ * dire che in Serie A l'anno scorso non ha giocato — non che ha fatto zero.
  *
  * Frecce per scegliere, Invio per confermare. Senza sigla mostra soltanto; con
  * la sigla assegna.
@@ -302,7 +309,13 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
                     status={lineupStatus(hit.player.id, hit.player.team, lineupIndex)}
                     compact
                   />
-                  <span className="num w-16 shrink-0 text-right text-xs text-zinc-400">
+                  <span
+                    className="num w-12 shrink-0 text-right text-xs text-emerald-300/80"
+                    title={`Fantamedia ${STATS_SEASON}`}
+                  >
+                    {listFantaAvg(hit.player.id, STATS_INDEX) ?? '—'}
+                  </span>
+                  <span className="num w-12 shrink-0 text-right text-xs text-zinc-400">
                     {hit.player.quot}
                   </span>
                   <span className="w-20 shrink-0 truncate text-right text-xs">

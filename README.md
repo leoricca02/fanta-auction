@@ -191,6 +191,57 @@ node scripts/build-tiers.mjs   # riscarica la guida e rigenera src/data/tiers.ts
 Lo script muore nominando la pagina se la guida introduce una fascia che `TIER_ORDER` non
 conosce o se il markup cambia: meglio nessun aggiornamento che un file monco.
 
+---
+
+### 📊 Le statistiche della scorsa stagione
+
+La scheda giocatore mostra come è andata davvero l'anno scorso in Serie A: **fantamedia**,
+media voto, presenze, e poi gol, assist e rigori segnati su calciati per chi gioca fuori dai
+pali, **porte inviolate**, gol subiti e rigori parati per i portieri. Cartellini per tutti.
+La fantamedia compare anche in coda a ogni riga della command bar e del picker delle
+formazioni, così durante la chiamata non serve aprire la scheda.
+
+L'aggancio è **per id**: la tabella delle statistiche pubblica lo stesso id di Fantacalcio.it
+che il listone mette nella colonna `#`, quindi non c'è nessun nome da normalizzare e nessuna
+omonimia da sciogliere. Sul listone 2026-27 aggancia 399 giocatori su 537: i restanti sono
+arrivi dall'estero e promossi dalla B, e per loro la scheda dice **"non ha giocato"** invece di
+mostrare degli zeri. Sotto le 12 presenze la scheda avvisa che quella fantamedia è un campione
+piccolo, non una stagione.
+
+```bash
+node scripts/build-stats.mjs   # riscarica le statistiche e rigenera src/data/stats.ts
+```
+
+Le porte inviolate non stanno nella tabella di riepilogo: lo script le conta giornata per
+giornata sulla pagina di ogni portiere e **verifica che presenze e gol subiti così ottenuti
+combacino col riepilogo**, così un cambio di markup non produce numeri plausibili e sbagliati.
+
+---
+
+### ⚽ Gli specialisti dei piazzati
+
+Chi calcia i **rigori**, le **punizioni** e i **corner**, squadra per squadra, con la gerarchia
+di SosFanta. Il primo rigorista ha un chip acceso in cima alla scheda, accanto allo stato di
+formazione: dopo "titolare" è il fatto più pesante che ci sia su un giocatore. Sotto, la sezione
+*Piazzati* elenca gli incarichi fino al terzo posto — oltre, la gerarchia è teorica.
+
+```bash
+node scripts/build-specialists.mjs   # rigenera src/data/specialists.ts
+```
+
+L'aggancio è per nome **dentro la rosa del club**, non sul listone intero: la fonte pubblica le
+gerarchie squadra per squadra, e venticinque candidati invece di cinquecento rendono il match
+per nome più sicuro di quello delle fasce. Se dentro la stessa rosa due giocatori condividono il
+cognome — la fonte scrive "Martinez", in casa Inter ce ne sono due — **nessuno dei due** prende
+il badge.
+
+Le punizioni e i corner sulla fonte sono elenchi ordinati, i rigoristi no: sono raccontati a
+parole. Per quelli lo script legge la rosa del club dal listone e cerca quali giocatori il testo
+cita, distinguendo il paragrafo *Primo* dalle *Note* — ed è il motivo per cui questo script,
+unico dei tre, va lanciato **dopo** aver aggiornato `data/lista_calciatori_classic.xlsx`.
+Stampa le sessanta righe di quello che ha capito prima di scrivere il file: un parser di prosa
+si verifica leggendolo.
+
 ### 🎯 Obiettivi
 
 Strategia in markdown semplice (titoli, elenchi, **grassetto**, *corsivo*, `codice`) e lista
@@ -270,7 +321,7 @@ aspettare settembre.
 src/
 ├── domain/      logica pura — reducer, formazioni, ricerca, statistiche, checklist, backup
 ├── parse/       parser difensivo del listone .xlsx
-├── data/        fasce SosFanta, generate da scripts/build-tiers.mjs
+├── data/        fasce SosFanta e statistiche Fantacalcio.it, generate da scripts/
 ├── store/       Zustand + Dexie
 ├── features/    live · teams · free · goals · player · settings
 └── export/      xlsx nativo · report · pdf
