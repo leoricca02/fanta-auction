@@ -20,18 +20,22 @@ export function ListoneConfirm(): JSX.Element | null {
   const harmless = !planTouchesUserData(pending.plan);
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-h-full w-full max-w-2xl overflow-y-auto rounded border border-neutral-700 bg-neutral-900 p-5">
-        <h2 className="text-base font-semibold text-neutral-100">
+    <div className="fixed inset-0 z-40 flex animate-fade-in items-center justify-center bg-black/60 p-4 backdrop-blur-md">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="glass max-h-full w-full max-w-2xl animate-pop-in overflow-y-auto rounded-2xl p-5 shadow-pop"
+      >
+        <h2 className="text-base font-semibold text-zinc-100">
           Sostituire il listone con “{pending.filename}”?
         </h2>
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-zinc-500">
           Niente è ancora stato scritto. Le note dei giocatori usciti vengono archiviate, non
           cancellate.
         </p>
 
         {harmless && (
-          <p className="mt-3 rounded border border-emerald-800 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
+          <p className="mt-3 rounded-lg border border-emerald-800 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
             Nessun tuo dato viene toccato: formazioni, note e obiettivi restano come sono.
           </p>
         )}
@@ -45,11 +49,11 @@ export function ListoneConfirm(): JSX.Element | null {
 
         {diff.quotChanged.length > 0 && (
           <Section title={`Quotazione variata oltre il 20% (${diff.quotChanged.length})`}>
-            <ul className="max-h-32 overflow-y-auto text-xs text-neutral-400">
+            <ul className="max-h-32 overflow-y-auto text-xs text-zinc-400">
               {diff.quotChanged.map((change) => (
                 <li key={change.player.id}>
                   {change.player.name}: {change.from} → {change.to}{' '}
-                  <span className={change.deltaPct > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  <span className={change.deltaPct > 0 ? 'text-emerald-400' : 'text-rose-400'}>
                     ({change.deltaPct > 0 ? '+' : ''}
                     {change.deltaPct.toFixed(0)}%)
                   </span>
@@ -64,11 +68,11 @@ export function ListoneConfirm(): JSX.Element | null {
             title={`${impact.removedWithData.length} usciti su cui avevi lavorato`}
             tone="warn"
           >
-            <ul className="max-h-40 overflow-y-auto text-xs text-neutral-300">
+            <ul className="max-h-40 overflow-y-auto text-xs text-zinc-300">
               {impact.removedWithData.map(({ player, reasons }) => (
                 <li key={player.id}>
-                  <span className="text-neutral-100">{player.name}</span>{' '}
-                  <span className="text-neutral-500">({player.team})</span>{' '}
+                  <span className="text-zinc-100">{player.name}</span>{' '}
+                  <span className="text-zinc-500">({player.team})</span>{' '}
                   <span className="text-amber-400">— {reasons.join(', ')}</span>
                 </li>
               ))}
@@ -81,11 +85,11 @@ export function ListoneConfirm(): JSX.Element | null {
             title={`${impact.teamChangedInLineup.length} schierati che hanno cambiato squadra`}
             tone="warn"
           >
-            <ul className="max-h-32 overflow-y-auto text-xs text-neutral-300">
+            <ul className="max-h-32 overflow-y-auto text-xs text-zinc-300">
               {impact.teamChangedInLineup.map((change) => (
                 <li key={change.player.id}>
                   {change.player.name}: {change.from} → {change.to}
-                  <span className="text-neutral-500"> — esce dalla formazione del {change.from}</span>
+                  <span className="text-zinc-500"> — esce dalla formazione del {change.from}</span>
                 </li>
               ))}
             </ul>
@@ -94,7 +98,7 @@ export function ListoneConfirm(): JSX.Element | null {
 
         {impact.lineupsTouched.length > 0 && (
           <Section title="Formazioni da ritoccare" tone="warn">
-            <p className="text-xs text-neutral-300">
+            <p className="text-xs text-zinc-300">
               {impact.lineupsTouched.join(', ')} —{' '}
               <strong className="text-amber-300">
                 {impact.slotsEmptied} slot {impact.slotsEmptied === 1 ? 'resterà vuoto' : 'resteranno vuoti'}
@@ -108,7 +112,7 @@ export function ListoneConfirm(): JSX.Element | null {
           <button
             type="button"
             onClick={cancelListoneImport}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800"
+            className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/[0.06]"
           >
             Annulla
           </button>
@@ -135,11 +139,11 @@ function Stat({
   readonly tone?: 'ok' | 'warn';
 }): JSX.Element {
   const color =
-    tone === 'ok' ? 'text-emerald-400' : tone === 'warn' ? 'text-amber-400' : 'text-neutral-100';
+    tone === 'ok' ? 'text-emerald-400' : tone === 'warn' ? 'text-amber-400' : 'text-zinc-100';
   return (
     <div>
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className={`text-lg tabular-nums ${color}`}>{value}</dd>
+      <dt className="text-xs text-zinc-500">{label}</dt>
+      <dd className={`text-lg num ${color}`}>{value}</dd>
     </div>
   );
 }
@@ -155,12 +159,12 @@ function Section({
 }): JSX.Element {
   return (
     <section
-      className={`mt-4 rounded border p-3 ${
-        tone === 'warn' ? 'border-amber-800 bg-amber-950/25' : 'border-neutral-800'
+      className={`mt-4 rounded-lg border p-3 ${
+        tone === 'warn' ? 'border-amber-800 bg-amber-950/25' : 'border-white/[0.08]'
       }`}
     >
       <h3
-        className={`text-xs font-medium ${tone === 'warn' ? 'text-amber-300' : 'text-neutral-400'}`}
+        className={`text-xs font-medium ${tone === 'warn' ? 'text-amber-300' : 'text-zinc-400'}`}
       >
         {title}
       </h3>

@@ -1,12 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
+/*
+ * Solo cio' che non si esprime con una utility Tailwind: reset del canvas,
+ * scrollbar sottili e i due componenti tipografici che ricorrono ovunque
+ * (`kbd` e le griglie numeriche). Tutto il resto sta nelle classi dei
+ * componenti, dove si legge accanto al markup che colora.
+ */
+
+html,
+body,
+#root {
   height: 100%;
 }
 
 body {
-  background: #0a0a0a;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #09090b;
+  color: rgb(228 228 231);
+  font-family: theme('fontFamily.sans');
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Le tabelle dell'asta sono lunghe: una scrollbar spessa mangia colonne. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(63 63 70) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgb(63 63 70);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(82 82 91);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  /* Tasto fisico: compare nella command bar, nei suggerimenti e nei footer. */
+  .kbd {
+    @apply inline-flex min-w-[1.25rem] items-center justify-center rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5
+      font-mono text-[10px] font-medium leading-none text-zinc-300 shadow-sm;
+  }
+
+  /* Ogni cifra critica dell'asta: nessun layout shift mentre il prezzo sale. */
+  .num {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+
+  /* Vetro delle card e dei pannelli. */
+  .glass {
+    @apply border border-white/[0.08] bg-zinc-900/60 backdrop-blur-xl;
+  }
+}
+
+@layer utilities {
+  /* Le frecce dello spinner numerico rubano larghezza al prezzo. */
+  .no-spin::-webkit-outer-spin-button,
+  .no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .no-spin {
+    -moz-appearance: textfield;
+  }
+}
+
+/* Chi ha chiesto meno movimento non deve subire i layout transition. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

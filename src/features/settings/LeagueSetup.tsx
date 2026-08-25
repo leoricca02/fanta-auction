@@ -46,17 +46,17 @@ export function LeagueSetup(): JSX.Element {
   );
 
   return (
-    <section className="rounded border border-neutral-800 p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+    <section className="rounded-lg border border-white/[0.08] p-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
         Partecipanti
       </h2>
-      <p className="mt-1 text-sm text-neutral-500">
+      <p className="mt-1 text-sm text-zinc-500">
         Nomi e sigle dei 12. La sigla è di 3 lettere e serve alla command bar:{' '}
-        <code className="text-neutral-300">dimarco 60 mrc</code>.
+        <code className="text-zinc-300">dimarco 60 mrc</code>.
       </p>
 
       {eventsCount > 0 && (
-        <p className="mt-2 rounded border border-neutral-700 px-2 py-1 text-xs text-neutral-400">
+        <p className="mt-2 rounded-lg border border-white/[0.12] px-2 py-1 text-xs text-zinc-400">
           Ci sono già {eventsCount} assegnazioni registrate. Rinominare una squadra o cambiarne la
           sigla non le tocca: restano agganciate alla <em>riga</em> di questo elenco, non al nome.
           Non riordinare le righe.
@@ -80,18 +80,18 @@ export function LeagueSetup(): JSX.Element {
               value={row.name}
               onChange={(e) => update(i, { name: e.target.value })}
               placeholder={`Squadra ${i + 1}`}
-              className="flex-1 rounded bg-neutral-900 px-2 py-1 text-sm text-neutral-100 outline-none ring-1 ring-neutral-800"
+              className="flex-1 rounded bg-white/[0.03] px-2 py-1 text-sm text-zinc-100 outline-none ring-1 ring-zinc-800"
             />
             <input
               value={row.abbr}
               onChange={(e) => update(i, { abbr: e.target.value.slice(0, 3) })}
               maxLength={3}
               placeholder="sig"
-              className={`w-16 rounded bg-neutral-900 px-2 py-1 text-center text-sm uppercase text-neutral-100 outline-none ring-1 ${
+              className={`w-16 rounded bg-white/[0.03] px-2 py-1 text-center text-sm uppercase text-zinc-100 outline-none ring-1 ${
                 duplicates.has(row.abbr.trim().toLowerCase())
                   ? 'ring-red-600'
                   : row.abbr.trim().length === 3
-                    ? 'ring-neutral-800'
+                    ? 'ring-zinc-800'
                     : 'ring-amber-700'
               }`}
             />
@@ -99,7 +99,7 @@ export function LeagueSetup(): JSX.Element {
         ))}
       </ol>
 
-      {error !== null && <p className="mt-2 text-xs text-red-400">{error}</p>}
+      {error !== null && <p className="mt-2 text-xs text-rose-400">{error}</p>}
       {saved && <p className="mt-2 text-xs text-emerald-400">Salvato.</p>}
 
       <button

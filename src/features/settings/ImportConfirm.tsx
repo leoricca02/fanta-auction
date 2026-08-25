@@ -23,31 +23,35 @@ export function ImportConfirm(): JSX.Element | null {
   ];
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-h-full w-full max-w-lg overflow-y-auto rounded border border-neutral-700 bg-neutral-900 p-5">
-        <h2 className="text-base font-semibold text-neutral-100">
+    <div className="fixed inset-0 z-40 flex animate-fade-in items-center justify-center bg-black/60 p-4 backdrop-blur-md">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="glass max-h-full w-full max-w-lg animate-pop-in overflow-y-auto rounded-2xl p-5 shadow-pop"
+      >
+        <h2 className="text-base font-semibold text-zinc-100">
           Importare “{pending.filename}”?
         </h2>
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-zinc-500">
           Niente e' ancora stato scritto. Questa e' l'anteprima del risultato.
         </p>
 
         <table className="mt-4 w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+            <tr className="text-left text-xs uppercase tracking-wide text-zinc-500">
               <th className="pb-1">Collezione</th>
               <th className="pb-1 text-right">Nuovi</th>
               <th className="pb-1 text-right">Aggiornati</th>
               <th className="pb-1 text-right">Saltati</th>
             </tr>
           </thead>
-          <tbody className="text-neutral-300">
+          <tbody className="text-zinc-300">
             {rows.map(([label, s]) => (
               <tr key={label}>
                 <td className="py-0.5">{label}</td>
-                <td className="py-0.5 text-right tabular-nums">{s.untouched ? '—' : s.added}</td>
-                <td className="py-0.5 text-right tabular-nums">{s.untouched ? '—' : s.updated}</td>
-                <td className="py-0.5 text-right tabular-nums text-amber-400">
+                <td className="py-0.5 text-right num">{s.untouched ? '—' : s.added}</td>
+                <td className="py-0.5 text-right num">{s.untouched ? '—' : s.updated}</td>
+                <td className="py-0.5 text-right num text-amber-400">
                   {s.untouched ? '—' : s.skipped}
                 </td>
               </tr>
@@ -62,12 +66,12 @@ export function ImportConfirm(): JSX.Element | null {
         </table>
 
         {summary.skippedRecords.length > 0 && (
-          <div className="mt-4 rounded border border-neutral-800 p-3">
+          <div className="mt-4 rounded-lg border border-white/[0.08] p-3">
             <p className="text-xs font-medium text-amber-400">
               {summary.skippedRecords.length} record del file sono piu' vecchi di quelli che hai
               gia': restano i tuoi.
             </p>
-            <ul className="mt-1 max-h-24 overflow-y-auto text-xs text-neutral-500">
+            <ul className="mt-1 max-h-24 overflow-y-auto text-xs text-zinc-500">
               {summary.skippedRecords.map((r) => (
                 <li key={`${r.collection}:${r.key}`}>
                   {r.collection} · {r.key}
@@ -78,18 +82,18 @@ export function ImportConfirm(): JSX.Element | null {
         )}
 
         {conflicts.rejectedCount > 0 && (
-          <div className="mt-4 rounded border border-red-900 bg-red-950/30 p-3">
-            <p className="text-sm font-medium text-red-300">
+          <div className="mt-4 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3">
+            <p className="text-sm font-medium text-rose-300">
               {conflicts.rejectedCount}{' '}
               {conflicts.rejectedCount === 1 ? 'evento verra scartato' : 'eventi verranno scartati'}{' '}
               dal ricalcolo dello stato di lega.
             </p>
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-xs text-zinc-400">
               {conflicts.fromFile} dal file, {conflicts.fromCurrent} gia' presenti. Restano tutti
               nel log: nessun dato viene perso.
             </p>
             {conflicts.newlyRejected.length > 0 && (
-              <p className="mt-2 text-xs font-medium text-red-300">
+              <p className="mt-2 text-xs font-medium text-rose-300">
                 Attenzione: {conflicts.newlyRejected.length}{' '}
                 {conflicts.newlyRejected.length === 1
                   ? 'assegnazione che oggi e valida smettera di esserlo'
@@ -97,7 +101,7 @@ export function ImportConfirm(): JSX.Element | null {
                 .
               </p>
             )}
-            <ul className="mt-2 max-h-32 overflow-y-auto text-xs text-neutral-400">
+            <ul className="mt-2 max-h-32 overflow-y-auto text-xs text-zinc-400">
               {conflicts.rejected.map((r) => (
                 <li key={r.eventId}>· {r.detail}</li>
               ))}
@@ -109,7 +113,7 @@ export function ImportConfirm(): JSX.Element | null {
           <button
             type="button"
             onClick={cancelImport}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800"
+            className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/[0.06]"
           >
             Annulla
           </button>

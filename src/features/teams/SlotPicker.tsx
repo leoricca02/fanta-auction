@@ -1,7 +1,11 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Search } from 'lucide-react';
 
 import type { Player } from '../../domain/types';
 import { normalizeName } from '../../parse/listone';
+import { cn } from '../../ui/cn';
+import { roleTheme } from '../../ui/roles';
+import { Kbd } from '../../ui/primitives';
 
 /**
  * Picker di uno slot (PRD §5.2).
@@ -133,17 +137,23 @@ export function SlotPicker({
 
   return (
     <div
-      className="flex w-80 shrink-0 flex-col rounded border border-neutral-700 bg-neutral-900"
+      className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-white/[0.1] bg-zinc-900/80 shadow-pop backdrop-blur-xl"
       onKeyDown={handleKey}
     >
-      <div className="flex items-center gap-2 border-b border-neutral-800 p-2">
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={`${label} — digita per filtrare`}
-          className="min-w-0 flex-1 rounded bg-neutral-800 px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
-        />
+      <div className="flex items-center gap-2 border-b border-white/[0.08] p-2">
+        <div className="relative min-w-0 flex-1">
+          <Search
+            size={13}
+            className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500"
+          />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={`${label} — digita per filtrare`}
+            className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] py-1 pl-7 pr-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+          />
+        </div>
         <button
           type="button"
           tabIndex={-1}
@@ -154,11 +164,12 @@ export function SlotPicker({
             inputRef.current?.focus();
           }}
           title="Mostra tutta la rosa, ruoli compresi quelli non compatibili (Tab)"
-          className={`shrink-0 rounded px-2 py-1 text-[11px] ${
+          className={cn(
+            'shrink-0 rounded-lg border px-2 py-1 text-[11px] transition-colors',
             showAll
-              ? 'bg-amber-800/70 text-amber-100'
-              : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200'
-          }`}
+              ? 'border-amber-500/40 bg-amber-500/15 text-amber-200'
+              : 'border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:text-zinc-200',
+          )}
         >
           tutta la rosa
         </button>
@@ -168,7 +179,7 @@ export function SlotPicker({
         {visible.map((player, i) => (
           <Fragment key={player.id}>
             {i === inRole.length && (
-              <li className="border-t border-neutral-800 px-2 pb-0.5 pt-2 text-[11px] uppercase tracking-wide text-amber-600/90">
+              <li className="border-t border-white/[0.08] px-2 pb-0.5 pt-2 text-[11px] uppercase tracking-wider text-amber-500/90">
                 Fuori ruolo — {label} non e' il loro ruolo di listino
               </li>
             )}
@@ -179,24 +190,34 @@ export function SlotPicker({
                 tabIndex={-1}
                 onMouseEnter={() => setIndex(i)}
                 onClick={(e) => onPick(player.id, e.shiftKey)}
-                className={`flex w-full items-baseline gap-2 px-2 py-1 text-left text-sm ${
-                  i === index ? 'bg-emerald-800/60' : 'hover:bg-neutral-800'
-                }`}
+                className={cn(
+                  'relative flex w-full items-baseline gap-2 px-2 py-1 text-left text-sm transition-colors',
+                  i === index ? 'bg-white/[0.07]' : 'hover:bg-white/[0.03]',
+                )}
               >
+                {i === index && (
+                  <span
+                    className={cn(
+                      'absolute inset-y-0 left-0 w-0.5 rounded-full',
+                      roleTheme(player.role).bar,
+                    )}
+                  />
+                )}
                 <span
-                  className={`w-6 shrink-0 text-xs ${
-                    i >= inRole.length ? 'font-semibold text-amber-500' : 'text-neutral-500'
-                  }`}
+                  className={cn(
+                    'w-6 shrink-0 text-xs font-semibold',
+                    i >= inRole.length ? 'text-amber-400' : roleTheme(player.role).text,
+                  )}
                 >
                   {player.role}
                 </span>
-                <span className="flex-1 truncate text-neutral-100">{player.name}</span>
+                <span className="flex-1 truncate text-zinc-100">{player.name}</span>
                 {usedIds.has(player.id) && (
-                  <span className="shrink-0 text-xs text-amber-500" title="gia' schierato altrove">
+                  <span className="shrink-0 text-xs text-amber-400" title="gia' schierato altrove">
                     ●
                   </span>
                 )}
-                <span className="w-8 shrink-0 text-right text-xs tabular-nums text-neutral-400">
+                <span className="num w-8 shrink-0 text-right text-xs text-zinc-400">
                   {player.quot}
                 </span>
               </button>
@@ -204,23 +225,32 @@ export function SlotPicker({
           </Fragment>
         ))}
         {visible.length === 0 && (
-          <li className="px-2 py-3 text-sm text-neutral-500">
+          <li className="px-2 py-3 text-sm text-zinc-500">
             {query === ''
               ? 'Nessun giocatore disponibile in questo club.'
               : 'Nessun giocatore, in nessun ruolo, corrisponde.'}
           </li>
         )}
         {outOfRole.length === 0 && !showAll && (
-          <li className="border-t border-neutral-800 px-2 py-1.5 text-[11px] text-neutral-600">
-            Cerca un nome, o premi <span className="text-neutral-400">Tab</span>, per schierare
-            qui chiunque altro della rosa.
+          <li className="border-t border-white/[0.08] px-2 py-1.5 text-[11px] text-zinc-600">
+            Cerca un nome, o premi <Kbd>Tab</Kbd>, per schierare qui chiunque altro della rosa.
           </li>
         )}
       </ul>
 
-      <div className="border-t border-neutral-800 px-2 py-1 text-[11px] text-neutral-500">
-        Invio assegna e passa oltre · Maiusc+Invio aggiunge il ballottaggio · Tab tutta la
-        rosa · Esc chiude
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/[0.08] px-2 py-1.5 text-[11px] text-zinc-500">
+        <span className="flex items-center gap-1">
+          <Kbd>Invio</Kbd> assegna e passa oltre
+        </span>
+        <span className="flex items-center gap-1">
+          <Kbd>⇧ Invio</Kbd> ballottaggio
+        </span>
+        <span className="flex items-center gap-1">
+          <Kbd>Tab</Kbd> tutta la rosa
+        </span>
+        <span className="flex items-center gap-1">
+          <Kbd>Esc</Kbd> chiude
+        </span>
       </div>
     </div>
   );

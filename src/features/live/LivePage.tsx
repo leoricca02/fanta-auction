@@ -1,12 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BarChart3,
+  History,
+  IdCard,
+  Redo2,
+  Target,
+  TriangleAlert,
+  Undo2,
+  Users,
+  Wallet,
+} from 'lucide-react';
 
-import type { Player } from '../../domain/types';
+import type { Player, Role } from '../../domain/types';
 import { PHASE_ORDER } from '../../domain/types';
 import { makePlayerIndex, maxBidAssoluto, reduce, teamState } from '../../domain/reducer';
 import { activePhase, computeFreeAgents, makeNoteIndex } from '../../domain/free-agents';
 import { computeReconciliation } from '../../domain/metrics';
 import { userTeam } from '../../domain/config';
 import { useAppStore } from '../../store/appStore';
+import { cn } from '../../ui/cn';
+import { roleTheme } from '../../ui/roles';
+import { EASE, Kbd, Meter, SectionTitle, SlideOver } from '../../ui/primitives';
 import { PlayerCard } from '../player/PlayerCard';
 import { FreeAgentsPanel } from '../free/FreeAgentsPanel';
 import { GoalsPanel } from '../goals/GoalsPanel';
@@ -109,8 +124,8 @@ export function LivePage(): JSX.Element {
 
   if (players.length === 0) {
     return (
-      <div className="p-8 text-sm text-neutral-400">
-        Carica prima il listone da <strong className="text-neutral-200">Impostazioni</strong>.
+      <div className="p-8 text-sm text-zinc-400">
+        Carica prima il listone da <strong className="text-zinc-200">Impostazioni</strong>.
       </div>
     );
   }
@@ -130,10 +145,8 @@ export function LivePage(): JSX.Element {
 
       <div className="flex min-h-0 flex-1">
         {me !== null && (
-          <section className="flex min-h-0 w-72 shrink-0 flex-col gap-2 overflow-y-auto border-r border-neutral-800 p-3">
-            <h2 className="text-xs uppercase tracking-wide text-neutral-500">
-              {teamState(state, me.id).teamId} — la tua rosa
-            </h2>
+          <section className="flex min-h-0 w-72 shrink-0 flex-col gap-3 overflow-y-auto border-r border-white/[0.08] bg-white/[0.01] p-3">
+            <SectionTitle icon={<Wallet size={12} />}>La tua rosa</SectionTitle>
             <MyRoster teamId={me.id} state={state} players={playerIndex} />
           </section>
         )}
@@ -147,16 +160,36 @@ export function LivePage(): JSX.Element {
             onPriceChange={setCurrentPrice}
           />
 
-          <nav className="flex flex-wrap items-center gap-1.5 text-[11px]">
-            <OverlayButton label="Scheda" hint="?" onClick={() => setOverlay('card')} />
-            <OverlayButton label="Obiettivi" hint="o" onClick={() => setOverlay('goals')} />
-            <OverlayButton label="Svincolati" hint="s" onClick={() => setOverlay('free')} />
-            <OverlayButton label="Statistiche" hint="t" onClick={() => setOverlay('stats')} />
-            <span className="ml-1 text-neutral-600">
-              <kbd>Ctrl+Z</kbd> annulla · <kbd>Ctrl+Shift+Z</kbd> ripristina
+          <nav className="flex flex-wrap items-center gap-1.5">
+            <OverlayButton
+              label="Scheda"
+              hint="?"
+              icon={<IdCard size={13} />}
+              onClick={() => setOverlay('card')}
+            />
+            <OverlayButton
+              label="Obiettivi"
+              hint="o"
+              icon={<Target size={13} />}
+              onClick={() => setOverlay('goals')}
+            />
+            <OverlayButton
+              label="Svincolati"
+              hint="s"
+              icon={<Users size={13} />}
+              onClick={() => setOverlay('free')}
+            />
+            <OverlayButton
+              label="Statistiche"
+              hint="t"
+              icon={<BarChart3 size={13} />}
+              onClick={() => setOverlay('stats')}
+            />
+            <span className="ml-auto flex items-center gap-1.5 text-[11px] text-zinc-600">
+              <Kbd>Ctrl Z</Kbd> annulla
+              <Kbd>Ctrl ⇧ Z</Kbd> ripristina
             </span>
           </nav>
-
 
           <RecentEvents />
         </section>
@@ -171,26 +204,18 @@ export function LivePage(): JSX.Element {
         />
       </div>
 
-      {overlay === 'card' && highlighted !== null && (
-        <OverlayShell onClose={closeOverlay}>
-          <PlayerCard player={highlighted} onClose={closeOverlay} />
-        </OverlayShell>
-      )}
-      {overlay === 'goals' && (
-        <OverlayShell onClose={closeOverlay}>
-          <GoalsPanel onClose={closeOverlay} />
-        </OverlayShell>
-      )}
-      {overlay === 'free' && (
-        <OverlayShell onClose={closeOverlay}>
-          <FreeAgentsPanel onClose={closeOverlay} />
-        </OverlayShell>
-      )}
-      {overlay === 'stats' && (
-        <OverlayShell onClose={closeOverlay}>
-          <StatsPanel onClose={closeOverlay} />
-        </OverlayShell>
-      )}
+      <SlideOver open={overlay === 'card' && highlighted !== null} onClose={closeOverlay}>
+        {highlighted !== null && <PlayerCard player={highlighted} onClose={closeOverlay} />}
+      </SlideOver>
+      <SlideOver open={overlay === 'goals'} onClose={closeOverlay}>
+        <GoalsPanel onClose={closeOverlay} />
+      </SlideOver>
+      <SlideOver open={overlay === 'free'} onClose={closeOverlay}>
+        <FreeAgentsPanel onClose={closeOverlay} />
+      </SlideOver>
+      <SlideOver open={overlay === 'stats'} onClose={closeOverlay}>
+        <StatsPanel onClose={closeOverlay} />
+      </SlideOver>
     </div>
   );
 }
@@ -199,45 +224,24 @@ export function LivePage(): JSX.Element {
 function OverlayButton({
   label,
   hint,
+  icon,
   onClick,
 }: {
   readonly label: string;
   readonly hint: string;
+  readonly icon: React.ReactNode;
   readonly onClick: () => void;
 }): JSX.Element {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded border border-neutral-800 bg-neutral-900/60 px-2 py-1 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-800 hover:text-neutral-100"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1.5 text-xs text-zinc-300 transition-colors hover:border-white/20 hover:bg-white/[0.06] hover:text-zinc-100"
     >
-      {label} <kbd className="text-neutral-500">{hint}</kbd>
+      <span className="text-zinc-500">{icon}</span>
+      {label}
+      <Kbd>{hint}</Kbd>
     </button>
-  );
-}
-
-function OverlayShell({
-  children,
-  onClose,
-}: {
-  readonly children: React.ReactNode;
-  readonly onClose: () => void;
-}): JSX.Element {
-  return (
-    <div
-      className="fixed inset-0 z-30 flex items-stretch justify-end bg-black/70"
-      onClick={onClose}
-    >
-      <div
-        className="flex max-h-full"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') onClose();
-        }}
-      >
-        {children}
-      </div>
-    </div>
   );
 }
 
@@ -255,38 +259,83 @@ function ReconciliationBar({
   readonly totalCredits: number;
   readonly slotsFilled: number;
   readonly totalSlots: number;
-  readonly phase: string | null;
+  readonly phase: Role | null;
   readonly free: Readonly<Record<string, number>>;
   readonly targets: Readonly<Record<string, number>>;
   readonly consistent: boolean;
 }): JSX.Element {
   return (
     <div
-      className={`flex shrink-0 flex-wrap items-center gap-4 border-b px-3 py-1.5 text-xs ${
-        consistent ? 'border-neutral-800 text-neutral-400' : 'border-red-800 bg-red-950/40 text-red-200'
-      }`}
+      className={cn(
+        'flex shrink-0 flex-wrap items-center gap-x-5 gap-y-1.5 border-b px-3 py-2 text-xs',
+        consistent
+          ? 'border-white/[0.08] bg-white/[0.01] text-zinc-400'
+          : 'animate-flash-err border-rose-500/30 bg-rose-500/10 text-rose-200',
+      )}
     >
-      <span>
-        Fase <strong className="text-neutral-100">{phase ?? 'conclusa'}</strong>
+      <span className="flex items-center gap-1.5">
+        <span className="text-zinc-500">Fase</span>
+        {phase === null ? (
+          <span className="font-semibold text-zinc-100">conclusa</span>
+        ) : (
+          <span
+            className={cn(
+              'rounded-md px-1.5 py-0.5 text-[11px] font-semibold',
+              roleTheme(phase).chip,
+            )}
+          >
+            {phase} · {roleTheme(phase).label}
+          </span>
+        )}
       </span>
-      <span className="tabular-nums">
-        crediti <strong className="text-neutral-100">{creditsSpent}</strong> / {totalCredits}
+
+      <span className="flex min-w-[9rem] items-center gap-2">
+        <span className="text-zinc-500">crediti</span>
+        <span className="num text-zinc-100">{creditsSpent}</span>
+        <span className="num text-zinc-600">/ {totalCredits}</span>
+        <Meter
+          value={totalCredits === 0 ? 0 : creditsSpent / totalCredits}
+          className="w-16"
+          fill="bg-emerald-500"
+        />
       </span>
-      <span className="tabular-nums">
-        slot <strong className="text-neutral-100">{slotsFilled}</strong> / {totalSlots}
+
+      <span className="flex min-w-[9rem] items-center gap-2">
+        <span className="text-zinc-500">slot</span>
+        <span className="num text-zinc-100">{slotsFilled}</span>
+        <span className="num text-zinc-600">/ {totalSlots}</span>
+        <Meter
+          value={totalSlots === 0 ? 0 : slotsFilled / totalSlots}
+          className="w-16"
+          fill="bg-zinc-400"
+        />
       </span>
-      <span className="text-neutral-500">
-        liberi:{' '}
+
+      <span className="flex items-center gap-2">
+        <span className="text-zinc-500">liberi</span>
         {PHASE_ORDER.map((role) => (
-          <span key={role} className="mr-2 tabular-nums">
+          <span
+            key={role}
+            className={cn(
+              'num inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px]',
+              roleTheme(role).chip,
+            )}
+            title={`${roleTheme(role).label}: ${free[role]} svincolati`}
+          >
             {role} {free[role]}
             {(targets[role] ?? 0) > 0 && (
-              <span className="text-emerald-400"> ({targets[role]}★)</span>
+              <span className="text-emerald-300">★{targets[role]}</span>
             )}
           </span>
         ))}
       </span>
-      {!consistent && <span className="font-medium">conti incoerenti — controlla il tabellone</span>}
+
+      {!consistent && (
+        <span className="flex items-center gap-1.5 font-medium">
+          <TriangleAlert size={13} />
+          conti incoerenti — controlla il tabellone
+        </span>
+      )}
     </div>
   );
 }
@@ -301,32 +350,95 @@ function MyRoster({
   readonly players: ReturnType<typeof makePlayerIndex>;
 }): JSX.Element {
   const t = teamState(state, teamId);
+  const maxBid = maxBidAssoluto(t);
+  /**
+   * Soglia di sicurezza: ogni slot ancora vuoto costa almeno un credito, e
+   * quello che avanza oltre quel minimo e' l'unica cifra con cui puoi davvero
+   * rilanciare. Quando il margine scende sotto un credito per slot vuoto la
+   * rosa si chiude da sola, anche se i crediti non sono finiti: e' il momento
+   * in cui conviene saperlo, non quello in cui arrivi a zero.
+   */
+  const cushion = t.credits - t.slotsFree;
+  const tight = t.slotsFree > 0 && cushion <= t.slotsFree;
+
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm tabular-nums text-neutral-300">
-        <strong className="text-2xl text-emerald-400">{t.credits}</strong> crediti ·{' '}
-        {t.slotsFree} slot liberi · max {maxBidAssoluto(t)}
-      </p>
-      {PHASE_ORDER.map((role) => (
-        <div key={role}>
-          <p className="text-[11px] uppercase tracking-wide text-neutral-500">
-            {role} {t.slotsFilledByRole[role]}/{t.slotsFilledByRole[role] + t.slotsFreeByRole[role]}
-          </p>
-          <ul className="mt-0.5">
-            {t.roster
-              .filter((entry) => entry.role === role)
-              .map((entry) => (
-                <li key={entry.playerId} className="flex justify-between gap-2 text-sm">
-                  <span className="truncate text-neutral-200">
-                    {players.get(entry.playerId)?.name ?? `#${entry.playerId}`}
-                  </span>
-                  <span className="shrink-0 tabular-nums text-neutral-500">{entry.price}</span>
-                </li>
-              ))}
-            {t.slotsFilledByRole[role] === 0 && <li className="text-sm text-neutral-700">—</li>}
-          </ul>
+      <div
+        className={cn(
+          'rounded-xl border p-3 transition-colors',
+          tight
+            ? 'border-amber-500/30 bg-amber-500/[0.07]'
+            : 'border-white/[0.08] bg-white/[0.02]',
+        )}
+      >
+        <div className="flex items-baseline gap-1.5">
+          <span
+            className={cn(
+              'num text-3xl font-bold leading-none',
+              tight ? 'text-amber-300' : 'text-emerald-400',
+            )}
+          >
+            {t.credits}
+          </span>
+          <span className="text-xs text-zinc-500">crediti</span>
         </div>
-      ))}
+        <div className="num mt-1 flex items-center gap-2 text-[11px] text-zinc-500">
+          <span>{t.slotsFree} slot liberi</span>
+          <span className="text-zinc-700">·</span>
+          <span>max bid {maxBid}</span>
+        </div>
+        {tight && (
+          <p className="mt-1.5 flex items-start gap-1.5 text-[11px] leading-snug text-amber-300/90">
+            <TriangleAlert size={12} className="mt-px shrink-0" />
+            Ti resta poco oltre il minimo di 1 credito per slot: da qui in avanti puoi rilanciare
+            su pochi nomi.
+          </p>
+        )}
+      </div>
+
+      {PHASE_ORDER.map((role) => {
+        const filled = t.slotsFilledByRole[role];
+        const total = filled + t.slotsFreeByRole[role];
+        const theme = roleTheme(role);
+        return (
+          <div key={role}>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'inline-flex h-4 w-4 items-center justify-center rounded text-[10px] font-bold',
+                  theme.chip,
+                )}
+              >
+                {role}
+              </span>
+              <span className="num text-[11px] text-zinc-500">
+                {filled}/{total}
+              </span>
+              <Meter
+                value={total === 0 ? 0 : filled / total}
+                fill={theme.bar}
+                className="ml-auto w-16"
+              />
+            </div>
+            <ul className="mt-1 flex flex-col">
+              {t.roster
+                .filter((entry) => entry.role === role)
+                .map((entry) => (
+                  <li
+                    key={entry.playerId}
+                    className="flex justify-between gap-2 rounded px-1 py-0.5 text-sm transition-colors hover:bg-white/[0.03]"
+                  >
+                    <span className="min-w-0 truncate text-zinc-200">
+                      {players.get(entry.playerId)?.name ?? `#${entry.playerId}`}
+                    </span>
+                    <span className="num shrink-0 text-zinc-500">{entry.price}</span>
+                  </li>
+                ))}
+              {filled === 0 && <li className="px-1 text-sm text-zinc-700">—</li>}
+            </ul>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -342,38 +454,52 @@ function RecentEvents(): JSX.Element {
   const recent = [...events].slice(-8).reverse();
 
   if (recent.length === 0) {
-    return <p className="text-xs text-neutral-600">Nessuna assegnazione registrata.</p>;
+    return (
+      <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-4 text-center text-xs text-zinc-600">
+        Nessuna assegnazione registrata.
+      </p>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
-      <h3 className="text-[11px] uppercase tracking-wide text-neutral-500">Ultime assegnazioni</h3>
-      <ul className="flex flex-col">
-        {recent.map((event) => (
-          <li
-            key={event.id}
-            className={`flex items-center gap-2 py-0.5 text-xs ${
-              event.undone ? 'text-neutral-600 line-through' : 'text-neutral-300'
-            }`}
-          >
-            <span className="min-w-0 flex-1 truncate">
-              {byId.get(event.playerId)?.name ?? `#${event.playerId}`}
-            </span>
-            <span className="w-10 shrink-0 uppercase text-neutral-500">
-              {teams.find((t) => t.id === event.teamId)?.abbr ?? event.teamId}
-            </span>
-            <span className="w-10 shrink-0 text-right tabular-nums">{event.price}</span>
-            <button
-              type="button"
-              onClick={() =>
-                void (event.undone ? redoAssignment(event.id) : undoAssignment(event.id))
-              }
-              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+    <div className="flex flex-col gap-1">
+      <SectionTitle icon={<History size={12} />}>Ultime assegnazioni</SectionTitle>
+      <ul className="flex flex-col overflow-hidden rounded-lg border border-white/[0.06]">
+        <AnimatePresence initial={false}>
+          {recent.map((event) => (
+            <motion.li
+              key={event.id}
+              layout
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18, ease: EASE }}
+              className={cn(
+                'flex items-center gap-2 px-2 py-1 text-xs transition-colors hover:bg-white/[0.03]',
+                event.undone ? 'text-zinc-600 line-through opacity-60' : 'text-zinc-300',
+              )}
             >
-              {event.undone ? 'ripristina' : 'annulla'}
-            </button>
-          </li>
-        ))}
+              <span className="min-w-0 flex-1 truncate">
+                {byId.get(event.playerId)?.name ?? `#${event.playerId}`}
+              </span>
+              <span className="w-10 shrink-0 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+                {teams.find((t) => t.id === event.teamId)?.abbr ?? event.teamId}
+              </span>
+              <span className="num w-10 shrink-0 text-right text-zinc-200">{event.price}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  void (event.undone ? redoAssignment(event.id) : undoAssignment(event.id))
+                }
+                title={event.undone ? 'Ripristina' : 'Annulla'}
+                className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-zinc-500 no-underline transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
+              >
+                {event.undone ? <Redo2 size={11} /> : <Undo2 size={11} />}
+                {event.undone ? 'ripristina' : 'annulla'}
+              </button>
+            </motion.li>
+          ))}
+        </AnimatePresence>
       </ul>
     </div>
   );

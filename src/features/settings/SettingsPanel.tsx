@@ -36,15 +36,15 @@ export function SettingsPanel(): JSX.Element {
         <div className="flex flex-col gap-6">
           <ReadinessCheck />
 
-          <section className="rounded border border-amber-800/60 bg-amber-950/20 p-4">
+          <section className="rounded-lg border border-amber-800/60 bg-amber-950/20 p-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-400">
               Backup dei dati
             </h2>
-            <p className="mt-1 text-sm text-neutral-400">
+            <p className="mt-1 text-sm text-zinc-400">
               Formazioni, note e obiettivi vivono in IndexedDB: una pulizia dati del browser li
               cancella senza avvisare. Scarica un backup ogni volta che finisci di lavorare.
             </p>
-            <p className="mt-2 text-sm text-neutral-300">
+            <p className="mt-2 text-sm text-zinc-300">
               Ultimo backup: <strong>{formatted(lastBackupAt)}</strong> · {userData.lineups.length}{' '}
               formazioni, {userData.teamNotes.length} note squadra, {userData.playerNotes.length}{' '}
               note giocatore
@@ -61,7 +61,7 @@ export function SettingsPanel(): JSX.Element {
               <button
                 type="button"
                 onClick={() => backupInput.current?.click()}
-                className="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
               >
                 Importa backup…
               </button>
@@ -79,11 +79,11 @@ export function SettingsPanel(): JSX.Element {
             </div>
           </section>
 
-          <section className="rounded border border-neutral-800 p-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+          <section className="rounded-lg border border-white/[0.08] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
               Export
             </h2>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-zinc-500">
               {eventsCount === 0
                 ? 'Nessuna assegnazione registrata: i file usciranno con le colonne vuote.'
                 : `${eventsCount} assegnazioni nel log.`}
@@ -100,30 +100,30 @@ export function SettingsPanel(): JSX.Element {
               <button
                 type="button"
                 onClick={() => void exportReportXlsx()}
-                className="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
               >
                 .xlsx report
               </button>
               <button
                 type="button"
                 onClick={() => void exportPdf()}
-                className="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
               >
                 .pdf rose
               </button>
             </div>
           </section>
 
-          <section className="rounded border border-neutral-800 p-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+          <section className="rounded-lg border border-white/[0.08] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
               Listone
             </h2>
-            <p className="mt-1 text-sm text-neutral-400">
+            <p className="mt-1 text-sm text-zinc-400">
               {listone === null ? (
                 <>Nessun listone caricato.</>
               ) : (
                 <>
-                  <strong className="text-neutral-200">{listone.filename}</strong> ·{' '}
+                  <strong className="text-zinc-200">{listone.filename}</strong> ·{' '}
                   {listone.count} giocatori · caricato il {formatted(listone.importedAt)}
                 </>
               )}
@@ -133,7 +133,7 @@ export function SettingsPanel(): JSX.Element {
               <button
                 type="button"
                 onClick={() => listoneInput.current?.click()}
-                className="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
               >
                 Carica .xlsx…
               </button>
@@ -181,7 +181,7 @@ function ResetAuction(): JSX.Element | null {
   if (active === 0) return null;
 
   return (
-    <div className="mt-4 rounded border border-amber-800/60 bg-amber-950/20 p-3">
+    <div className="mt-4 rounded-lg border border-amber-800/60 bg-amber-950/20 p-3">
       <p className="text-xs text-amber-200">
         {active} assegnazioni attive. Il re-import del listone resta bloccato finché ce ne sono:
         cambiare il listone ad asta iniziata invaliderebbe l’event log.
@@ -205,7 +205,7 @@ function ResetAuction(): JSX.Element | null {
           <button
             type="button"
             onClick={() => setArming(false)}
-            className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-zinc-300 hover:bg-white/[0.06]"
           >
             No
           </button>
@@ -215,14 +215,14 @@ function ResetAuction(): JSX.Element | null {
           <button
             type="button"
             onClick={() => setArming(true)}
-            className="rounded border border-amber-700 px-3 py-1 text-xs text-amber-200 hover:bg-amber-900/40"
+            className="rounded-lg border border-amber-700 px-3 py-1 text-xs text-amber-200 hover:bg-amber-900/40"
           >
             Annulla tutte le assegnazioni
           </button>
           <button
             type="button"
             onClick={() => void downloadBackup()}
-            className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-zinc-300 hover:bg-white/[0.06]"
           >
             Scarica prima un backup
           </button>
@@ -261,11 +261,11 @@ function DangerZone(): JSX.Element {
   const vuoto = cose.length === 0;
 
   return (
-    <section className="rounded border border-red-900/70 p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-red-400">
+    <section className="rounded-lg border border-rose-500/30/70 p-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-rose-400">
         Ricomincia da capo
       </h2>
-      <p className="mt-1 text-sm text-neutral-400">
+      <p className="mt-1 text-sm text-zinc-400">
         {vuoto
           ? 'Non c’è niente da cancellare: l’app è già come appena installata.'
           : 'Cancella tutto e riporta l’app allo stato di prima apertura. Non si annulla.'}
@@ -273,7 +273,7 @@ function DangerZone(): JSX.Element {
 
       {!vuoto && (
         <>
-          <ul className="mt-2 list-inside list-disc text-xs text-neutral-400">
+          <ul className="mt-2 list-inside list-disc text-xs text-zinc-400">
             {cose.map((c) => (
               <li key={c}>{c}</li>
             ))}
@@ -281,7 +281,7 @@ function DangerZone(): JSX.Element {
 
           {arming ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-red-300">
+              <span className="text-xs font-medium text-rose-300">
                 Confermi? Tutto quello che c’è qui sopra sparisce.
               </span>
               <button
@@ -290,14 +290,14 @@ function DangerZone(): JSX.Element {
                   void resetEverything();
                   setArming(false);
                 }}
-                className="rounded bg-red-800 px-3 py-1 text-xs text-white hover:bg-red-700"
+                className="rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-zinc-950 transition-colors hover:bg-rose-400"
               >
                 Sì, cancella tutto
               </button>
               <button
                 type="button"
                 onClick={() => setArming(false)}
-                className="rounded border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+                className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-zinc-300 hover:bg-white/[0.06]"
               >
                 No
               </button>
@@ -307,14 +307,14 @@ function DangerZone(): JSX.Element {
               <button
                 type="button"
                 onClick={() => void downloadBackup()}
-                className="rounded border border-amber-700 px-3 py-1 text-xs text-amber-200 hover:bg-amber-900/40"
+                className="rounded-lg border border-amber-700 px-3 py-1 text-xs text-amber-200 hover:bg-amber-900/40"
               >
                 Scarica prima un backup
               </button>
               <button
                 type="button"
                 onClick={() => setArming(true)}
-                className="rounded border border-red-800 px-3 py-1 text-xs text-red-300 hover:bg-red-950/50"
+                className="rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs text-rose-300 transition-colors hover:bg-rose-500/10"
               >
                 Cancella tutto
               </button>

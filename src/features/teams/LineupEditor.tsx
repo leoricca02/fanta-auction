@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { ListChecks } from 'lucide-react';
 
 import type { Lineup, LineupSlot, Player, Role } from '../../domain/types';
 import {
@@ -15,6 +16,7 @@ import {
 } from '../../domain/modules';
 import { duplicatedCandidates } from '../../domain/lineup';
 import { offRoleCandidates, slotCandidates } from '../../domain/free-agents';
+import { cn } from '../../ui/cn';
 import { SlotPicker } from './SlotPicker';
 
 /**
@@ -174,12 +176,12 @@ export function LineupEditor({
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
       <header className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-neutral-100">{teamCode}</h2>
+        <h2 className="text-xl font-bold tracking-tight text-zinc-100">{teamCode}</h2>
 
         <select
           value={current.module}
           onChange={(e) => void handleModule(e.target.value)}
-          className="rounded bg-neutral-800 px-2 py-1 text-sm text-neutral-100"
+          className="num rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-sm text-zinc-100 outline-none transition-colors hover:border-white/20 focus:border-emerald-500/50"
           aria-label="Modulo"
         >
           {MODULE_NAMES.map((name) => (
@@ -189,21 +191,22 @@ export function LineupEditor({
           ))}
         </select>
 
-        <span className="text-sm tabular-nums text-neutral-400">
+        <span className="num text-sm text-zinc-400">
           {filled}/{current.slots.length} slot
         </span>
 
         <button
           type="button"
           onClick={() => openPicker(firstEmptySlot(current))}
-          className="rounded bg-emerald-700 px-3 py-1 text-sm text-white hover:bg-emerald-600"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-zinc-950 shadow-glow-emerald transition-colors hover:bg-emerald-400"
         >
+          <ListChecks size={14} />
           Compila dal primo slot vuoto
         </button>
       </header>
 
       {dropped.length > 0 && (
-        <p className="rounded border border-amber-800 bg-amber-950/40 px-3 py-1.5 text-xs text-amber-200">
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">
           Fuori dal nuovo modulo: {dropped.join(', ')}
           <button type="button" onClick={() => setDropped([])} className="ml-2 underline opacity-70">
             ok
@@ -251,7 +254,7 @@ export function LineupEditor({
       </div>
 
       <label className="mt-2 flex flex-col gap-1">
-        <span className="text-xs uppercase tracking-wide text-neutral-500">Nota squadra</span>
+        <span className="text-[11px] uppercase tracking-wider text-zinc-500">Nota squadra</span>
         <textarea
           value={noteDraft}
           onChange={(e) => setNoteDraft(e.target.value)}
@@ -260,7 +263,7 @@ export function LineupEditor({
           }}
           rows={3}
           placeholder="Come gioca, chi e' in dubbio, chi sta per partire..."
-          className="rounded bg-neutral-800 px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-600"
+          className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
         />
       </label>
     </section>
@@ -308,9 +311,10 @@ function SlotRow({
   return (
     <li className="flex items-center gap-2">
       <span
-        className={`w-10 shrink-0 text-xs font-medium ${
-          active ? 'text-emerald-400' : 'text-neutral-500'
-        }`}
+        className={cn(
+          'w-10 shrink-0 text-xs font-semibold uppercase tracking-wide',
+          active ? 'text-emerald-400' : 'text-zinc-500',
+        )}
       >
         {slot.roleLabel}
       </span>
@@ -331,30 +335,36 @@ function SlotRow({
             onClear();
           }
         }}
-        className={`flex min-h-[30px] flex-1 items-center gap-1 rounded border px-2 py-1 text-left text-sm ${
+        className={cn(
+          'flex min-h-[32px] flex-1 items-center gap-1 rounded-lg border px-2 py-1 text-left text-sm transition-colors',
           active
-            ? 'border-emerald-500 bg-neutral-800'
+            ? 'border-emerald-500/60 bg-emerald-500/[0.07] shadow-glow-emerald'
             : slot.candidates.length === 0
-              ? 'border-dashed border-neutral-700 text-neutral-600'
-              : 'border-neutral-700 bg-neutral-800/60 text-neutral-100'
-        } focus:border-emerald-500 focus:outline-none`}
+              ? 'border-dashed border-white/[0.12] text-zinc-600 hover:border-white/25'
+              : 'border-white/[0.08] bg-white/[0.03] text-zinc-100 hover:border-white/20',
+          'focus:border-emerald-500/60 focus:outline-none',
+        )}
       >
         {slot.candidates.length === 0 ? (
-          <span className="text-neutral-600">vuoto</span>
+          <span className="text-zinc-600">vuoto</span>
         ) : (
           slot.candidates.map((id) => (
             <span
               key={id}
-              className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs ${
-                contested ? 'bg-amber-900/60 text-amber-100' : 'bg-emerald-900/60 text-emerald-100'
-              } ${duplicated.has(id) ? 'ring-1 ring-red-500' : ''}`}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs',
+                contested
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
+                duplicated.has(id) && 'ring-1 ring-rose-500',
+              )}
             >
               {(() => {
                 const role = byId.get(id)?.role;
                 if (role === undefined || allowed.has(role)) return null;
                 return (
                   <span
-                    className="shrink-0 rounded bg-amber-800/70 px-1 text-[10px] font-semibold text-amber-100"
+                    className="shrink-0 rounded border border-amber-500/40 bg-amber-500/15 px-1 text-[10px] font-semibold text-amber-200"
                     title={`Listato ${role}, schierato qui fuori ruolo`}
                   >
                     {role}
@@ -381,14 +391,18 @@ function SlotRow({
                   e.stopPropagation();
                   onRemove(id);
                 }}
-                className="cursor-pointer text-neutral-400 hover:text-white"
+                className="cursor-pointer text-zinc-500 transition-colors hover:text-zinc-100"
               >
                 ×
               </span>
             </span>
           ))
         )}
-        {contested && <span className="ml-auto text-[11px] text-amber-400">ballottaggio</span>}
+        {contested && (
+          <span className="ml-auto shrink-0 text-[11px] font-medium text-amber-400">
+            ballottaggio
+          </span>
+        )}
       </button>
 
       <input
@@ -398,7 +412,7 @@ function SlotRow({
           if (noteDraft !== slot.note) onNote(noteDraft);
         }}
         placeholder="nota"
-        className="w-40 shrink-0 rounded bg-neutral-900 px-2 py-1 text-xs text-neutral-300 outline-none placeholder:text-neutral-700"
+        className="w-40 shrink-0 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2 py-1 text-xs text-zinc-300 outline-none transition-colors placeholder:text-zinc-700 focus:border-emerald-500/40"
       />
     </li>
   );

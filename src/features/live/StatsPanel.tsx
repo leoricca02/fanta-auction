@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ArrowDown, BarChart3 } from 'lucide-react';
 
 import type { LineupStatus, Role } from '../../domain/types';
 import { PHASE_ORDER } from '../../domain/types';
@@ -8,6 +9,9 @@ import { userTeam } from '../../domain/config';
 import type { Deal, TeamSortKey, TeamStats } from '../../domain/stats';
 import { compareTeamStats, computeAuctionStats } from '../../domain/stats';
 import { useAppStore } from '../../store/appStore';
+import { cn } from '../../ui/cn';
+import { roleTheme } from '../../ui/roles';
+import { CloseButton, RoleBadge, SectionTitle } from '../../ui/primitives';
 
 /**
  * L'asta in numeri — overlay `t`.
@@ -32,8 +36,8 @@ import { useAppStore } from '../../store/appStore';
 const STATUS_FILL: Readonly<Record<LineupStatus, string>> = {
   TITOLARE: 'bg-emerald-500',
   BALLOTTAGGIO: 'bg-amber-500',
-  PANCHINA: 'bg-neutral-400',
-  NON_INSERITO: 'bg-neutral-600',
+  PANCHINA: 'bg-zinc-400',
+  NON_INSERITO: 'bg-zinc-600',
 };
 
 const STATUS_LABEL: Readonly<Record<LineupStatus, string>> = {
@@ -74,11 +78,11 @@ function heatVerdict(heat: number | null, slotsFilled: number): {
   readonly text: string;
   readonly tone: string;
 } {
-  if (heat === null) return { text: 'non ancora partita', tone: 'text-neutral-500' };
-  if (slotsFilled < 10) return { text: 'troppo presto per dirlo', tone: 'text-neutral-400' };
+  if (heat === null) return { text: 'non ancora partita', tone: 'text-zinc-500' };
+  if (slotsFilled < 10) return { text: 'troppo presto per dirlo', tone: 'text-zinc-400' };
   if (heat >= 1.15) return { text: 'si sta pagando caro', tone: 'text-amber-400' };
   if (heat <= 0.85) return { text: 'il tavolo tiene i crediti', tone: 'text-emerald-400' };
-  return { text: 'andamento regolare', tone: 'text-neutral-300' };
+  return { text: 'andamento regolare', tone: 'text-zinc-300' };
 }
 
 export interface StatsPanelProps {
@@ -126,28 +130,30 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
 
   return (
     <div
-      className={`flex flex-col gap-4 overflow-y-auto bg-neutral-950 p-4 ${
-        embedded ? 'min-h-0 flex-1' : 'h-full w-[68rem] max-w-full border-l border-neutral-800'
-      }`}
+      className={cn(
+        'flex flex-col gap-4 overflow-y-auto bg-zinc-950/80 p-4 backdrop-blur-xl',
+        embedded ? 'min-h-0 flex-1' : 'h-full w-[68rem] max-w-full border-l border-white/[0.08]',
+      )}
     >
-      <header className="flex items-baseline gap-3">
-        <h2 className="text-base font-semibold text-neutral-100">L&apos;asta in numeri</h2>
-        <span className="text-xs text-neutral-500">
+      <header className="flex items-center gap-3">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-zinc-300">
+          <BarChart3 size={15} />
+        </span>
+        <h2 className="text-base font-semibold tracking-tight text-zinc-100">
+          L&apos;asta in numeri
+        </h2>
+        <span className="num text-xs text-zinc-500">
           {market.slotsFilled} di {market.totalSlots} slot assegnati
         </span>
         {onClose !== undefined && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="ml-auto rounded px-2 py-1 text-xs text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
-          >
-            Esc
-          </button>
+          <span className="ml-auto">
+            <CloseButton onClose={onClose} />
+          </span>
         )}
       </header>
 
       {stats.empty ? (
-        <p className="rounded border border-dashed border-neutral-800 px-4 py-10 text-center text-sm text-neutral-500">
+        <p className="rounded-lg border border-dashed border-white/[0.08] px-4 py-10 text-center text-sm text-zinc-500">
           Nessuna assegnazione ancora. Le statistiche compaiono dal primo colpo battuto.
         </p>
       ) : (
@@ -192,33 +198,31 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 2 — dove vanno i crediti, reparto per reparto. */}
-          <section className="rounded border border-neutral-800 p-3">
-            <h3 className="mb-2 text-[11px] uppercase tracking-wide text-neutral-500">
-              Dove vanno i crediti
-            </h3>
+          <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+            <SectionTitle className="mb-2">Dove vanno i crediti</SectionTitle>
             <ul className="flex flex-col gap-1.5">
               {stats.byRole.map((role) => (
                 <li key={role.role} className="flex items-center gap-2 text-xs">
-                  <span className="w-4 shrink-0 font-semibold text-neutral-400">{role.role}</span>
-                  <span className="w-16 shrink-0 tabular-nums text-neutral-500">
+                  <RoleBadge role={role.role} size="xs" />
+                  <span className="num w-16 shrink-0 text-zinc-500">
                     {role.filled}/{role.totalSlots}
                   </span>
                   <span
-                    className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-neutral-900"
+                    className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-white/[0.07]"
                     title={`${credits(role.spent)} crediti — ${pct(role.shareOfSpend)} della spesa di lega`}
                   >
                     <span
-                      className="block h-full rounded-sm bg-emerald-500"
+                      className={cn('block h-full rounded-sm', roleTheme(role.role).bar)}
                       style={{ width: `${Math.max(role.shareOfSpend * 100, role.spent > 0 ? 2 : 0)}%` }}
                     />
                   </span>
-                  <span className="w-24 shrink-0 text-right tabular-nums text-neutral-300">
+                  <span className="w-24 shrink-0 text-right num text-zinc-300">
                     {credits(role.spent)} cr
                   </span>
-                  <span className="w-20 shrink-0 text-right tabular-nums text-neutral-500">
+                  <span className="w-20 shrink-0 text-right num text-zinc-500">
                     media {credits(role.avgPrice)}
                   </span>
-                  <span className="w-44 shrink-0 truncate text-right text-neutral-500">
+                  <span className="w-44 shrink-0 truncate text-right text-zinc-500">
                     {role.top === null ? '—' : `top ${role.top.name} ${role.top.price}`}
                   </span>
                 </li>
@@ -227,11 +231,9 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 3 — il dato che nessun altro al tavolo ha. */}
-          <section className="rounded border border-neutral-800 p-3">
-            <h3 className="mb-1 text-[11px] uppercase tracking-wide text-neutral-500">
-              Che roba e&apos; uscita finora
-            </h3>
-            <p className="mb-2 text-xs text-neutral-400">
+          <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+            <SectionTitle className="mb-1">Che roba e&apos; uscita finora</SectionTitle>
+            <p className="mb-2 text-xs text-zinc-400">
               <strong className="text-emerald-400">{pct(mix.starterShare)}</strong> dei giocatori
               gia&apos; andati e&apos; titolare nelle formazioni che hai compilato.
             </p>
@@ -247,11 +249,11 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
                 ),
               )}
             </div>
-            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-400">
+            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-400">
               {STATUS_ORDER.map((status) => (
                 <li key={status} className="flex items-center gap-1.5">
                   <span className={`h-2 w-2 rounded-sm ${STATUS_FILL[status]}`} />
-                  <span className="tabular-nums text-neutral-200">{mix[status]}</span>
+                  <span className="num text-zinc-200">{mix[status]}</span>
                   {STATUS_LABEL[status]}
                 </li>
               ))}
@@ -276,13 +278,13 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 5 — chi mi puo' ancora battere. */}
-          <section className="rounded border border-neutral-800">
-            <h3 className="border-b border-neutral-800 px-3 py-2 text-[11px] uppercase tracking-wide text-neutral-500">
+          <section className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+            <SectionTitle className="border-b border-white/[0.08] px-3 py-2">
               Squadra per squadra — clicca una colonna per ordinare
-            </h3>
+            </SectionTitle>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="text-neutral-500">
+                <thead className="text-zinc-500">
                   <tr>
                     <SortableTh label="sigla" sortKey="teamId" sort={sort} onSort={setSort} left />
                     <SortableTh label="crediti" sortKey="credits" sort={sort} onSort={setSort} />
@@ -341,18 +343,21 @@ interface TileProps {
 
 function Tile({ label, value, hint, tone, bar, title }: TileProps): JSX.Element {
   return (
-    <div className="rounded border border-neutral-800 bg-neutral-900/40 p-3" title={title}>
-      <div className="text-[10px] uppercase tracking-wide text-neutral-500">{label}</div>
-      <div className="mt-0.5 text-2xl font-semibold tabular-nums text-neutral-100">{value}</div>
+    <div
+      className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-colors hover:border-white/[0.14]"
+      title={title}
+    >
+      <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
+      <div className="num mt-0.5 text-2xl font-semibold text-zinc-100">{value}</div>
       {bar !== undefined && (
-        <div className="mt-1.5 h-1 w-full overflow-hidden rounded-sm bg-neutral-800">
+        <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className="h-full rounded-sm bg-emerald-500"
+            className="h-full rounded-full bg-emerald-500"
             style={{ width: `${Math.min(bar * 100, 100)}%` }}
           />
         </div>
       )}
-      <div className={`mt-1 text-[11px] ${tone ?? 'text-neutral-500'}`}>{hint}</div>
+      <div className={`mt-1 text-[11px] ${tone ?? 'text-zinc-500'}`}>{hint}</div>
     </div>
   );
 }
@@ -367,19 +372,19 @@ interface DealListProps {
 
 function DealList({ title, hint, deals, nameById, render }: DealListProps): JSX.Element {
   return (
-    <div className="rounded border border-neutral-800 p-3">
-      <h3 className="text-[11px] uppercase tracking-wide text-neutral-500">{title}</h3>
-      {hint !== undefined && <p className="mb-1 text-[10px] text-neutral-600">{hint}</p>}
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+      <SectionTitle>{title}</SectionTitle>
+      {hint !== undefined && <p className="mb-1 text-[10px] text-zinc-600">{hint}</p>}
       <ol className="mt-1 flex flex-col gap-1">
         {deals.map((deal) => (
-          <li key={deal.playerId} className="flex items-baseline gap-2 text-xs">
-            <span className="w-4 shrink-0 text-neutral-600">{deal.role}</span>
-            <span className="min-w-0 flex-1 truncate text-neutral-100">{deal.name}</span>
-            <span className="shrink-0 text-neutral-600">{deal.club}</span>
-            <span className="w-10 shrink-0 text-right text-neutral-400">
+          <li key={deal.playerId} className="flex items-center gap-2 text-xs">
+            <RoleBadge role={deal.role} size="xs" />
+            <span className="min-w-0 flex-1 truncate text-zinc-100">{deal.name}</span>
+            <span className="shrink-0 text-zinc-600">{deal.club}</span>
+            <span className="w-10 shrink-0 text-right text-zinc-400">
               {nameById.get(deal.teamId) ?? deal.teamId}
             </span>
-            <span className="w-20 shrink-0 text-right tabular-nums text-neutral-200">
+            <span className="w-20 shrink-0 text-right num text-zinc-200">
               {render(deal)}
             </span>
           </li>
@@ -413,11 +418,14 @@ function SortableTh({
         type="button"
         onClick={() => onSort(sortKey)}
         title={title}
-        className={`w-full px-2 py-1.5 ${left ? 'text-left' : 'text-right'} ${
-          active ? 'text-neutral-100 underline' : 'hover:text-neutral-300'
-        }`}
+        className={cn(
+          'inline-flex w-full items-center gap-0.5 px-2 py-1.5 transition-colors',
+          left ? 'text-left' : 'flex-row-reverse text-right',
+          active ? 'text-zinc-100' : 'hover:text-zinc-300',
+        )}
       >
         {label}
+        {active && <ArrowDown size={10} className="shrink-0 text-zinc-500" />}
       </button>
     </th>
   );
@@ -432,54 +440,62 @@ interface TeamRowProps {
 function TeamRow({ team, label, mine }: TeamRowProps): JSX.Element {
   return (
     <tr
-      className={`border-t border-neutral-900 hover:bg-neutral-900/60 ${
-        mine ? 'bg-emerald-950/30' : ''
-      }`}
+      className={cn(
+        'border-t border-white/[0.06] transition-colors hover:bg-white/[0.03]',
+        mine && 'bg-emerald-500/[0.07]',
+      )}
     >
-      <td className="px-2 py-1.5 font-medium text-neutral-100">
+      <td className="px-2 py-1.5 font-medium text-zinc-100">
         {label}
         {mine && <span className="ml-1 text-[10px] text-emerald-500">tu</span>}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums text-neutral-100">
+      <td className="px-2 py-1.5 text-right num text-zinc-100">
         {credits(team.credits)}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums text-neutral-300">
+      <td className="px-2 py-1.5 text-right num text-zinc-300">
         {credits(team.maxBid)}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums text-neutral-300">
+      <td className="px-2 py-1.5 text-right num text-zinc-300">
         {team.slotsFree === 0 ? 'piena' : decimal(team.perFreeSlot)}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums text-neutral-400">
+      <td className="px-2 py-1.5 text-right num text-zinc-400">
         {credits(team.spent)}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums text-neutral-400">
+      <td className="px-2 py-1.5 text-right num text-zinc-400">
         {team.slotsFilled}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums text-neutral-400">
+      <td className="px-2 py-1.5 text-right num text-zinc-400">
         {team.slotsFilled === 0 ? '—' : credits(team.avgPrice)}
       </td>
-      <td className="px-2 py-1.5 text-right tabular-nums">
+      <td className="px-2 py-1.5 text-right num">
         {team.mix.assigned === 0 ? (
-          <span className="text-neutral-600">—</span>
+          <span className="text-zinc-600">—</span>
         ) : (
           <span className="text-emerald-400">{pct(team.mix.starterShare)}</span>
         )}
       </td>
       <td className="px-2 py-1.5">
-        <span className="flex items-center gap-1 text-[10px] text-neutral-500">
+        <span className="flex items-center gap-1 text-[10px]">
           {PHASE_ORDER.map((role: Role) => (
-            <span key={role} className="tabular-nums" title={`${role}: ${team.filledByRole[role]}`}>
+            <span
+              key={role}
+              title={`${roleTheme(role).label}: ${team.filledByRole[role]}`}
+              className={cn(
+                'num inline-flex h-4 min-w-[1rem] items-center justify-center rounded px-1',
+                roleTheme(role).chip,
+              )}
+            >
               {team.filledByRole[role]}
             </span>
           ))}
         </span>
       </td>
-      <td className="max-w-[12rem] truncate px-2 py-1.5 text-neutral-400">
+      <td className="max-w-[12rem] truncate px-2 py-1.5 text-zinc-400">
         {team.priciest === null
           ? '—'
           : `${team.priciest.name} ${credits(team.priciest.price)}`}
       </td>
-      <td className="px-2 py-1.5 text-neutral-500">
+      <td className="px-2 py-1.5 text-zinc-500">
         {team.topClub === null ? '—' : `${team.topClub.club} ×${team.topClub.count}`}
       </td>
     </tr>

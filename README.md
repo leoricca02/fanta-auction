@@ -166,9 +166,30 @@ Chi non è ancora stato assegnato, diviso per ruolo, **ordinato per `QUOT.` decr
 il listone. Ogni riga porta con sé tag e appunto: `★` obiettivo, `◇` alternativa, `⨯` da evitare.
 La riga è cliccabile e apre la scheda accanto alla tabella, senza coprirla.
 
-Ordinabile anche per nome, squadra, stato di formazione, `FVM`. Filtri combinabili su squadra,
-tag, stato, presenza di nota, quotazione minima — e **restano come li lasci** fra un'apertura
-e l'altra.
+Ordinabile anche per nome, squadra, stato di formazione, fascia, `FVM`. Filtri combinabili su
+squadra, tag, stato, fascia, presenza di nota, quotazione minima — e **restano come li lasci**
+fra un'apertura e l'altra.
+
+---
+
+### 🏷️ Le fasce della guida
+
+Ogni giocatore porta la **fascia della guida all'asta di SosFanta** — da `SUPER TOP` a
+`DA EVITARE`, passando per `JOLLY`, `SCOMMESSE`, `LOW COST` — nella scheda giocatore e in una
+colonna degli svincolati, che ci si può anche ordinare e filtrare.
+
+Non è un tag: `obiettivo`/`alternativa`/`evita` restano il tuo giudizio e finiscono nel backup,
+la fascia è un **dato derivato dal listone** che si ricalcola a ogni import e non occupa spazio
+fra i tuoi dati. L'aggancio è per nome normalizzato, perché la guida non pubblica gli id di
+Fantacalcio.it: sul listone 2026-27 prende 479 nomi su 482, e chi non aggancia semplicemente
+non ha badge.
+
+```bash
+node scripts/build-tiers.mjs   # riscarica la guida e rigenera src/data/tiers.ts
+```
+
+Lo script muore nominando la pagina se la guida introduce una fascia che `TIER_ORDER` non
+conosce o se il markup cambia: meglio nessun aggiornamento che un file monco.
 
 ### 🎯 Obiettivi
 
@@ -249,6 +270,7 @@ aspettare settembre.
 src/
 ├── domain/      logica pura — reducer, formazioni, ricerca, statistiche, checklist, backup
 ├── parse/       parser difensivo del listone .xlsx
+├── data/        fasce SosFanta, generate da scripts/build-tiers.mjs
 ├── store/       Zustand + Dexie
 ├── features/    live · teams · free · goals · player · settings
 └── export/      xlsx nativo · report · pdf

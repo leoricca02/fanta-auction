@@ -24,7 +24,7 @@ const DOT: Readonly<Record<CheckLevel, string>> = {
 };
 
 const RING: Readonly<Record<CheckLevel, string>> = {
-  ok: 'border-neutral-800',
+  ok: 'border-white/[0.08]',
   warn: 'border-amber-900/70',
   todo: 'border-rose-900/70',
 };
@@ -56,8 +56,8 @@ export function ReadinessCheck(): JSX.Element {
 
   return (
     <section
-      className={`rounded border p-4 ${
-        readiness.ready ? 'border-neutral-800' : 'border-amber-800/60 bg-amber-950/10'
+      className={`rounded-lg border p-4 ${
+        readiness.ready ? 'border-white/[0.08]' : 'border-amber-800/60 bg-amber-950/10'
       }`}
     >
       <button
@@ -66,7 +66,7 @@ export function ReadinessCheck(): JSX.Element {
         aria-expanded={open}
         className="flex w-full items-center gap-3 text-left"
       >
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-300">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-300">
           Sei pronto?
         </h2>
 
@@ -77,16 +77,16 @@ export function ReadinessCheck(): JSX.Element {
           ))}
         </span>
 
-        <span className="text-xs tabular-nums text-neutral-500">
+        <span className="text-xs num text-zinc-500">
           {readiness.done}/{readiness.total} a posto
         </span>
 
-        <span className="ml-auto text-xs text-neutral-500">{open ? 'chiudi' : 'apri'}</span>
+        <span className="ml-auto text-xs text-zinc-500">{open ? 'chiudi' : 'apri'}</span>
       </button>
 
       {!open && firstOpenItem !== null && (
-        <p className="mt-2 text-xs text-neutral-400">
-          <span className="text-neutral-200">{firstOpenItem.label}:</span> {firstOpenItem.detail}
+        <p className="mt-2 text-xs text-zinc-400">
+          <span className="text-zinc-200">{firstOpenItem.label}:</span> {firstOpenItem.detail}
         </p>
       )}
       {!open && firstOpenItem === null && (
@@ -108,14 +108,14 @@ export function ReadinessCheck(): JSX.Element {
 
 function CheckRow({ check }: { readonly check: Check }): JSX.Element {
   return (
-    <li className={`rounded border bg-neutral-900/40 px-3 py-2 ${RING[check.level]}`}>
+    <li className={`rounded-lg border bg-white/[0.02] px-3 py-2 ${RING[check.level]}`}>
       <div className="flex items-baseline gap-2">
         <span className={`h-2 w-2 shrink-0 translate-y-[-1px] rounded-full ${DOT[check.level]}`} />
-        <span className="text-xs font-medium text-neutral-200">{check.label}</span>
-        <span className="text-xs text-neutral-400">{check.detail}</span>
+        <span className="text-xs font-medium text-zinc-200">{check.label}</span>
+        <span className="text-xs text-zinc-400">{check.detail}</span>
       </div>
       {check.action !== '' && (
-        <p className="mt-1 pl-4 text-[11px] text-neutral-500">{check.action}</p>
+        <p className="mt-1 pl-4 text-[11px] text-zinc-500">{check.action}</p>
       )}
     </li>
   );

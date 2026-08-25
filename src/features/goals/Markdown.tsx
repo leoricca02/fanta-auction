@@ -11,13 +11,15 @@ import { parseSimpleMarkdown } from '../../domain/markdown';
 
 export interface MarkdownProps {
   readonly text: string;
+  /** Densita' e colore del contenitore: la scheda giocatore lo vuole piu' fitto. */
+  readonly className?: string;
 }
 
-export function Markdown({ text }: MarkdownProps): JSX.Element {
+export function Markdown({ text, className }: MarkdownProps): JSX.Element {
   const blocks = parseSimpleMarkdown(text);
 
   return (
-    <div className="flex flex-col gap-2 text-sm text-neutral-200">
+    <div className={`flex flex-col gap-2 text-sm text-zinc-200 ${className ?? ''}`}>
       {blocks.map((block, i) => (
         <BlockView key={i} block={block} />
       ))}
@@ -31,7 +33,7 @@ function BlockView({ block }: { readonly block: Block }): JSX.Element {
       const size =
         block.level === 1 ? 'text-base font-semibold' : block.level === 2 ? 'text-sm font-semibold' : 'text-sm font-medium';
       return (
-        <p className={`${size} text-neutral-100`}>
+        <p className={`${size} text-zinc-100`}>
           <InlineView content={block.content} />
         </p>
       );
@@ -62,7 +64,7 @@ function InlineView({ content }: { readonly content: readonly Inline[] }): JSX.E
         switch (piece.kind) {
           case 'bold':
             return (
-              <strong key={i} className="font-semibold text-neutral-50">
+              <strong key={i} className="font-semibold text-zinc-50">
                 {piece.text}
               </strong>
             );
@@ -74,7 +76,7 @@ function InlineView({ content }: { readonly content: readonly Inline[] }): JSX.E
             );
           case 'code':
             return (
-              <code key={i} className="rounded bg-neutral-800 px-1 text-[0.9em] text-emerald-300">
+              <code key={i} className="rounded bg-white/[0.06] px-1 text-[0.9em] text-emerald-300">
                 {piece.text}
               </code>
             );
