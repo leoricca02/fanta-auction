@@ -17,12 +17,34 @@ body,
   height: 100%;
 }
 
+/* Su iOS la barra di Safari entra e esce: 100% e' l'altezza grande e taglia
+ * il fondo. `dvh` segue la barra; dove non esiste resta valido il 100% sopra. */
+html {
+  height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   background: #09090b;
   color: rgb(228 228 231);
   font-family: theme('fontFamily.sans');
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Installata sulla home screen la pagina passa sotto la status bar. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+/* Il doppio tap per zoomare costa 300 ms su ogni comando dell'asta. */
+button,
+[role='button'],
+a,
+summary,
+label,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 /* Le tabelle dell'asta sono lunghe: una scrollbar spessa mangia colonne. */
@@ -88,5 +110,28 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dito invece di mouse: i bersagli sotto i 36 px si sbagliano. Vale solo dove
+ * il puntatore e' grossolano, cosi' il desktop resta identico al pixel. */
+@media (pointer: coarse) {
+  /* Niente pull-to-refresh a meta' asta, niente rimbalzo sui pannelli. Solo
+   * qui: col trackpad la stessa riga disabiliterebbe lo swipe indietro. */
+  body {
+    overscroll-behavior: none;
+  }
+
+  button,
+  [role='button'],
+  summary,
+  select {
+    min-height: 2.25rem;
+  }
+
+  /* Le scrollbar sottili non si afferrano a dito: la si scorre e basta. */
+  *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 }

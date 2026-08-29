@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { reduce } from '../../domain/reducer';
 import { useAppStore } from '../../store/appStore';
+import { storageDurability, type StorageDurability } from '../../store/persist';
 import { LeagueSetup } from './LeagueSetup';
 import { ReadinessCheck } from './ReadinessCheck';
 
@@ -47,7 +48,7 @@ export function SettingsPanel(): JSX.Element {
             <p className="mt-2 text-sm text-zinc-300">
               Ultimo backup: <strong>{formatted(lastBackupAt)}</strong> · {userData.lineups.length}{' '}
               formazioni, {userData.teamNotes.length} note squadra, {userData.playerNotes.length}{' '}
-              note giocatore
+              note giocatore <StorageStatus />
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -323,5 +324,45 @@ function DangerZone(): JSX.Element {
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * Se il browser ha concesso la persistenza dei dati. Inline nella riga del
+ * backup e non a capo: la sezione e' gia' un avviso, e una riga in piu' qui
+ * spingeva tutta la colonna verso il basso per dire una cosa secondaria.
+ * Muto dove l'API non esiste.
+ */
+function StorageStatus(): JSX.Element | null {
+  const [state, setState] = useState<StorageDurability>('unknown');
+
+  useEffect(() => {
+    let alive = true;
+    void storageDurability().then((d) => {
+      if (alive) setState(d);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (state === 'unknown') return null;
+
+  return state === 'persistent' ? (
+    <span className="text-emerald-400" title="Il browser non sfratta i dati da solo.">
+      {' '}
+      · archiviazione persistente
+    </span>
+  ) : (
+    <span
+      className="text-amber-400"
+      title={
+        "Il browser puo' cancellare i dati per liberare spazio: su iPad Safari lo fa dopo " +
+        "sette giorni senza aprire l'app. Installala sulla home screen per ottenere la persistenza."
+      }
+    >
+      {' '}
+      · archiviazione sfrattabile
+    </span>
   );
 }

@@ -69,7 +69,7 @@ export function App(): JSX.Element {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[#09090b] text-zinc-200">
+    <div className="flex h-full flex-col bg-[#09090b] text-zinc-200">
       <header className="sticky top-0 z-20 flex shrink-0 items-center gap-4 border-b border-white/[0.08] bg-zinc-950/70 px-4 py-2 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-400 shadow-glow-emerald">
