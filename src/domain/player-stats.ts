@@ -44,6 +44,17 @@ export interface SeasonStats {
    * niente — non e' uno zero.
    */
   readonly cleanSheets: number | null;
+  /**
+   * Partite con voto >= 6.5, contate giornata per giornata. Su `played` da la
+   * percentuale di volte in cui il giocatore la partita l'ha portata a casa:
+   * una media voto 6.2 fatta di 6.5 e 6 e' un'altra cosa dalla stessa media
+   * fatta di 7.5 e 5, e la media da sola non lo dice.
+   *
+   * `null` per chi ha cambiato club a stagione in corso: la fonte elenca le
+   * giornate di un club alla volta e il conteggio sarebbe monco. Non e' uno
+   * zero, ed e' il motivo per cui il tipo ammette l'assenza.
+   */
+  readonly goodGames: number | null;
   /** Rigori segnati su rigori calciati. */
   readonly penScored: number;
   readonly penTaken: number;

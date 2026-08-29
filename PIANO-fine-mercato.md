@@ -444,11 +444,9 @@ Quattro cose che vanno chieste invece che decise di testa propria quando si riap
 
 1. **I link sono due o tre?** Se rigoristi e piazzati arrivano come pagina unica, cambia solo
    `SOURCES` (§5.4).
-2. **Filtro `solo specialisti` negli svincolati?** Resta l'unica cosa non fatta della funzione.
-   Le statistiche 2025/26 sono state tenute fuori
-   dalla tabella svincolati per scelta: la colonna in più costava più di quanto rendesse. Per gli
-   specialisti la risposta può essere diversa — un rigorista svincolato a fine asta è un colpo —
-   ma è la stessa domanda e va rifatta, non ereditata.
+2. ~~Filtro `solo specialisti` negli svincolati?~~ **Deciso il 2026-08-27: no, nessun filtro.**
+   Vale la stessa logica per cui le statistiche 2025/26 erano già state tenute fuori da quella
+   tabella: la riga in più costa più di quanto renda. Non c'è niente da implementare.
 3. ~~Quanti nomi mostrare per squadra?~~ **Deciso**: la scheda si ferma al terzo, il dataset
    li tiene tutti. Da rivedere solo se all'uso i primi tre risultassero ancora troppi.
 4. **Il rigorista entra nella checklist pre-asta?** Una voce tipo *"conosci il rigorista delle 20

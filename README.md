@@ -216,6 +216,74 @@ Le porte inviolate non stanno nella tabella di riepilogo: lo script le conta gio
 giornata sulla pagina di ogni portiere e **verifica che presenze e gol subiti così ottenuti
 combacino col riepilogo**, così un cambio di markup non produce numeri plausibili e sbagliati.
 
+Sulla stessa pagina, per tutti i 547 giocatori che hanno preso almeno un voto, si contano le
+**partite sufficienti**: le giornate chiuse con voto ≥ 6.5. Una media voto 6,2 fatta di 6,5 e 6
+è un'altra cosa dalla stessa media fatta di 7,5 e 5, e la media da sola non lo dice. Per i
+cinque che hanno cambiato club a stagione in corso la fonte elenca solo le giornate di un club:
+lì il conteggio resta **vuoto** invece di diventare uno zero che direbbe una bugia.
+
+---
+
+### 🏅 Punti di forza e punti deboli
+
+Le stesse cifre di sopra, lette come **posizione dentro il ruolo**. "Media voto 6,17" non dice
+niente; "12° tra i difensori" dice tutto, e nei cinque secondi della chiamata è l'unica forma in
+cui una statistica serve. La scheda mostra due colonne — fino a tre pregi e fino a tre difetti —
+con la cifra, la posizione e una barra che disegna la posizione, non il valore.
+
+Il pool è **tutti i giocatori dello stesso ruolo con almeno una presenza** (196 difensori, 192
+centrocampisti, 116 attaccanti, 43 portieri), senza soglie minime, e i pari merito condividono
+la posizione come in una classifica sportiva. Non è una convenzione scelta a caso: sono le due
+regole che riproducono esattamente i numeri di FantaLAB. Su Hermoso, 2025/26, escono media voto
+12°, % partite con voto ≥ 6.5 16° e fantamedia 19° — le tre posizioni pubblicate sulla sua
+scheda. C'è un test che lo verifica sui dati veri, in `src/domain/highlights.test.ts`.
+
+Due scelte che tengono onesta la colonna dei difetti:
+
+- **un pregio deve stare sopra la metà del suo ruolo, un difetto sotto.** Prendere sempre le tre
+  peggiori metteva "3° negli assist" fra i punti deboli di Dimarco. Chi è forte ovunque ha la
+  colonna vuota, ed è il dato giusto;
+- **il giudizio non guarda il rank ma la posizione media dei pari merito.** Trenta portieri su
+  quarantatré hanno zero rigori parati: sono tutti quindicesimi, e nessuno di loro è bravo a
+  parare i rigori.
+
+---
+
+### 🥊 Le statistiche di campo
+
+Anticipi, contrasti vinti, duelli aerei e falli commessi, che Fantacalcio.it non pubblica. La
+fonte è **Sofascore**, ed è l'unica gratuita che li dia per la Serie A: risponde 403 a `curl` e
+200 a un browser vero, quindi `data/sofascore-2025-26.txt` è quel 200 salvato una volta sola.
+Il procedimento per rifarlo — endpoint, campi, paginazione — è nell'intestazione dello script.
+
+```bash
+node scripts/build-advanced.mjs   # dump -> src/data/advanced-stats.ts
+```
+
+Sofascore non conosce l'id di Fantacalcio.it, quindi qui l'aggancio è **per nome**, e i due lati
+lo scrivono in modi opposti: `Esposito Se.` contro `sebastiano-esposito`, e a volte con lo slug
+girato (`yildiz-kenan`). Lo script risolve in tre turni — prima chi porta l'abbreviazione, poi i
+nomi nudi, infine i resti sulle presenze — e **muore se resta un solo caso ambiguo**: meglio
+nessun file che le cifre di un giocatore attaccate al nome di un altro. Aggancia **562 su 562**
+di quelli presenti in entrambe le fonti, con due eccezioni dichiarate in chiaro nel codice
+(`Ramon`, che Sofascore chiama col secondo cognome; `Djuric`, la cui Đ sparisce dallo slug).
+
+Queste voci si contano **ogni 90 minuti** e non a partita — la presenza di chi entra al 90' non è
+l'unità di misura di chi le gioca tutte — e chi sta sotto i 450 minuti non entra in classifica:
+tre anticipi in mezz'ora farebbero primo un fantasma. Da qui pool diversi sulla stessa scheda:
+196 difensori sulle metriche di rendimento, 162 su quelle di campo. La scheda scrive sempre "su
+quanti".
+
+Due scelte di merito: anticipi e contrasti si classificano **solo per difensori e
+centrocampisti** (un attaccante ultimo nei contrasti non ha un difetto, ha un altro lavoro), e le
+**parate non ci sono** pur essendo nel dato — un portiere para molto anche perché ha una difesa
+che gli fa arrivare tutto addosso, e messa fra i pregi direbbe il contrario di quello che sembra.
+
+> **Non sono le stesse cifre di FantaLAB.** Il loro fornitore è un altro e le definizioni non
+> coincidono: delle tre voci di campo di Hermoso — anticipi 74°, falli 142°, ammonizioni 146° —
+> questi dati ne riproducono una sola. Sono misure vere prese da Sofascore, non un tentativo di
+> indovinare i numeri di qualcun altro. Le metriche di rendimento, quelle sì, combaciano esatte.
+
 ---
 
 ### ⚽ Gli specialisti dei piazzati

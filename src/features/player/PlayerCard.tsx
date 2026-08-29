@@ -14,6 +14,8 @@ import {
   StarOff,
   StickyNote,
   Target,
+  TrendingDown,
+  TrendingUp,
   TriangleAlert,
   Users,
 } from 'lucide-react';
@@ -25,12 +27,14 @@ import { isTarget } from '../../domain/objectives';
 import { makeTierIndex, tierOf } from '../../domain/tiers';
 import type { SeasonStats } from '../../domain/player-stats';
 import { formatAvg, formatPenalties, statsOf } from '../../domain/player-stats';
+import type { Highlight } from '../../domain/highlights';
+import { highlightsOf, rankLabel } from '../../domain/highlights';
 import type { SetPiece, SpecialistRole } from '../../domain/specialists';
 import { makeSpecialistIndex, specialistLabel, specialistsOf } from '../../domain/specialists';
 import { TIER_BLOCKS } from '../../data/tiers';
 import { SPECIALIST_BLOCKS } from '../../data/specialists';
 import { STATS_SEASON } from '../../data/stats';
-import { STATS_INDEX } from '../../data/stats-index';
+import { ADVANCED_INDEX, RANK_INDEX, STATS_INDEX } from '../../data/stats-index';
 import { useAppStore } from '../../store/appStore';
 import { Markdown } from '../goals/Markdown';
 import { cn } from '../../ui/cn';
@@ -456,6 +460,10 @@ function SpecialistSection({ roles }: { readonly roles: readonly SpecialistRole[
  * La fantamedia sta accanto alle presenze sempre, e sotto le dodici presenze la
  * scheda dice apertamente che non significa granche': una fantamedia da 9 su
  * tre partite e' la trappola piu' vecchia dell'asta.
+ *
+ * Sotto le cifre grezze stanno i punti di forza e i punti deboli, che sono le
+ * stesse cifre lette come posizione nel ruolo: e' li' che una fantamedia 6,41
+ * diventa "19esimo tra i difensori", cioe' un'informazione.
  */
 function SeasonSection({
   player,
@@ -517,6 +525,8 @@ function SeasonSection({
             <MicroStat label="espulsioni" value={stats.red} />
           </div>
 
+          <Highlights stats={stats} />
+
           {stats.played < FEW_MATCHES && (
             <p className="text-[11px] text-amber-500/90">
               Solo {stats.played} presenze: la fantamedia e’ un campione piccolo, non una stagione.
@@ -530,6 +540,97 @@ function SeasonSection({
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * Punti di forza e punti deboli, le due colonne che durante la chiamata dicono
+ * in un colpo d'occhio dove il giocatore e' sopra la media del suo ruolo e dove
+ * e' sotto.
+ *
+ * Non c'e' nessun giudizio nuovo: sono le stesse metriche misurate della
+ * griglia qui sopra, ordinate dentro il ruolo. La barra disegna la posizione,
+ * non il valore — una media voto 6,17 e una 6,80 si somigliano da leggere e
+ * sono la dodicesima e la prima, e la barra e' l'unica cosa che lo mostra.
+ *
+ * Il ruolo che conta e' quello della **stagione passata**: la classifica e'
+ * quella, e un difensore diventato centrocampista resta confrontato con i
+ * difensori con cui ha giocato.
+ */
+function Highlights({ stats }: { readonly stats: SeasonStats }): JSX.Element | null {
+  const { strengths, weaknesses } = useMemo(
+    () => highlightsOf(stats, RANK_INDEX, ADVANCED_INDEX),
+    [stats],
+  );
+  if (strengths.length === 0 && weaknesses.length === 0) return null;
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <HighlightColumn
+        title="Punti di forza"
+        icon={<TrendingUp size={11} />}
+        tone="good"
+        items={strengths}
+        stats={stats}
+      />
+      <HighlightColumn
+        title="Punti deboli"
+        icon={<TrendingDown size={11} />}
+        tone="bad"
+        items={weaknesses}
+        stats={stats}
+      />
+    </div>
+  );
+}
+
+function HighlightColumn({
+  title,
+  icon,
+  tone,
+  items,
+  stats,
+}: {
+  readonly title: string;
+  readonly icon: JSX.Element;
+  readonly tone: 'good' | 'bad';
+  readonly items: readonly Highlight[];
+  readonly stats: SeasonStats;
+}): JSX.Element | null {
+  if (items.length === 0) return null;
+  const head = tone === 'good' ? 'text-emerald-300/90' : 'text-rose-300/90';
+  const bar = tone === 'good' ? 'bg-emerald-400/80' : 'bg-rose-400/80';
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className={cn('flex items-center gap-1 text-[10px] uppercase tracking-wide', head)}>
+        {icon}
+        {title}
+      </div>
+      {items.map((h) => (
+        <div
+          key={h.metric.key}
+          className="rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1"
+        >
+          <div className="flex items-baseline justify-between gap-1.5">
+            <span className="truncate text-[11px] text-zinc-300">{h.metric.label}</span>
+            <span className="num shrink-0 text-[11px] text-zinc-400">
+              {h.metric.format(h.value)}
+            </span>
+          </div>
+          <div className="text-[10px] text-zinc-500">
+            {rankLabel(h, stats.role)} <span className="num">su {h.pool}</span>
+          </div>
+          <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              className={cn('h-full rounded-full', bar)}
+              // La barra e' la posizione, non il valore: piena = primo del ruolo.
+              style={{ width: `${Math.max(2, Math.round(h.share * 100))}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

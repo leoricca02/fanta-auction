@@ -7,11 +7,22 @@
  * Fantacalcio.it nell'href del giocatore: e' lo stesso `#` del listone, quindi
  * l'aggancio e' per id e non per nome. Niente omonimie, niente accenti.
  *
- * Le porte inviolate non stanno nel riepilogo. Si ricavano dalla pagina del
- * singolo portiere, che elenca le giornate una per una: partita con voto e
- * senza l'evento `concededGoals` = porta inviolata. Lo script verifica che
- * presenze e gol subiti ricavati per giornata combacino col riepilogo, cosi'
- * un cambio di markup non passa inosservato producendo numeri plausibili.
+ * Due cifre non stanno nel riepilogo e si ricavano dalla pagina del singolo
+ * giocatore, che elenca le giornate una per una:
+ *
+ *   - **porte inviolate** (solo portieri): partita con voto e senza l'evento
+ *     `concededGoals`;
+ *   - **partite sufficienti**: giornate con voto >= 6.5, il numeratore della
+ *     percentuale che dice quanto spesso il giocatore la porta a casa.
+ *
+ * La pagina del giocatore elenca solo le giornate giocate **con quel club**:
+ * chi ha cambiato squadra a mercato aperto ne mostra meno di quante il
+ * riepilogo ne dichiari, e li' le partite sufficienti restano `null`. Sono
+ * cinque casi su 547, tutti sotto le dieci presenze.
+ *
+ * Lo script verifica che le presenze contate per giornata combacino col
+ * riepilogo — e per i portieri anche i gol subiti — cosi' un cambio di markup
+ * non passa inosservato producendo numeri plausibili.
  *
  * Difensivo come gli altri parser: se una colonna sparisce o un totale non
  * torna, muore nominando il giocatore invece di scrivere un file monco.
@@ -23,8 +34,15 @@ const SEASON = '2025-26';
 const SEASON_LABEL = '2025/26';
 const STATS_URL = `https://www.fantacalcio.it/statistiche-serie-a/${SEASON}/classic/riepilogo`;
 
-/** Pagine portiere scaricate in parallelo. Basso: non c'e' fretta. */
+/** Pagine giocatore scaricate in parallelo. Basso: non c'e' fretta. */
 const CONCURRENCY = 6;
+
+/**
+ * Soglia della "partita sufficiente". 6.5 e non 6 perche' e' la soglia che
+ * usano le classifiche di rendimento: il 6 e' la partita che non e' successa,
+ * il 6.5 e' la prima che sposta qualcosa.
+ */
+const GOOD_GRADE = 6.5;
 
 const ENTITIES = {
   '&amp;': '&',
@@ -131,17 +149,18 @@ function parseSummary(html) {
       yellow: num(cells.amm, 'ammonizioni', name),
       red: num(cells.esp, 'espulsioni', name),
       cleanSheets: null,
+      goodGames: null,
     };
   });
 }
 
 /**
- * Porte inviolate del portiere, contate giornata per giornata.
+ * Giornate del giocatore, contate una per una.
  * Restituisce anche presenze e gol subiti visti dalla pagina: il chiamante li
  * confronta col riepilogo, che e' l'unico modo di accorgersi che il conteggio
  * ha smesso di significare quello che credevamo.
  */
-function parseCleanSheets(html, who) {
+function parseMatchdays(html, who) {
   const table = /<table class="player-summary-table".*?<\/table>/s.exec(html);
   if (table === null) throw new Error(`${who}: tabella delle giornate non trovata.`);
   const rows = table[0].match(/<tr>.*?<\/tr>/gs) ?? [];
@@ -149,17 +168,22 @@ function parseCleanSheets(html, who) {
   let played = 0;
   let conceded = 0;
   let cleanSheets = 0;
+  let goodGames = 0;
   for (const row of rows) {
     const grade = /<span class="grade" data-value="([^"]*)"/.exec(row);
     // Niente voto: non e' sceso in campo, e una porta inviolata non e' sua.
     if (grade === null || grade[1].trim() === '') continue;
     played += 1;
+    // La fonte scrive il voto all'italiana: "6,5".
+    const value = Number(grade[1].trim().replace(',', '.'));
+    if (!Number.isFinite(value)) throw new Error(`${who}: voto illeggibile "${grade[1]}".`);
+    if (value >= GOOD_GRADE) goodGames += 1;
     const goals = /data-key="concededGoals"[^>]*data-value="(\d+)"/.exec(row);
     const n = goals === null ? 0 : Number(goals[1]);
     conceded += n;
     if (n === 0) cleanSheets += 1;
   }
-  return { played, conceded, cleanSheets };
+  return { played, conceded, cleanSheets, goodGames };
 }
 
 /** Scarica `items` a ondate di `CONCURRENCY`, in ordine. */
@@ -175,19 +199,34 @@ async function mapLimit(items, worker) {
 const players = parseSummary(await fetchPage(STATS_URL));
 console.log(`Riepilogo ${SEASON_LABEL}: ${players.length} giocatori.`);
 
-const keepers = players.filter((p) => p.role === 'P' && p.played > 0);
-console.log(`Porte inviolate: ${keepers.length} portieri da controllare...`);
+const seenPlay = players.filter((p) => p.played > 0);
+const keepers = seenPlay.filter((p) => p.role === 'P');
+console.log(`Giornata per giornata: ${seenPlay.length} pagine da leggere...`);
 
-await mapLimit(keepers, async (p) => {
-  const seen = parseCleanSheets(await fetchPage(p.url), p.name);
-  if (seen.played !== p.played) {
+const partial = [];
+await mapLimit(seenPlay, async (p) => {
+  const seen = parseMatchdays(await fetchPage(p.url), p.name);
+  if (seen.played > p.played) {
     throw new Error(`${p.name}: ${seen.played} giornate con voto ma il riepilogo ne dichiara ${p.played}.`);
   }
+  // Pagina che copre solo una parte della stagione: le sufficienti restano
+  // `null`, che e' il dato vero. Uno zero direbbe "non ne ha mai fatta una".
+  if (seen.played < p.played) {
+    partial.push(`${p.name} (${p.team}): pagina ${seen.played}, riepilogo ${p.played}`);
+    return;
+  }
+  p.goodGames = seen.goodGames;
+  // Gol subiti e porte inviolate hanno senso solo fra i pali: altrove
+  // `concededGoals` non compare e ogni partita sembrerebbe una porta inviolata.
+  if (p.role !== 'P') return;
   if (seen.conceded !== p.conceded) {
     throw new Error(`${p.name}: ${seen.conceded} gol subiti per giornata ma il riepilogo ne dichiara ${p.conceded}.`);
   }
   p.cleanSheets = seen.cleanSheets;
 });
+
+console.log(`Pagine parziali, partite sufficienti sconosciute: ${partial.length}`);
+for (const line of partial) console.log('  ' + line);
 
 const BACKSLASH = String.fromCharCode(92);
 const quoted = (v) => `'${v.split("'").join(`${BACKSLASH}'`)}'`;
@@ -198,7 +237,8 @@ const body = players
       `  { id: ${p.id}, name: ${quoted(p.name)}, team: ${quoted(p.team)}, role: '${p.role}',` +
       ` played: ${p.played}, avg: ${p.avg}, fantaAvg: ${p.fantaAvg},` +
       ` goals: ${p.goals}, assists: ${p.assists}, conceded: ${p.conceded},` +
-      ` cleanSheets: ${p.cleanSheets}, penScored: ${p.penScored}, penTaken: ${p.penTaken},` +
+      ` cleanSheets: ${p.cleanSheets}, goodGames: ${p.goodGames},` +
+      ` penScored: ${p.penScored}, penTaken: ${p.penTaken},` +
       ` penSaved: ${p.penSaved}, yellow: ${p.yellow}, red: ${p.red} },`,
   )
   .join('\n');
@@ -225,4 +265,7 @@ ${body}
 `;
 
 writeFileSync(new URL('../src/data/stats.ts', import.meta.url), out, 'utf8');
-console.log(`Scritto src/data/stats.ts: ${players.length} giocatori, ${keepers.length} portieri con porte inviolate.`);
+console.log(
+  `Scritto src/data/stats.ts: ${players.length} giocatori, ${seenPlay.length} con giornate lette,` +
+    ` ${keepers.length} portieri con porte inviolate.`,
+);

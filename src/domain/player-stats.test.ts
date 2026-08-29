@@ -25,6 +25,7 @@ function s(id: number, over: Partial<SeasonStats> = {}): SeasonStats {
     assists: 3,
     conceded: 0,
     cleanSheets: null,
+    goodGames: 15,
     penScored: 0,
     penTaken: 0,
     penSaved: 0,
