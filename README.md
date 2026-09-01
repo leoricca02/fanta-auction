@@ -6,12 +6,20 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-550%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-627%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
 
 </div>
+
+---
+
+> **Versione di fine mercato 2026/27**, aggiornata il 1º settembre 2026, a mercato chiuso.
+> Il listone è quello definitivo di Fantacalcio.it: 538 giocatori in lista, 49 fuori lista.
+> Fasce, specialisti dei piazzati e commenti sugli infortunati vengono dalla guida SosFanta e
+> si rigenerano con i tre script di `scripts/` ogni volta che la fonte cambia — è un comando,
+> non una riscrittura.
 
 ---
 
@@ -169,6 +177,11 @@ La riga è cliccabile e apre la scheda accanto alla tabella, senza coprirla.
 Ordinabile anche per nome, squadra, stato di formazione, fascia, `FVM`. Filtri combinabili su
 squadra, tag, stato, fascia, presenza di nota, quotazione minima — e **restano come li lasci**
 fra un'apertura e l'altra.
+
+Il **ruolo non è un filtro che si toglie**: `P D C A` sono quattro viste e una è sempre accesa,
+non c'è un "tutti". L'asta Classic procede per ruoli in sequenza, e mescolare un portiere da 19
+con un attaccante da 38 in un unico elenco ordinato per `QUOT.` darebbe una classifica che
+durante la chiamata non serve a niente. Per tornare ai portieri si preme `P`.
 
 ---
 
@@ -379,7 +392,8 @@ il quasi.
 
 ## Re-import del listone
 
-Il mercato chiude il 1° settembre e il listone va riscaricato. Il diff — nuovi, usciti, cambio
+Il mercato chiude il 1° settembre e il listone va riscaricato — questa versione monta già quello
+definitivo, ma il flusso resta lo stesso a ogni futuro aggiornamento. Il diff — nuovi, usciti, cambio
 squadra, quotazione variata oltre ±20% — **si mostra sempre prima di applicarlo**, insieme a
 cosa ti costa: quali giocatori su cui avevi lavorato escono dalla Serie A, quali formazioni
 perdono qualcuno, quanti slot restano vuoti.
@@ -444,13 +458,13 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 550 test
+npm test              # 627 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```
 
-I test girano sul **listone vero**, non su fixture inventate: 516 giocatori, distribuzione
-P 63 / D 181 / C 184 / A 88. Il replay simula un'asta completa da 300 assegnazioni e verifica
+I test girano sul **listone vero**, non su fixture inventate: 538 giocatori, distribuzione
+P 64 / D 189 / C 194 / A 91. Il replay simula un'asta completa da 300 assegnazioni e verifica
 che ne escano 12 rose da 25.
 
 C'è anche una guardia sul costo a fine asta — con 300 eventi la piega dell'event log sta in
