@@ -68,7 +68,7 @@ File: `data/lista_calciatori_classic.xlsx`, header su riga 1.
 | `FantaSquadra`, `Costo` | Vuote — target dell'export |
 
 Parser difensivo: valida le colonne attese, fallisce nominando quella mancante, mai in
-silenzio. Su questo file: 516 giocatori in lista, P 63, D 181, C 184, A 88.
+silenzio. Su questo file: 538 giocatori in lista, P 64, D 189, C 194, A 91.
 
 **Re-import.** Il mercato chiude il 1° settembre; il listone va riscaricato. `Player`
 appartiene al listone ed è sostituibile, tutti i dati utente sono agganciati a `#` e non

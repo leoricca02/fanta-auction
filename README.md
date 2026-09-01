@@ -181,7 +181,7 @@ colonna degli svincolati, che ci si può anche ordinare e filtrare.
 Non è un tag: `obiettivo`/`alternativa`/`evita` restano il tuo giudizio e finiscono nel backup,
 la fascia è un **dato derivato dal listone** che si ricalcola a ogni import e non occupa spazio
 fra i tuoi dati. L'aggancio è per nome normalizzato, perché la guida non pubblica gli id di
-Fantacalcio.it: sul listone 2026-27 prende 479 nomi su 482, e chi non aggancia semplicemente
+Fantacalcio.it: sul listone di fine mercato 2026-27 prende 490 nomi su 492, e chi non aggancia semplicemente
 non ha badge.
 
 ```bash
@@ -203,7 +203,7 @@ formazioni, così durante la chiamata non serve aprire la scheda.
 
 L'aggancio è **per id**: la tabella delle statistiche pubblica lo stesso id di Fantacalcio.it
 che il listone mette nella colonna `#`, quindi non c'è nessun nome da normalizzare e nessuna
-omonimia da sciogliere. Sul listone 2026-27 aggancia 399 giocatori su 537: i restanti sono
+omonimia da sciogliere. Sul listone di fine mercato 2026-27 aggancia 371 giocatori su 538: i restanti sono
 arrivi dall'estero e promossi dalla B, e per loro la scheda dice **"non ha giocato"** invece di
 mostrare degli zeri. Sotto le 12 presenze la scheda avvisa che quella fantamedia è un campione
 piccolo, non una stagione.
@@ -358,7 +358,7 @@ A parità di chiave vince il record più recente, mai il file.
 | **`.pdf`** | Riepilogo stampabile delle 12 rose |
 | **`.json`** | Backup completo dei dati utente |
 
-L'export nativo **riscrive dentro il file originale** invece di rigenerarlo: le 537 righe e
+L'export nativo **riscrive dentro il file originale** invece di rigenerarlo: le 587 righe e
 le colonne che l'app non usa devono sopravvivere intatte, perché *"reimportabile"* non ammette
 il quasi.
 

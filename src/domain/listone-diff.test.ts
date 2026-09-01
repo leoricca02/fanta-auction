@@ -95,19 +95,19 @@ describe('§2 — diff fra due listoni', () => {
     expect(diff.removed).toEqual([]);
     expect(diff.teamChanged).toEqual([]);
     expect(diff.quotChanged).toEqual([]);
-    expect(diff.kept).toBe(516);
+    expect(diff.kept).toBe(538);
   });
 
   it('il primo import e tutto nuovo', () => {
     const diff = diffListone([], realListone());
-    expect(diff.added).toHaveLength(516);
+    expect(diff.added).toHaveLength(538);
     expect(diff.removed).toEqual([]);
     expect(diff.kept).toBe(0);
   });
 
   it('un listone svuotato e tutto uscito', () => {
     const diff = diffListone(realListone(), []);
-    expect(diff.removed).toHaveLength(516);
+    expect(diff.removed).toHaveLength(538);
     expect(diff.added).toEqual([]);
   });
 });
@@ -328,7 +328,7 @@ describe('§2 — piano di import', () => {
     });
     expect(plan.firstImport).toBe(true);
     expect(plan.blocked).toBeNull();
-    expect(plan.diff.added).toHaveLength(516);
+    expect(plan.diff.added).toHaveLength(538);
     expect(planTouchesUserData(plan)).toBe(false);
   });
 

@@ -9,7 +9,7 @@ import type { TierBlock } from '../domain/tiers';
 export const TIERS_SOURCE_URL = 'https://www.sosfanta.com/guida-asta-fantacalcio/guida-asta-fantacalcio-2026-2027-tutti-consigli-fasce-chi-prendere';
 
 /** Data di scarico della guida, mostrata all'utente per capire quanto e' vecchia. */
-export const TIERS_UPDATED_AT = '2026-08-24';
+export const TIERS_UPDATED_AT = '2026-09-01';
 
 export const TIER_BLOCKS: readonly TierBlock[] = [
   {
@@ -20,7 +20,7 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'P',
     tier: 'TOP',
-    names: ['Maignan', 'Martinez Jo.', 'Carnesecchi', 'Butez', 'Vicario'],
+    names: ['Martinez Jo.', 'Carnesecchi', 'Maignan', 'Butez', 'Vicario'],
   },
   {
     role: 'P',
@@ -30,27 +30,22 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'P',
     tier: 'FASCIA ALTA',
-    names: ['De Gea', 'Skorupski', 'Mandas', 'Okoye'],
+    names: ['Mandas', 'Okoye', 'Skorupski'],
   },
   {
     role: 'P',
     tier: 'JOLLY 1ª FASCIA',
-    names: ['Milinkovic-Savic V.', 'Provedel'],
+    names: ['Provedel', 'Milinkovic-Savic V.'],
   },
   {
     role: 'P',
     tier: 'FASCIA MEDIA',
-    names: ['Caprile', 'Falcone'],
+    names: ['De Gea', 'Falcone', 'Caprile'],
   },
   {
     role: 'P',
     tier: 'SOPRA AI LOW COST',
     names: ['Bijlow'],
-  },
-  {
-    role: 'P',
-    tier: 'JOLLY 2ª FASCIA',
-    names: ['Daffara', 'Perin', 'Motta'],
   },
   {
     role: 'P',
@@ -60,22 +55,12 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'P',
     tier: 'LOW COST 2ª FASCIA',
-    names: ['Stankovic F.'],
+    names: ['Stankovic F.', 'Perri'],
   },
   {
     role: 'P',
     tier: 'LEGHE NUMEROSE',
-    names: ['Thiam', 'Palmisani'],
-  },
-  {
-    role: 'P',
-    tier: 'JOLLY 3ª FASCIA',
-    names: ['Desplanches', 'Turati'],
-  },
-  {
-    role: 'P',
-    tier: 'MERCATO',
-    names: ['Paleari'],
+    names: ['Palmisani', 'Tornqvist'],
   },
   {
     role: 'D',
@@ -85,291 +70,291 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'D',
     tier: 'TOP',
-    names: ['Wesley', 'Spence', 'Bremer', 'Bastoni', 'Pavlovic', 'Solet'],
+    names: ['Wesley', 'Bremer', 'Bastoni', 'Molina N.', 'Pavlovic', 'Spence', 'Solet'],
   },
   {
     role: 'D',
     tier: 'SEMITOP',
-    names: ['Akanji', 'Stones', 'Molina N.', 'Di Lorenzo', 'Gila', 'Rrahmani'],
+    names: ['Akanji', 'Kalulu', 'Di Lorenzo', 'Mancini', 'Rrahmani', 'Stones', 'Gila'],
   },
   {
     role: 'D',
     tier: 'SOTTO AI SEMITOP',
-    names: ['Mancini', 'Kalulu', 'Cambiaso', 'Zappacosta', 'Spinazzola'],
+    names: ['Bisseck', 'N\'Dicka', 'Ostigard', 'Ramon'],
   },
   {
     role: 'D',
     tier: 'FASCIA ALTA',
-    names: ['N\'Dicka', 'Lucumì', 'Bisseck', 'Ramon'],
+    names: ['Spinazzola', 'Tavares N.', 'Cambiaso', 'Zappacosta', 'Celik', 'Lucumì'],
   },
   {
     role: 'D',
     tier: 'JOLLY 1ª FASCIA',
-    names: ['Carlos Augusto', 'Celik'],
+    names: ['Carlos Augusto', 'Kempf'],
   },
   {
     role: 'D',
     tier: 'POSSIBILI SORPRESE',
-    names: ['Chalobah T.', 'Koulierakis', 'Vojvoda', 'Kaiki', 'Obrador', 'Mitaj'],
+    names: ['Chalobah T.', 'Couto', 'Vojvoda', 'Koulierakis'],
   },
   {
     role: 'D',
     tier: 'FASCIA MEDIA',
-    names: ['Ostigard', 'Kristensen T.', 'Hermoso', 'Bartesaghi', 'Delprato', 'Miranda J.', 'Valle', 'Kempf', 'Bernasconi'],
+    names: ['Hermoso', 'Miranda J.', 'Belghali', 'Valle', 'Delprato', 'Bernasconi', 'Kristensen T.'],
   },
   {
     role: 'D',
     tier: 'INFORTUNATI',
-    names: ['Buongiorno', 'Parisi'],
+    names: ['Buongiorno', 'Hien', 'Parisi'],
   },
   {
     role: 'D',
     tier: 'SCOMMESSE',
-    names: ['Couto', 'Jimenez A.', 'Viery', 'Ahanor', 'Valdepenas'],
+    names: ['Jimenez A.', 'Mangas', 'Kaiki', 'Obrador', 'Mitaj', 'Viery', 'Valdepenas', 'Lulli', 'Fortini'],
   },
   {
     role: 'D',
     tier: 'SOPRA AI LOW COST',
-    names: ['Vasquez', 'Dragusin', 'Valeri', 'Gabbia', 'Scalvini', 'Hien', 'Mina', 'Norton-Cuffy', 'Tiago Gabriel', 'Pedraza'],
+    names: ['Scalvini', 'Vasquez', 'Tiago Gabriel', 'Valeri', 'Kamara H.', 'Theate', 'Mina'],
   },
   {
     role: 'D',
     tier: 'JOLLY 2ª FASCIA',
-    names: ['Bellanova', 'Joao Mario', 'Beukema', 'Holm', 'Rensch'],
+    names: ['Bartesaghi', 'Bellanova', 'Joao Mario', 'Balerdi', 'Beukema', 'Holm', 'Pavard', 'De Winter', 'Gatti', 'Rensch'],
   },
   {
     role: 'D',
     tier: 'LOW COST 1ª FASCIA',
-    names: ['Zortea', 'Kelly L.', 'Gatti', 'Doekhi', 'Idzes', 'Bella-Kotchap', 'Comuzzo', 'Gallo', 'Gaspar K.', 'Pedersen', 'Troilo'],
+    names: ['Diego Carlos', 'Gabbia', 'Sutalo J.', 'Zortea', 'Gallo', 'Leysen F.', 'Gaspar K.', 'Troilo', 'Van Der Brempt', 'Doekhi', 'Bracaglia', 'Dragusin', 'Idzes', 'Obert', 'Sugawara', 'Kelly L.', 'Provstgaard', 'Mazzocchi'],
   },
   {
     role: 'D',
     tier: 'LOW COST 2ª FASCIA',
-    names: ['Coco', 'Ismajli', 'Heggem', 'Kamara H.', 'Mangas', 'Kolasinac', 'Oyono A.', 'Veiga D.', 'Vitik', 'Comert', 'Kabasele', 'Walukiewicz', 'Favasuli'],
+    names: ['Comuzzo', 'Coco', 'Ismajli', 'Caleta-Car', 'Heggem', 'Kolasinac', 'Marcandalli', 'Marusic', 'Monterisi', 'Pedraza', 'Veiga D.', 'Bella-Kotchap', 'Zè Pedro', 'Juan Jesus', 'Kabasele', 'Vitik', 'Estupinan', 'Ziolkowski'],
   },
   {
     role: 'D',
     tier: 'LEGHE NUMEROSE',
-    names: ['Obert', 'Marcandalli', 'Marusic', 'Monterisi', 'Bracaglia', 'Haps', 'Moreno M.', 'Zè Pedro', 'Correia T.', 'Halhal', 'Siebert', 'Smolcic I.', 'Carboni A.', 'Hainaut', 'Kossounou', 'Rodriguez Ju.', 'Pellegrini Lu.', 'Leysen F.', 'Terzic'],
+    names: ['Oyono A.', 'Correia T.', 'Haps', 'Comert', 'Hainaut', 'Moreno M.', 'Rodriguez Ju.', 'Siebert', 'Smolcic I.', 'Terzic', 'Walukiewicz', 'Carboni A.', 'Drameh', 'Schingtienne', 'Tchato', 'Goglichidze'],
   },
   {
     role: 'D',
     tier: 'JOLLY 3ª FASCIA',
-    names: ['Pavard', 'Fortini', 'Olivera', 'Bertola', 'Doig', 'Ghilardi', 'Valenti', 'Zanoli', 'De Winter', 'Idrissi R.', 'Provstgaard', 'Ranieri L.', 'Biraghi', 'Helland', 'Puczka', 'Van Der Brempt', 'Cabal', 'Ziolkowski'],
+    names: ['Badiashile', 'Doig', 'Ghilardi', 'Olivera', 'Bertola', 'Floriani Mussolini', 'Kossounou', 'Valenti', 'Zanoli', 'Helland', 'Ranieri L.', 'Abankwah', 'Biraghi', 'Marin R.', 'Dembelè A.'],
   },
   {
     role: 'D',
     tier: 'JOLLY 4ª FASCIA',
-    names: ['Kofler', 'Arizala', 'Birindelli', 'Zappa', 'Britschgi', 'Casale', 'Alhassane', 'Ebosse', 'Lazzari', 'Otoa', 'Palma', 'Sabelli', 'Carboni F.', 'De Silvestri', 'Mazzocchi', 'Mlacic', 'Ndiaye', 'Oyono J.', 'Odenthal', 'Omar Fayed'],
+    names: ['Calvani', 'Birindelli', 'Cittadini', 'Favasuli', 'Britschgi', 'Ebosse', 'Franjic', 'Halhal', 'Kambwala', 'Odenthal', 'Palma', 'Alhassane', 'Lazzari', 'Ndiaye', 'Otoa', 'Pellegrini Lu.', 'Puczka', 'Sabelli', 'Carboni F.', 'Maye', 'Omar Fayed'],
   },
   {
     role: 'D',
     tier: 'A RISCHIO',
-    names: ['Calvani', 'Pongracic', 'Akpoguma', 'Candè', 'Cittadini', 'Diawara S.', 'Marin R.', 'Terracciano F.', 'Corrado', 'Marianucci', 'Missori', 'Ndaba', 'Rugani'],
+    names: ['Kofler', 'Arizala', 'Pongracic', 'Akpoguma', 'Candè', 'Casale', 'Kouadio', 'Lucchesi', 'Cinquegrano', 'Drobnic', 'Jean', 'Ndaba', 'Terracciano F.', 'De Silvestri'],
   },
   {
     role: 'D',
     tier: 'DA EVITARE',
-    names: ['Delli Carri', 'Lucchesi', 'Kouadio', 'Schingtienne', 'Sverko', 'Aurelio', 'Franjic', 'Jean', 'Sagrado', 'Abankwah', 'Amey', 'Antov', 'Bakoune', 'Cinquegrano', 'Goldaniga', 'Gomes', 'Matturro', 'Patric', 'Pieragnolo'],
+    names: ['Idrissi R.', 'Sverko', 'Aurelio', 'Bakoune', 'Diawara S.', 'Sagrado', 'Amey', 'Antov', 'Goldaniga', 'Gomes', 'Patric', 'Pieragnolo'],
   },
   {
     role: 'D',
     tier: 'MERCATO',
-    names: ['Dodò', 'Romagnoli', 'Tavares N.', 'Tomori', 'Martin', 'Estupinan', 'Floriani Mussolini'],
+    names: ['Dodò', 'Norton-Cuffy', 'Romagnoli', 'Tomori', 'Cabal', 'Marianucci', 'Rugani'],
   },
   {
     role: 'C',
     tier: 'SUPER TOP',
-    names: ['Paz N.', 'McTominay'],
+    names: ['Paz N.', 'Calhanoglu'],
   },
   {
     role: 'C',
     tier: 'TOP',
-    names: ['Orsolini', 'Calhanoglu', 'Pulisic', 'De Bruyne', 'Rabiot', 'Zaniolo'],
+    names: ['McTominay', 'Orsolini', 'Pulisic', 'Baturina', 'Rabiot', 'Frattesi', 'De Bruyne'],
   },
   {
     role: 'C',
     tier: 'SEMITOP',
-    names: ['Zaccagni', 'Mastantuono', 'Atta', 'Baturina', 'Jones C.', 'Gudmundsson A.', 'Alajbegovic', 'Vlasic'],
+    names: ['Zaniolo', 'Zaccagni', 'Atta', 'Mora', 'Mastantuono', 'Kessiè', 'Vlasic', 'Alajbegovic', 'McKennie', 'Jones C.'],
   },
   {
     role: 'C',
     tier: 'SOTTO AI SEMITOP',
-    names: ['Mora', 'Taylor K.', 'Da Cunha', 'Barella', 'McKennie', 'Rowe'],
+    names: ['Zielinski', 'Conceicao', 'Rowe', 'Barella', 'Da Cunha', 'Taylor K.', 'Gudmundsson A.'],
   },
   {
     role: 'C',
     tier: 'FASCIA ALTA',
-    names: ['Conceicao', 'Zielinski', 'Modric', 'Saelemaekers', 'Zambo Anguissa', 'Isaksen', 'Frattesi', 'Samardzic', 'Politano'],
+    names: ['Ekkelenkamp', 'Samardzic', 'Modric', 'Konè M.', 'Zambo Anguissa', 'Moreira', 'Politano', 'Isaksen', 'Chukwueze'],
   },
   {
     role: 'C',
     tier: 'JOLLY 1ª FASCIA',
-    names: ['Rodriguez Je.', 'Sucic P.', 'Pasalic', 'Odgaard', 'Chukwueze', 'Zhegrova', 'Pellegrini Lo.'],
+    names: ['Gonzalez N.', 'Sucic P.', 'Rodriguez Je.', 'Vergara', 'Pasalic'],
   },
   {
     role: 'C',
     tier: 'POSSIBILI SORPRESE',
-    names: ['Diouf', 'Cissè A.', 'Oulai', 'Cacciamani', 'Pisilli'],
+    names: ['Diouf', 'Milla', 'Mbangula', 'Pisilli', 'Cacciamani', 'Cissè A.'],
   },
   {
     role: 'C',
     tier: 'FASCIA MEDIA',
-    names: ['Ederson D.S.', 'Konè M.', 'Thuram K.', 'Baldanzi', 'Thorstvedt', 'Bernardeschi', 'Ekkelenkamp', 'Perrone', 'Moreira'],
+    names: ['Ederson D.S.', 'Thorstvedt', 'Baldanzi', 'Perrone', 'Saelemaekers', 'Douglas Luiz', 'Bernardeschi', 'Sarr P.'],
   },
   {
     role: 'C',
     tier: 'INFORTUNATI',
-    names: ['Konè I.', 'Pessina', 'Addai'],
+    names: ['Thuram K.', 'Konè I.', 'Pessina', 'Addai'],
   },
   {
     role: 'C',
     tier: 'SCOMMESSE',
-    names: ['Ndour', 'Calò', 'Liberali', 'Traorè Hj.', 'Adzic', 'Amondarain', 'Bakola'],
+    names: ['Calò', 'Adzic', 'Njie', 'Romano', 'Liberali', 'Ndour', 'Oulai', 'Monteiro J.', 'Bakola', 'Amondarain', 'Traorè Hj.'],
   },
   {
     role: 'C',
     tier: 'SOPRA AI LOW COST',
-    names: ['Fagioli', 'Gaetano', 'Casadei', 'Mandragora', 'Locatelli', 'Schmid', 'Bernabè', 'Oristanio'],
+    names: ['Casadei', 'Colpani', 'Gaetano', 'Schmid', 'Bernabè', 'Fagioli', 'Fitz-Jim', 'Fabbian', 'Folorunsho'],
   },
   {
     role: 'C',
     tier: 'JOLLY 2ª FASCIA',
-    names: ['Vergara', 'Elmas', 'Stankovic A.', 'Cancellieri', 'Cambiaghi', 'Caqueret', 'Zalewski', 'Milla'],
+    names: ['Hutchinson', 'Cancellieri', 'Pellegrini Lo.', 'Volpato', 'Cambiaghi', 'Mandragora', 'Odgaard', 'Elmas', 'Zalewski', 'Caqueret', 'Oristanio', 'Stankovic A.', 'Dominguez B.', 'Loftus-Cheek', 'Ricci S.'],
   },
   {
     role: 'C',
     tier: 'LOW COST 1ª FASCIA',
-    names: ['Cristante', 'Fazzini', 'Frendrup', 'De Roon', 'Colpani', 'Ferguson', 'Lobotka', 'Sow', 'Basic', 'Coulibaly L.', 'Rovella', 'Winks', 'Busio', 'Gandelman', 'Grillitsch', 'Matic', 'Sohm', 'El Aynaoui', 'Fitz-Jim', 'Dominguez B.'],
+    names: ['Cristante', 'Locatelli', 'Frendrup', 'Fazzini', 'Lobotka', 'Coulibaly L.', 'Ferguson', 'Rovella', 'Basic', 'Busio', 'Sohm', 'Grillitsch'],
   },
   {
     role: 'C',
     tier: 'LOW COST 2ª FASCIA',
-    names: ['Adopo', 'Ellertsson', 'Karlstrom', 'Nicolussi Caviglia', 'Pierotti', 'Tourè I.', 'Keita M.', 'Perez K.', 'Hasa'],
+    names: ['Adopo', 'Karlstrom', 'Sow', 'Ellertsson', 'Matic', 'Pierotti', 'Piotrowski', 'Tourè I.', 'Winks', 'Keita M.', 'Perez K.', 'De Roon', 'Gandelman', 'Gorter', 'Hasa', 'Ilic'],
   },
   {
     role: 'C',
     tier: 'LEGHE NUMEROSE',
-    names: ['Unai Gomez', 'Akinsanmiro', 'Berisha M.', 'Gineitis', 'Piotrowski', 'Romano', 'Zerbin', 'Amorim', 'Cataldi', 'Koutsoupias', 'Deiola', 'Diallo O.', 'Helgason', 'Miller L.', 'Sorensen O.', 'Masini'],
+    names: ['Akinsanmiro', 'Unai Gomez', 'Zerbin', 'Gineitis', 'Amorim', 'Berisha M.', 'Miller L.', 'Deiola', 'Helgason', 'Masini'],
   },
   {
     role: 'C',
     tier: 'JOLLY 3ª FASCIA',
-    names: ['Pobega', 'Dele-Bashiru', 'Koopmeiners', 'Meichtry', 'Mkhitaryan', 'Fabbian', 'Jashari', 'Luis Henrique', 'Moro N.', 'Brescianini', 'Colombo L.', 'Gilmour'],
+    names: ['Koopmeiners', 'Pobega', 'Dele-Bashiru', 'Jashari', 'Luis Henrique', 'Meichtry', 'Cataldi', 'Massolin', 'Mkhitaryan', 'Moro N.', 'Brescianini', 'Colombo L.', 'Diallo O.', 'Gilmour', 'Sulemana I.', 'Jovanovic'],
   },
   {
     role: 'C',
     tier: 'JOLLY 4ª FASCIA',
-    names: ['Volpato', 'Felici', 'Ilkhan', 'Loftus-Cheek', 'Ngom', 'Njie', 'Prati', 'Ricci S.', 'Aboukhlal', 'Fini', 'Messias', 'Chakvetadze', 'Ciurria', 'Duncan', 'Fadera', 'Musah', 'Ordonez C.', 'Venturino', 'Anjorin', 'Comotto', 'Fofana Sa.', 'Ilic', 'Kaba', 'Przyborek', 'Zarraga'],
+    names: ['Nicolussi Caviglia', 'Felici', 'Almqvist', 'Cichella', 'Fini', 'Ilkhan', 'Messias', 'Ngom', 'Gagliardini', 'Musah', 'Ordonez C.', 'Chakvetadze', 'Ciurria', 'El Azzouzi O.', 'Fadera', 'Venturino', 'Zarraga', 'Anjorin', 'Ciervo', 'Comotto', 'Fofana Sa.', 'Kaba', 'Mout', 'Przyborek'],
   },
   {
     role: 'C',
     tier: 'A RISCHIO',
-    names: ['Almqvist', 'Gelli F.', 'Sulemana I.', 'Boloca', 'El Azzouzi O.', 'Lipani', 'Maleh', 'Belahyane', 'Cremaschi', 'El Azzouzi A.', 'Iannoni', 'Lahdo', 'Liteta'],
+    names: ['Koutsoupias', 'Gelli F.', 'Maleh', 'Belahyane', 'Boloca', 'Cremaschi', 'Duncan', 'Foe Ondoa', 'Lipani', 'El Azzouzi A.', 'Lahdo', 'Liteta'],
   },
   {
     role: 'C',
     tier: 'DA EVITARE',
-    names: ['Cichella', 'Dagasso', 'Foe Ondoa', 'Forson O.', 'Gorter', 'Konaté A.', 'Kone B.', 'Laerke', 'Mout'],
+    names: ['Forson O.', 'Dagasso', 'Konaté A.', 'Kone B.', 'Laerke'],
   },
   {
     role: 'C',
     tier: 'MERCATO',
-    names: ['Fofana Y.', 'Douglas Luiz', 'Folorunsho', 'Miretti'],
+    names: ['Zhegrova', 'El Aynaoui', 'Fofana Y.', 'Aboukhlal'],
   },
   {
     role: 'A',
     tier: 'SUPER TOP',
-    names: ['Martinez L.', 'Malen'],
+    names: ['Malen', 'Martinez L.'],
   },
   {
     role: 'A',
     tier: 'TOP',
-    names: ['Thuram', 'Ramos G.', 'Hojlund', 'Kolo Muani'],
+    names: ['Ramos G.', 'Thuram', 'Hojlund'],
   },
   {
     role: 'A',
     tier: 'SEMITOP',
-    names: ['Kean', 'Douvikas', 'Yildiz', 'Davis K.'],
+    names: ['Kolo Muani', 'Kean', 'Douvikas', 'Davis K.'],
   },
   {
     role: 'A',
     tier: 'SOTTO AI SEMITOP',
-    names: ['Berardi', 'Scamacca', 'Krstovic'],
+    names: ['Scamacca', 'Esposito F.P.', 'Krstovic', 'Dybala', 'Berardi'],
   },
   {
     role: 'A',
     tier: 'FASCIA ALTA',
-    names: ['Simeone', 'Dybala', 'Santos A.', 'Dovbyk', 'Pinamonti'],
+    names: ['Woltemade', 'Beto', 'Pinamonti', 'Simeone'],
   },
   {
     role: 'A',
     tier: 'JOLLY 1ª FASCIA',
-    names: ['Esposito F.P.', 'Castro S.', 'Leao', 'Soulè', 'Neres', 'Boga', 'Pellegrino M.', 'Lucca'],
+    names: ['Castro S.', 'Pellegrino M.', 'Soulè', 'Bonny', 'Boga', 'Neres'],
   },
   {
     role: 'A',
     tier: 'POSSIBILI SORPRESE',
-    names: ['Adams A.'],
+    names: ['Adams A.', 'Varela G.'],
   },
   {
     role: 'A',
     tier: 'FASCIA MEDIA',
-    names: ['De Ketelaere', 'Laurientè', 'Raspadori', 'Diao'],
+    names: ['Santos A.', 'Dovbyk', 'De Ketelaere', 'Raspadori', 'Laurientè', 'Colombo', 'Diao', 'Esposito Se.'],
+  },
+  {
+    role: 'A',
+    tier: 'INFORTUNATI',
+    names: ['Yildiz'],
   },
   {
     role: 'A',
     tier: 'SCOMMESSE',
-    names: ['Romero D.', 'Mendy P.'],
-  },
-  {
-    role: 'A',
-    tier: 'SOPRA AI LOW COST',
-    names: ['Colombo'],
+    names: ['Raimondo', 'Kvernadze', 'Mendy P.', 'Romero D.'],
   },
   {
     role: 'A',
     tier: 'JOLLY 2ª FASCIA',
-    names: ['Bonny', 'David', 'Giovane', 'Piccoli'],
+    names: ['Piccoli', 'Lang', 'Lucca'],
   },
   {
     role: 'A',
     tier: 'LOW COST 1ª FASCIA',
-    names: ['Cutrone', 'Adams C.', 'Maldini', 'Tourè E.', 'Vitinha O.', 'Kevin Carlos', 'Geubbels', 'Ghedjemis'],
+    names: ['Bowie', 'Adams C.', 'Cutrone', 'Maldini', 'Geubbels', 'Vitinha O.', 'Elphege', 'Yeboah J.'],
   },
   {
     role: 'A',
     tier: 'LOW COST 2ª FASCIA',
-    names: ['Zapata D.', 'Bowie', 'Elphege', 'Rrahmani Al.', 'Yeboah J.', 'Raimondo'],
+    names: ['Kevin Carlos', 'Tourè E.', 'Bobcek', 'Zapata D.', 'Zeballos', 'Ngonge', 'Fatah'],
   },
   {
     role: 'A',
     tier: 'LEGHE NUMEROSE',
-    names: ['Stulic', 'Adorante', 'Mota', 'Havel', 'Kvernadze', 'Varela G.'],
+    names: ['Rrahmani Al.', 'Stulic', 'Adorante', 'Mota'],
   },
   {
     role: 'A',
     tier: 'JOLLY 3ª FASCIA',
-    names: ['Ratkov', 'Sulemana K.', 'Ekhator', 'Dia', 'Noslin', 'Borrelli', 'Kulenovic', 'Kuhn', 'Buksa', 'Vaz'],
+    names: ['Osmajic', 'Noslin', 'Sulemana K.', 'Birligea', 'Borrelli', 'Camarda', 'Frigan', 'Giovane', 'Havel', 'Kulenovic', 'N\'Dri', 'Lontani'],
   },
   {
     role: 'A',
     tier: 'JOLLY 4ª FASCIA',
-    names: ['Camarda', 'Frigan', 'Gueye', 'N\'Dri'],
+    names: ['Gueye', 'Ekhator', 'Bayo V.', 'Robinho Junior'],
   },
   {
     role: 'A',
     tier: 'A RISCHIO',
-    names: ['Milik', 'Robinson J.', 'Azon', 'Bayo V.', 'Lauberbach', 'Trepy'],
+    names: ['Milik', 'Robinson J.', 'Azon'],
   },
   {
     role: 'A',
     tier: 'DA EVITARE',
-    names: ['Mutandwa', 'Albarracin', 'De Martis', 'Lisman', 'Lontani'],
+    names: ['De Martis', 'Lauberbach', 'Lisman', 'Trepy'],
   },
   {
     role: 'A',
     tier: 'MERCATO',
-    names: ['Nkunku', 'Esposito Se.', 'Gimenez', 'Morata', 'Lang'],
+    names: ['Dia', 'Ratkov', 'David', 'Ghedjemis', 'Mutandwa', 'Vaz'],
   },
 ];

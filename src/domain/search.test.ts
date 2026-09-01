@@ -80,7 +80,7 @@ describe('searchPlayers sul listone reale', () => {
 
   it('con query vuota propone i piu quotati del ruolo', () => {
     const primi = searchPlayers(players, '', { role: 'A', limit: 3 }).map((h) => h.player);
-    expect(primi[0]?.name).toBe('Martinez L.');
+    expect(primi[0]?.name).toBe('Malen');
     const quots = primi.map((p) => p.quot);
     expect([...quots].sort((a, b) => b - a)).toEqual(quots);
   });

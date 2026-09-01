@@ -11,9 +11,9 @@ import { normalizeQuery } from './search';
  *
  * L'aggancio e' per nome normalizzato, non per id: la guida non pubblica gli id
  * di Fantacalcio.it. Regge perche' la guida usa la stessa convenzione del
- * listone ("Martinez Jo.", "Milinkovic-Savic V."). Sul listone 2026-27 aggancia
- * 479 dei 482 nomi, senza ambiguita'; i tre superstiti sono giocatori usciti
- * dalla Serie A. Chi non aggancia semplicemente non ha fascia: qui non c'e'
+ * listone ("Martinez Jo.", "Milinkovic-Savic V."). Sul listone di fine mercato
+ * 2026-27 aggancia 490 dei 492 nomi, senza ambiguita'; i due superstiti sono
+ * giocatori usciti dalla Serie A. Chi non aggancia semplicemente non ha fascia: qui non c'e'
  * niente da salvare, quindi non c'e' niente da perdere.
  */
 

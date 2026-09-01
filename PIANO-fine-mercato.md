@@ -119,18 +119,18 @@ npm test    # adesso serve a qualcosa: guarda cosa cade
 ### 2.1 I numeri fissi da riallineare
 
 Cadranno quasi certamente questi, tutti legati alle dimensioni del listone di agosto
-(537 righe totali, 516 id in lista):
+(587 righe totali, 538 id in lista dopo il mercato 2026; 537 e 516 prima):
 
 | File | Riga | Asserzione oggi |
 | --- | --- | --- |
-| `src/parse/listone.test.ts` | 62 | `totalRows` = **537** |
-| `src/parse/listone.test.ts` | 75 | id unici = **516** |
-| `src/export/native.test.ts` | 69, 72 | conserva **537** righe |
-| `src/domain/free-agents.test.ts` | 225 | svincolati totali = **516** |
+| `src/parse/listone.test.ts` | 62 | `totalRows` = **587** |
+| `src/parse/listone.test.ts` | 75 | id unici = **538** |
+| `src/export/native.test.ts` | 69, 72 | conserva **587** righe |
+| `src/domain/free-agents.test.ts` | 225 | svincolati totali = **538** |
 | `src/domain/free-agents.test.ts` | 280 | dopo un'assegnazione = **515** |
-| `src/domain/listone-diff.test.ts` | 98 | `kept` = **516** |
-| `src/domain/metrics.test.ts` | 251 | `freeAgents.total` = **516** |
-| `src/store/appStore.test.ts` | 81 | `listone.count` = **516** |
+| `src/domain/listone-diff.test.ts` | 98 | `kept` = **538** |
+| `src/domain/metrics.test.ts` | 251 | `freeAgents.total` = **538** |
+| `src/store/appStore.test.ts` | 81 | `listone.count` = **538** |
 
 Sono numeri da **aggiornare al valore nuovo**, non da rendere generici: valgono come
 protezione proprio perché sono espliciti. Se un domani il parser perdesse cinquanta righe in
@@ -327,7 +327,7 @@ Muore, nominando il problema, invece di scrivere un dataset monco:
 ### 5.5 Cosa c'è già nel codice
 
 ```
-scripts/build-specialists.mjs   → src/data/specialists.ts   (60 blocchi, 237 nomi ad agosto)
+scripts/build-specialists.mjs   → src/data/specialists.ts   (60 blocchi, 233 nomi a fine mercato)
 src/domain/specialists.ts       → tipi, rosterKey, makeSpecialistIndex, specialistLabel
 src/domain/specialists.test.ts  → 16 test
 src/features/player/PlayerCard.tsx → chip "rigorista" e sezione "Piazzati"
@@ -435,6 +435,25 @@ Numeri di riferimento del listone di agosto, utili come metro di paragone:
 **537 righe**, **516 id in lista**, **479 su 482** nomi delle fasce agganciati,
 **399 su 537** giocatori con statistiche 2025/26, **663** giocatori nel dataset statistiche,
 **237 nomi** in 60 blocchi di specialisti, oltre il 90% agganciati.
+
+## Appendice C — Passata del 1º settembre 2026 (mercato chiuso, fonti non ancora definitive)
+
+Piano eseguito per intero sul listone definitivo di Fantacalcio.it e sulle pagine SosFanta
+raggiunte dal *kit asta* (`kit-asta-fantacalcio-guida-formazioni-tipo-rigoristi-tiratori-portieri-budget`):
+i tre URL delle fonti **non sono cambiati**, quindi non c'è stato niente da modificare negli script.
+
+Numeri nuovi, da usare come metro al prossimo giro:
+**587 righe**, **538 id in lista** (P 64, D 189, C 194, A 91), **49 fuori lista**,
+**490 su 492** nomi delle fasce agganciati, **371 su 538** giocatori con statistiche 2025/26,
+**233 nomi** in 60 blocchi di specialisti, tutte e 20 le squadre con un primo rigorista.
+
+Da rifare quando SosFanta avrà finito di aggiornare: `build-tiers.mjs` e `build-specialists.mjs`.
+La guida ai portieri, in particolare, elenca 22 nomi contro i 27 di agosto, e le prose dei
+rigoristi citano ancora giocatori usciti — per la Fiorentina il paragrafo `Primo:` parla di
+Gudmundsson e Mandragora, che nel listone definitivo non sono più in rosa, e infatti l'unico
+rigorista viola agganciato è Mastantuono. Lo script li scarta correttamente, ma è il segnale che
+la fonte è indietro rispetto al mercato. Il listone, invece, è quello definitivo:
+non va riscaricato.
 
 ---
 

@@ -133,7 +133,8 @@ describe('TIER_BLOCKS', () => {
     const players = realListone();
     const index = makeTierIndex(players, TIER_BLOCKS);
     const total = TIER_BLOCKS.reduce((n, b) => n + b.names.length, 0);
-    // Sul listone 2026-27: 479 su 482. I mancanti sono nomi usciti dalla Serie A.
+    // Sul listone di fine mercato 2026-27: 490 su 492. I mancanti sono nomi usciti
+    // dalla Serie A.
     expect(index.size).toBeGreaterThanOrEqual(total - 10);
   });
 

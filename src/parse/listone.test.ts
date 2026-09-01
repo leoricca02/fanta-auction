@@ -58,21 +58,21 @@ describe('normalizeName', () => {
 describe('parseListone — file reale', () => {
   const result = parseListone(readListoneBytes());
 
-  it('carica 516 giocatori escludendo i 21 fuori lista', () => {
-    expect(result.totalRows).toBe(537);
-    expect(result.excludedCount).toBe(21);
-    expect(result.players).toHaveLength(516);
+  it('carica 538 giocatori escludendo i 49 fuori lista', () => {
+    expect(result.totalRows).toBe(587);
+    expect(result.excludedCount).toBe(49);
+    expect(result.players).toHaveLength(538);
   });
 
   it('rispetta la distribuzione per ruolo di §2.1', () => {
     const byRole = { P: 0, D: 0, C: 0, A: 0 };
     for (const p of result.players) byRole[p.role] += 1;
-    expect(byRole).toEqual({ P: 63, D: 181, C: 184, A: 88 });
+    expect(byRole).toEqual({ P: 64, D: 189, C: 194, A: 91 });
   });
 
   it('usa "#" come id primario e non produce duplicati', () => {
     const ids = new Set(result.players.map((p) => p.id));
-    expect(ids.size).toBe(516);
+    expect(ids.size).toBe(538);
   });
 
   it('conserva il nome originale e affianca searchKey normalizzata', () => {
@@ -81,8 +81,8 @@ describe('parseListone — file reale', () => {
     expect(lautaro?.name).toBe('Martinez L.');
     expect(lautaro?.searchKey).toBe('martinez l');
     expect(lautaro?.role).toBe('A');
-    expect(lautaro?.quot).toBe(35);
-    expect(lautaro?.fvm).toBe(296);
+    expect(lautaro?.quot).toBe(33);
+    expect(lautaro?.fvm).toBe(289);
     expect(lautaro?.team).toBe('Inter');
   });
 
@@ -96,17 +96,17 @@ describe('parseListone — file reale', () => {
       bytes.byteOffset,
       bytes.byteOffset + bytes.byteLength,
     ) as ArrayBuffer;
-    expect(parseListone(ab).players).toHaveLength(516);
+    expect(parseListone(ab).players).toHaveLength(538);
   });
 
   it('legge il foglio richiesto per nome', () => {
     expect(parseListone(readListoneBytes(), { sheetName: 'Lista calciatori' }).players).toHaveLength(
-      516,
+      538,
     );
   });
 
   it('e memoizzato dalla fixture con lo stesso risultato', () => {
-    expect(realListone()).toHaveLength(516);
+    expect(realListone()).toHaveLength(538);
     expect(realListone()).toBe(realListone());
   });
 });
