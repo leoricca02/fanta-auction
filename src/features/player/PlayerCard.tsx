@@ -29,17 +29,25 @@ import type { SeasonStats } from '../../domain/player-stats';
 import { formatAvg, formatPenalties, statsOf } from '../../domain/player-stats';
 import type { Highlight } from '../../domain/highlights';
 import { highlightsOf, rankLabel } from '../../domain/highlights';
-import type { SetPiece, SpecialistRole } from '../../domain/specialists';
-import { makeSpecialistIndex, specialistLabel, specialistsOf } from '../../domain/specialists';
+import type { HierarchyIndex, SetPiece, SpecialistRole } from '../../domain/specialists';
+import {
+  hierarchyOf,
+  makeHierarchyIndex,
+  makeSpecialistIndex,
+  specialistLabel,
+  specialistsOf,
+} from '../../domain/specialists';
+import { injuryOf, makeInjuryIndex } from '../../domain/injuries';
 import { TIER_BLOCKS } from '../../data/tiers';
-import { SPECIALIST_BLOCKS } from '../../data/specialists';
+import { INJURIES_UPDATED_AT, INJURY_NOTES } from '../../data/injuries';
+import { SPECIALIST_BLOCKS, SPECIALISTS_UPDATED_AT } from '../../data/specialists';
 import { STATS_SEASON } from '../../data/stats';
 import { ADVANCED_INDEX, RANK_INDEX, STATS_INDEX } from '../../data/stats-index';
 import { useAppStore } from '../../store/appStore';
 import { Markdown } from '../goals/Markdown';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
-import { CloseButton, EASE, RoleBadge, SectionTitle } from '../../ui/primitives';
+import { CloseButton, EASE, InfoPopover, RoleBadge, SectionTitle } from '../../ui/primitives';
 import { LineupBadge } from './LineupBadge';
 import { TierBadge } from './TierBadge';
 
@@ -153,6 +161,15 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
     [players],
   );
   const specialists = specialistsOf(player.id, specialistIndex);
+  // Le gerarchie intere: il badge dice il posto, il dettaglio dice il podio.
+  const hierarchyIndex = useMemo(
+    () => makeHierarchyIndex(players, SPECIALIST_BLOCKS),
+    [players],
+  );
+  // Il commento della guida sull'infortunio: c'e' solo per chi e' in fascia
+  // INFORTUNATI, e nemmeno per tutti.
+  const injuryIndex = useMemo(() => makeInjuryIndex(players, INJURY_NOTES), [players]);
+  const injury = injuryOf(player.id, injuryIndex);
 
   const target = isTarget(userData, player.id);
   const activeSlots = new Set(placement.slots.map((s) => s.slotId));
@@ -204,6 +221,10 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
         tag={note?.tag ?? null}
         target={target}
         specialists={specialists}
+        team={player.team}
+        playerId={player.id}
+        hierarchy={hierarchyIndex}
+        injury={injury}
       />
 
       {/* Griglia dei numeri: quattro cifre grezze, mono tabellare. */}
@@ -218,7 +239,12 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
         <Stat label="under" value={player.under === 0 ? '—' : player.under} />
       </section>
 
-      <SpecialistSection roles={specialists} />
+      <SpecialistSection
+        roles={specialists}
+        team={player.team}
+        playerId={player.id}
+        hierarchy={hierarchyIndex}
+      />
 
       <SeasonSection player={player} stats={stats} />
 
@@ -420,7 +446,17 @@ const SPECIALIST_RANK_SHOWN = 3;
  * vuoto in una scheda che si legge in cinque secondi e' peggio di nessun
  * riquadro.
  */
-function SpecialistSection({ roles }: { readonly roles: readonly SpecialistRole[] }): JSX.Element | null {
+function SpecialistSection({
+  roles,
+  team,
+  playerId,
+  hierarchy,
+}: {
+  readonly roles: readonly SpecialistRole[];
+  readonly team: string;
+  readonly playerId: number;
+  readonly hierarchy: HierarchyIndex;
+}): JSX.Element | null {
   const shown = roles.filter((r) => r.rank <= SPECIALIST_RANK_SHOWN);
   if (shown.length === 0) return null;
   return (
@@ -431,8 +467,12 @@ function SpecialistSection({ roles }: { readonly roles: readonly SpecialistRole[
           const Icon = SET_PIECE_ICON[role.kind];
           const first = role.rank === 1;
           return (
-            <Chip
+            <HierarchyChip
               key={role.kind}
+              kind={role.kind}
+              team={team}
+              playerId={playerId}
+              hierarchy={hierarchy}
               icon={<Icon size={11} />}
               className={cn(
                 first
@@ -441,11 +481,114 @@ function SpecialistSection({ roles }: { readonly roles: readonly SpecialistRole[
               )}
             >
               {specialistLabel(role)}
-            </Chip>
+            </HierarchyChip>
           );
         })}
       </div>
     </section>
+  );
+}
+
+const KIND_TITLE: Readonly<Record<SetPiece, string>> = {
+  rigori: 'Rigoristi',
+  punizioni: 'Punizioni',
+  corner: 'Corner',
+};
+
+/**
+ * Un badge di piazzato che, sotto, apre la gerarchia intera della squadra.
+ *
+ * Il badge da solo dice "terzo": la domanda che viene subito dopo e' "terzo
+ * dietro a chi", e la risposta cambia il prezzo. Se il primo della lista non e'
+ * piu' in quella rosa, il terzo e' di fatto secondo — percio' il pannello
+ * mostra anche i nomi che il listone non ha piu', marcati, invece di
+ * nasconderli e far sembrare la gerarchia piu' corta di com'e'.
+ */
+function HierarchyChip({
+  kind,
+  team,
+  playerId,
+  hierarchy,
+  icon,
+  children,
+  className,
+}: {
+  readonly kind: SetPiece;
+  readonly team: string;
+  readonly playerId: number;
+  readonly hierarchy: HierarchyIndex;
+  readonly icon: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly className?: string;
+}): JSX.Element {
+  const slots = hierarchyOf(team, kind, hierarchy);
+  const chip = (
+    <Chip icon={icon} className={cn(className)}>
+      {children}
+    </Chip>
+  );
+  if (slots.length === 0) return chip;
+  return (
+    <InfoPopover label={`${KIND_TITLE[kind]} ${team}`} trigger={chip}>
+      <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">
+        {KIND_TITLE[kind]} {team}
+      </p>
+      <ol className="flex flex-col gap-0.5">
+        {slots.map((slot) => {
+          const mine = slot.player?.id === playerId;
+          const gone = slot.player === null;
+          return (
+            <li
+              key={`${slot.rank}-${slot.name}`}
+              className={cn(
+                'flex items-baseline gap-1.5 text-[12px] leading-tight',
+                mine ? 'font-semibold text-emerald-300' : gone ? 'text-zinc-600' : 'text-zinc-300',
+              )}
+            >
+              <span className="num w-3 shrink-0 text-right text-[10px] text-zinc-500">
+                {slot.rank}
+              </span>
+              <span className={cn('truncate', gone && 'line-through')}>{slot.name}</span>
+              {gone && <span className="ml-auto shrink-0 text-[10px] text-zinc-600">fuori rosa</span>}
+            </li>
+          );
+        })}
+      </ol>
+      <SourceLine date={SPECIALISTS_UPDATED_AT} />
+    </InfoPopover>
+  );
+}
+
+/**
+ * Il commento della guida sull'infortunio, per intero.
+ *
+ * E' l'unico posto dove c'e' scritto **quando torna**, ed e' la differenza fra
+ * "non prenderlo" e "prendilo a saldo". Resta la prosa della fonte: ridurla a
+ * un numero di giornate vorrebbe dire inventarsi una precisione che nessuno ha.
+ */
+function InjuryChip({ text }: { readonly text: string }): JSX.Element {
+  return (
+    <InfoPopover
+      label="Quanto sta fuori"
+      trigger={
+        <Chip icon={<TriangleAlert size={11} />} className="border-yellow-500/30 text-yellow-300">
+          infortunato
+        </Chip>
+      }
+    >
+      <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">Quanto sta fuori</p>
+      <p className="text-[12px] leading-snug text-zinc-300">{text}</p>
+      <SourceLine date={INJURIES_UPDATED_AT} />
+    </InfoPopover>
+  );
+}
+
+/** La fonte e la sua data: un infortunio di tre settimane fa e' un'altra cosa. */
+function SourceLine({ date }: { readonly date: string }): JSX.Element {
+  return (
+    <p className="mt-2 border-t border-white/[0.08] pt-1.5 text-[10px] text-zinc-600">
+      guida SosFanta, {date}
+    </p>
   );
 }
 
@@ -690,12 +833,21 @@ function QuickBadges({
   tag,
   target,
   specialists,
+  team,
+  playerId,
+  hierarchy,
+  injury,
 }: {
   readonly placement: ReturnType<typeof lineupPlacement>;
   readonly tier: ReturnType<typeof tierOf>;
   readonly tag: Tag | null;
   readonly target: boolean;
   readonly specialists: readonly SpecialistRole[];
+  readonly team: string;
+  readonly playerId: number;
+  readonly hierarchy: HierarchyIndex;
+  /** Commento della guida, `null` se la fonte non dice per quanto. */
+  readonly injury: string | null;
 }): JSX.Element {
   const penaltyTaker = specialists.some((r) => r.kind === 'rigori' && r.rank === 1);
   return (
@@ -704,9 +856,16 @@ function QuickBadges({
 
       {/* Il fatto piu' pesante della scheda dopo lo stato di formazione. */}
       {penaltyTaker && (
-        <Chip icon={<Crosshair size={11} />} className="border-emerald-500/40 text-emerald-300">
+        <HierarchyChip
+          kind="rigori"
+          team={team}
+          playerId={playerId}
+          hierarchy={hierarchy}
+          icon={<Crosshair size={11} />}
+          className="border-emerald-500/40 text-emerald-300"
+        >
           rigorista
-        </Chip>
+        </HierarchyChip>
       )}
 
       {placement.status === 'TITOLARE' && (
@@ -721,11 +880,14 @@ function QuickBadges({
         </Chip>
       )}
 
-      {tier === 'INFORTUNATI' && (
-        <Chip icon={<TriangleAlert size={11} />} className="border-yellow-500/30 text-yellow-300">
-          infortunato
-        </Chip>
-      )}
+      {tier === 'INFORTUNATI' &&
+        (injury === null ? (
+          <Chip icon={<TriangleAlert size={11} />} className="border-yellow-500/30 text-yellow-300">
+            infortunato
+          </Chip>
+        ) : (
+          <InjuryChip text={injury} />
+        ))}
 
       {target && (
         <Chip icon={<Target size={11} />} className="border-emerald-500/40 text-emerald-300">

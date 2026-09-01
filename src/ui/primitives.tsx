@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -284,5 +285,118 @@ export function Modal({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+/** Larghezza del pannello: sotto non ci sta una gerarchia, sopra sborda. */
+const POPOVER_WIDTH = 256;
+
+/**
+ * Dettaglio che si apre sopra un badge: col mouse basta passarci, col dito si
+ * tocca.
+ *
+ * Non e' un `title=`. Il tooltip del sistema operativo arriva dopo un secondo,
+ * non si stila, e **col dito non esiste** — e questa app si usa anche da tablet
+ * durante l'asta, che e' esattamente il momento in cui uno vuole sapere in che
+ * ordine tirano i rigori senza aprire un'altra pagina.
+ *
+ * Tre modi di aprirlo, uno per ogni modo di usare l'app: `pointerenter` col
+ * mouse, il tocco (che e' un `click`), il focus da tastiera. Si chiude con
+ * Esc, che qui si ferma: la scheda dietro non deve chiudersi insieme.
+ */
+export function InfoPopover({
+  label,
+  trigger,
+  children,
+  className,
+  panelClassName,
+}: {
+  /** Cosa legge uno screen reader sul bersaglio. */
+  readonly label: string;
+  readonly trigger: ReactNode;
+  readonly children: ReactNode;
+  readonly className?: string;
+  readonly panelClassName?: string;
+}): JSX.Element {
+  const [open, setOpen] = useState(false);
+  /** Da che lato aprirlo: deciso all'apertura, non a ogni render. */
+  const [alignRight, setAlignRight] = useState(false);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const panelId = useId();
+
+  function show(): void {
+    const box = wrap.current?.getBoundingClientRect();
+    if (box !== undefined) setAlignRight(box.left + POPOVER_WIDTH > window.innerWidth - 8);
+    setOpen(true);
+  }
+
+  // Un tocco fuori chiude: col dito non esiste il "porta via il mouse".
+  useEffect(() => {
+    if (!open) return undefined;
+    const away = (e: PointerEvent): void => {
+      if (!(e.target instanceof Node) || wrap.current?.contains(e.target) !== true) setOpen(false);
+    };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [open]);
+
+  return (
+    <span
+      ref={wrap}
+      className="relative inline-flex"
+      onPointerEnter={(e) => {
+        if (e.pointerType === 'mouse') show();
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        aria-label={label}
+        aria-expanded={open}
+        aria-describedby={open ? panelId : undefined}
+        onClick={() => (open ? setOpen(false) : show())}
+        onFocus={show}
+        onBlur={(e) => {
+          if (!(e.relatedTarget instanceof Node) || wrap.current?.contains(e.relatedTarget) !== true)
+            setOpen(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== 'Escape' || !open) return;
+          // La scheda si chiude con Esc: qui si chiude solo il pannello.
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(false);
+        }}
+        className={cn('cursor-help focus:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500', className)}
+      >
+        {trigger}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.span
+            id={panelId}
+            role="tooltip"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.14, ease: EASE }}
+            style={{ width: POPOVER_WIDTH }}
+            className={cn(
+              'absolute top-full z-40 mt-1 block max-h-64 overflow-y-auto rounded-lg',
+              'border border-white/[0.12] bg-zinc-900/95 p-2.5 text-left shadow-pop backdrop-blur-xl',
+              alignRight ? 'right-0' : 'left-0',
+              panelClassName,
+            )}
+          >
+            {children}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
   );
 }

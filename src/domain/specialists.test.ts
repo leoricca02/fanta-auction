@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { SpecialistBlock } from './specialists';
 import {
   SET_PIECES,
+  hierarchyOf,
+  makeHierarchyIndex,
   makeSpecialistIndex,
   rosterKey,
   specialistLabel,
@@ -99,6 +101,50 @@ describe('makeSpecialistIndex', () => {
     expect(specialistsOf(1, makeSpecialistIndex(roster, blocks))).toEqual([
       { kind: 'rigori', rank: 1 },
     ]);
+  });
+});
+
+describe('makeHierarchyIndex', () => {
+  const roster = [p(1, 'Calhanoglu', 'Inter'), p(2, 'Dimarco', 'Inter')];
+  const blocks: SpecialistBlock[] = [
+    { team: 'Inter', kind: 'rigori', names: ['Calhanoglu', 'Lautaro Martinez', 'Dimarco'] },
+  ];
+
+  it('tiene la gerarchia intera, non solo chi aggancia', () => {
+    const slots = hierarchyOf('Inter', 'rigori', makeHierarchyIndex(roster, blocks));
+    expect(slots.map((s) => s.rank)).toEqual([1, 2, 3]);
+    expect(slots.map((s) => s.name)).toEqual(['Calhanoglu', 'Lautaro Martinez', 'Dimarco']);
+  });
+
+  /** Chi non e' piu' in rosa resta nella lista, ma marcato: e' l'informazione. */
+  it('lascia null il giocatore che il listone non ha piu', () => {
+    const slots = hierarchyOf('Inter', 'rigori', makeHierarchyIndex(roster, blocks));
+    expect(slots[0]?.player?.id).toBe(1);
+    expect(slots[1]?.player).toBeNull();
+    expect(slots[2]?.player?.id).toBe(2);
+  });
+
+  it('e vuota per una squadra o un tipo che la fonte non copre', () => {
+    const index = makeHierarchyIndex(roster, blocks);
+    expect(hierarchyOf('Inter', 'corner', index)).toEqual([]);
+    expect(hierarchyOf('Bologna', 'rigori', index)).toEqual([]);
+  });
+
+  it('non guarda maiuscole e accenti del nome squadra', () => {
+    const index = makeHierarchyIndex(roster, blocks);
+    expect(hierarchyOf('inter', 'rigori', index)).toHaveLength(3);
+  });
+
+  it('concorda con makeSpecialistIndex sul listone reale', () => {
+    const players = realListone();
+    const roles = makeSpecialistIndex(players, SPECIALIST_BLOCKS);
+    const hierarchy = makeHierarchyIndex(players, SPECIALIST_BLOCKS);
+    for (const player of players) {
+      for (const role of specialistsOf(player.id, roles)) {
+        const slots = hierarchyOf(player.team, role.kind, hierarchy);
+        expect(slots[role.rank - 1]?.player?.id, `${player.name} ${role.kind}`).toBe(player.id);
+      }
+    }
   });
 });
 

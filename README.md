@@ -185,11 +185,18 @@ Fantacalcio.it: sul listone di fine mercato 2026-27 prende 490 nomi su 492, e ch
 non ha badge.
 
 ```bash
-node scripts/build-tiers.mjs   # riscarica la guida e rigenera src/data/tiers.ts
+node scripts/build-tiers.mjs   # riscarica la guida: src/data/tiers.ts + src/data/injuries.ts
 ```
 
 Lo script muore nominando la pagina se la guida introduce una fascia che `TIER_ORDER` non
 conosce o se il markup cambia: meglio nessun aggiornamento che un file monco.
+
+**Quanto sta fuori.** Della fascia `INFORTUNATI` lo stesso script raccoglie anche il commento
+della guida, che è l'unico posto in cui c'è scritto *quando torna*: passando il mouse sul chip
+**infortunato** — o toccandolo, da tablet — si legge la frase della fonte per intero,
+"rientro previsto dopo la sosta di novembre". Resta prosa: ridurla a un numero di giornate
+vorrebbe dire inventarsi una precisione che la fonte non ha. All'asta è la differenza fra
+"non prenderlo" e "prendilo a saldo".
 
 ---
 
@@ -292,6 +299,12 @@ Chi calcia i **rigori**, le **punizioni** e i **corner**, squadra per squadra, c
 di SosFanta. Il primo rigorista ha un chip acceso in cima alla scheda, accanto allo stato di
 formazione: dopo "titolare" è il fatto più pesante che ci sia su un giocatore. Sotto, la sezione
 *Piazzati* elenca gli incarichi fino al terzo posto — oltre, la gerarchia è teorica.
+
+**Il podio della squadra** sta sotto il badge: mouse sopra, o dito, e si apre la gerarchia
+intera di quel club — chi tira per primo, chi dopo. "Terzo" da solo non dice niente; terzo
+dietro a due che non sono più in rosa dice tutto, e infatti i nomi che il listone non ha più
+restano in lista, barrati e marcati *fuori rosa*, invece di sparire e far sembrare la gerarchia
+più corta di com'è.
 
 ```bash
 node scripts/build-specialists.mjs   # rigenera src/data/specialists.ts

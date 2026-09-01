@@ -92,36 +92,15 @@ export function makeSpecialistIndex(
   players: readonly Player[],
   blocks: readonly SpecialistBlock[],
 ): SpecialistIndex {
-  const rosters = new Map<string, Map<string, Player[]>>();
-  for (const p of players) {
-    const teamKey = normalizeQuery(p.team);
-    let roster = rosters.get(teamKey);
-    if (roster === undefined) {
-      roster = new Map();
-      rosters.set(teamKey, roster);
-    }
-    const key = rosterKey(p.name);
-    const slot = roster.get(key);
-    if (slot === undefined) roster.set(key, [p]);
-    else slot.push(p);
-  }
+  const rosters = makeRosters(players);
 
   const index = new Map<number, SpecialistRole[]>();
   for (const block of blocks) {
     const roster = rosters.get(normalizeQuery(block.team));
     if (roster === undefined) continue;
     block.names.forEach((name, i) => {
-      let picked: Player | undefined;
-      for (const key of candidateKeys(name)) {
-        const candidates = roster.get(key);
-        if (candidates === undefined) continue;
-        // Chiave ambigua dentro la rosa: nessuno prende l'incarico, e non si
-        // ripiega su una chiave piu' debole che sarebbe ancora piu' ambigua.
-        if (candidates.length > 1) return;
-        picked = candidates[0];
-        break;
-      }
-      if (picked === undefined) return;
+      const picked = pickInRoster(roster, name);
+      if (picked === null) return;
       const roles = index.get(picked.id) ?? [];
       // La fonte non ripete un nome nello stesso elenco; se lo facesse, vale la
       // posizione piu' alta, che e' quella che l'utente deve vedere.
@@ -135,6 +114,93 @@ export function makeSpecialistIndex(
     roles.sort((a, b) => (KIND_ORDER.get(a.kind) ?? 0) - (KIND_ORDER.get(b.kind) ?? 0));
   }
   return index;
+}
+
+/** Club normalizzato -> chiave del nome -> giocatori con quella chiave. */
+type Rosters = ReadonlyMap<string, Map<string, Player[]>>;
+
+function makeRosters(players: readonly Player[]): Rosters {
+  const rosters = new Map<string, Map<string, Player[]>>();
+  for (const p of players) {
+    const teamKey = normalizeQuery(p.team);
+    let roster = rosters.get(teamKey);
+    if (roster === undefined) {
+      roster = new Map();
+      rosters.set(teamKey, roster);
+    }
+    const key = rosterKey(p.name);
+    const slot = roster.get(key);
+    if (slot === undefined) roster.set(key, [p]);
+    else slot.push(p);
+  }
+  return rosters;
+}
+
+/** Il giocatore della rosa che la fonte sta nominando, o `null`. */
+function pickInRoster(roster: Map<string, Player[]>, name: string): Player | null {
+  for (const key of candidateKeys(name)) {
+    const candidates = roster.get(key);
+    if (candidates === undefined) continue;
+    // Chiave ambigua dentro la rosa: nessuno prende l'incarico, e non si
+    // ripiega su una chiave piu' debole che sarebbe ancora piu' ambigua.
+    if (candidates.length > 1) return null;
+    return candidates[0] ?? null;
+  }
+  return null;
+}
+
+/**
+ * Un posto della gerarchia di una squadra, cosi' come lo scrive la fonte.
+ *
+ * `player` e' `null` quando quel nome non e' piu' in quella rosa: succede a ogni
+ * mercato, e la scheda lo dice invece di nasconderlo. Sapere che il primo
+ * rigorista della lista se n'e' andato **e'** l'informazione: vuol dire che i
+ * rigori sono di chi viene dopo.
+ */
+export interface SpecialistSlot {
+  readonly rank: number;
+  /** Nome come lo scrive la fonte. */
+  readonly name: string;
+  readonly player: Player | null;
+}
+
+/** Gerarchia completa di una squadra per un tipo di piazzato. */
+export type HierarchyIndex = ReadonlyMap<string, readonly SpecialistSlot[]>;
+
+const hierarchyKey = (team: string, kind: SetPiece): string => `${normalizeQuery(team)}|${kind}`;
+
+/**
+ * Le gerarchie intere, squadra per squadra: quello che serve per mostrare il
+ * podio accanto al badge invece del solo `rank` del giocatore aperto.
+ */
+export function makeHierarchyIndex(
+  players: readonly Player[],
+  blocks: readonly SpecialistBlock[],
+): HierarchyIndex {
+  const rosters = makeRosters(players);
+  const index = new Map<string, readonly SpecialistSlot[]>();
+  for (const block of blocks) {
+    const roster = rosters.get(normalizeQuery(block.team));
+    index.set(
+      hierarchyKey(block.team, block.kind),
+      block.names.map((name, i) => ({
+        rank: i + 1,
+        name,
+        player: roster === undefined ? null : pickInRoster(roster, name),
+      })),
+    );
+  }
+  return index;
+}
+
+const NO_SLOTS: readonly SpecialistSlot[] = [];
+
+export function hierarchyOf(
+  team: string,
+  kind: SetPiece,
+  index: HierarchyIndex,
+): readonly SpecialistSlot[] {
+  return index.get(hierarchyKey(team, kind)) ?? NO_SLOTS;
 }
 
 const NO_ROLES: readonly SpecialistRole[] = [];

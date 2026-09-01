@@ -166,8 +166,14 @@ lasci lì com'è sapendo che serve solo a esercitare la UI.
 node scripts/build-tiers.mjs
 ```
 
-Riscarica la guida SosFanta e riscrive `src/data/tiers.ts` (dataset generato, non si modifica a
-mano). Aggiorna anche `TIERS_UPDATED_AT`, che l'app mostra per dire quanto è vecchia la guida.
+Riscarica la guida SosFanta e riscrive **due** dataset generati, che non si modificano a mano:
+`src/data/tiers.ts` e `src/data/injuries.ts` — quest'ultimo sono i commenti della fascia
+`INFORTUNATI`, cioè le uniche righe della guida che dicono per quanto uno starà fuori, e finisce
+nel popover del chip *infortunato*. Aggiorna anche `TIERS_UPDATED_AT` e `INJURIES_UPDATED_AT`,
+che l'app mostra per dire quanto è vecchia la fonte.
+
+Se la guida cambia impaginazione e i paragrafi non si agganciano più a nessun infortunato, lo
+script muore invece di scrivere un file vuoto.
 
 ### 3.2 Le due cose da cambiare a mano prima di lanciarlo
 
@@ -328,6 +334,7 @@ Muore, nominando il problema, invece di scrivere un dataset monco:
 
 ```
 scripts/build-specialists.mjs   → src/data/specialists.ts   (60 blocchi, 233 nomi a fine mercato)
+scripts/build-tiers.mjs         → src/data/injuries.ts      (commenti sugli infortunati)
 src/domain/specialists.ts       → tipi, rosterKey, makeSpecialistIndex, specialistLabel
 src/domain/specialists.test.ts  → 16 test
 src/features/player/PlayerCard.tsx → chip "rigorista" e sezione "Piazzati"
@@ -420,6 +427,7 @@ Cosa esiste già, per non riscriverlo per sbaglio:
 | Dataset | File generato | Script | Aggancio |
 | --- | --- | --- | --- |
 | Fasce guida SosFanta | `src/data/tiers.ts` | `scripts/build-tiers.mjs` | per **nome** normalizzato |
+| Infortunati, quanto stanno fuori | `src/data/injuries.ts` | `scripts/build-tiers.mjs` | per **nome** normalizzato |
 | Statistiche 2025/26 | `src/data/stats.ts` | `scripts/build-stats.mjs` | per **id** Fantacalcio.it |
 | Specialisti piazzati | `src/data/specialists.ts` | `scripts/build-specialists.mjs` | per **nome, dentro la rosa** |
 
