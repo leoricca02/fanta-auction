@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react';
-import { ArrowDown, Eye, EyeOff, Search, Users } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Search,
+  SearchX,
+  Users,
+} from 'lucide-react';
 
 import type { Player, Role, Tag } from '../../domain/types';
 import { PHASE_ORDER, TAGS } from '../../domain/types';
@@ -13,7 +22,7 @@ import { TIER_BLOCKS } from '../../data/tiers';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
-import { CloseButton, SectionTitle } from '../../ui/primitives';
+import { CloseButton, EmptyState, SectionTitle } from '../../ui/primitives';
 import { LineupBadge } from '../player/LineupBadge';
 import { PlayerCard } from '../player/PlayerCard';
 import { TierBadge } from '../player/TierBadge';
@@ -78,9 +87,47 @@ let persistedFilters: Filters = {
 
 const STATUSES = ['tutti', 'TITOLARE', 'BALLOTTAGGIO', 'PANCHINA', 'NON_INSERITO'] as const;
 
+/**
+ * Le colonne ordinabili, con il **verso in cui ciascuna ordina davvero**.
+ *
+ * Non c'e' un ASC/DESC da alternare: ogni chiave ha un verso solo, quello utile
+ * — la quotazione dal piu' caro, il nome dalla A. Disegnare due frecce
+ * cliccabili prometterebbe un ordinamento inverso che il dominio non fa.
+ * Questa tabella dichiara il verso vero, e la freccia lo mostra.
+ */
+const COLUMNS = [
+  { key: 'name', label: 'nome', numeric: false, direction: 'asc', width: 'w-56' },
+  { key: 'team', label: 'squadra', numeric: false, direction: 'asc', width: 'w-28' },
+  { key: 'status', label: 'formazione', numeric: false, direction: 'asc', width: 'w-32' },
+  { key: 'tier', label: 'fascia', numeric: false, direction: 'desc', width: 'w-28' },
+  { key: 'quot', label: 'quot', numeric: true, direction: 'desc', width: 'w-16' },
+  { key: 'fvm', label: 'fvm', numeric: true, direction: 'desc', width: 'w-16' },
+] as const satisfies readonly {
+  readonly key: SortKey;
+  readonly label: string;
+  readonly numeric: boolean;
+  readonly direction: 'asc' | 'desc';
+  /**
+   * Larghezza fissa delle colonne che non devono respirare.
+   *
+   * Senza, il browser spartisce la riga in parti quasi uguali e una colonna di
+   * fasce lunga trecento pixel per contenere un badge da sessanta allontana il
+   * nome dalla quotazione — cioe' le due cose che si leggono insieme. Solo
+   * Elastica resta la sola nota, che e' testo libero: se anche il nome lo
+   * fosse, su uno schermo largo si aprirebbe una voragine fra il nome e la sua
+   * quotazione — cioe' fra le due cose che si leggono insieme.
+   */
+  readonly width: string;
+}[];
+
+const DIRECTION_LABEL: Readonly<Record<'asc' | 'desc', string>> = {
+  asc: 'crescente',
+  desc: 'dal piu’ alto',
+};
+
 /** Stile comune dei controlli di filtro: un solo posto da cambiare. */
-const CONTROL =
-  'rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-zinc-200 outline-none transition-colors hover:border-white/20 focus:border-emerald-500/50';
+/** Filtri e tendine della barra: la finitura sta in `.field`, qui la densita'. */
+const CONTROL = 'field px-2 py-1 text-zinc-200';
 
 export interface FreeAgentsPanelProps {
   readonly onClose?: () => void;
@@ -161,6 +208,21 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
 
   const freeCount = rows.filter((p) => state.assignmentByPlayerId[p.id] === undefined).length;
 
+  /*
+    Serve a distinguere i due vuoti, che si somigliano e non sono la stessa
+    cosa: "hai stretto troppo i filtri" si risolve allargandoli, "il reparto e'
+    finito" no. Dirlo sbagliato manda l'utente a cercare un giocatore che non
+    esiste piu'.
+  */
+  const hasFilters =
+    filters.query !== '' ||
+    filters.team !== 'tutte' ||
+    filters.tag !== 'tutti' ||
+    filters.status !== 'tutti' ||
+    filters.tier !== 'tutte' ||
+    filters.onlyWithNote ||
+    filters.minQuot > 0;
+
   const cardPlayer = useMemo(
     () => (cardPlayerId === null ? null : (players.find((p) => p.id === cardPlayerId) ?? null)),
     [cardPlayerId, players],
@@ -172,7 +234,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
     <div className={cn('flex max-w-full', embedded ? 'min-h-0 flex-1' : 'h-full')}>
       <div
         className={cn(
-          'flex min-w-0 flex-col gap-2.5 bg-zinc-950/80 p-3 backdrop-blur-xl',
+          'flex min-w-0 flex-col gap-2.5 bg-panel/80 p-3 backdrop-blur-xl',
           embedded ? 'min-h-0 flex-1' : 'h-full w-[46rem] border-l border-white/[0.08]',
         )}
       >
@@ -191,8 +253,18 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
           )}
         </header>
 
-        {/* I quattro reparti, colorati: il ruolo attivo si vede senza leggere. */}
-        <div className="flex gap-1">
+        {/*
+          I quattro reparti in un segmented control: un solo fondo scuro, un
+          bordo solo, e le quattro voci dentro. Quattro bottoni sciolti si
+          leggono come quattro azioni indipendenti; una barra sola si legge come
+          **una scelta fra quattro**, che e' quello che e'.
+
+          Dentro, pero', la voce attiva tiene il colore del suo ruolo invece del
+          grigio uniforme di un segmented control da manuale: qui il ruolo e' la
+          prima informazione della schermata, e sapere di stare guardando i
+          portieri senza leggere la lettera vale piu' dell'uniformita'.
+        */}
+        <div className="flex w-fit gap-0.5 rounded-lg border border-white/10 bg-canvas p-1">
           {PHASE_ORDER.map((role) => {
             const theme = roleTheme(role);
             const active = filters.role === role;
@@ -201,12 +273,13 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                 key={role}
                 type="button"
                 onClick={() => update({ role })}
+                aria-pressed={active}
                 title={theme.label}
                 className={cn(
-                  'rounded-lg px-3.5 py-1 text-sm font-semibold transition-all',
+                  'focus-ring rounded-md px-3.5 py-1 text-sm font-semibold transition-all duration-150',
                   active
                     ? cn(theme.chip, theme.glow)
-                    : 'border border-white/[0.08] bg-white/[0.02] text-zinc-500 hover:text-zinc-300',
+                    : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-300',
                 )}
               >
                 {role}
@@ -314,43 +387,61 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
 
         <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-white/[0.06]">
           <table className="w-full text-xs">
-            <thead className="sticky top-0 z-10 bg-zinc-950/95 text-zinc-500 backdrop-blur">
-              <tr className="border-b border-white/[0.08]">
-                {(
-                  [
-                    ['name', 'nome'],
-                    ['team', 'squadra'],
-                    ['status', 'formazione'],
-                    ['tier', 'fascia'],
-                    ['quot', 'quot'],
-                    ['fvm', 'fvm'],
-                  ] as const
-                ).map(([key, label]) => (
-                  <th
-                    key={key}
-                    onClick={() => update({ sort: key })}
-                    title="Ordina per questa colonna"
-                    className={cn(
-                      'cursor-pointer px-2 py-1.5 text-left font-normal transition-colors hover:text-zinc-300',
-                      filters.sort === key && 'text-zinc-200',
-                      (key === 'quot' || key === 'fvm') && 'text-right',
-                    )}
-                  >
-                    <span
+            <thead className="sticky top-0 z-10 border-b border-white/10 bg-panel/95 text-zinc-500 backdrop-blur-md">
+              <tr>
+                {COLUMNS.map(({ key, label, numeric, direction, width }) => {
+                  const active = filters.sort === key;
+                  const Arrow = direction === 'desc' ? ArrowDown : ArrowUp;
+                  return (
+                    <th
+                      key={key}
+                      onClick={() => update({ sort: key })}
+                      aria-sort={active ? (direction === 'desc' ? 'descending' : 'ascending') : 'none'}
+                      title={`Ordina per ${label} (${DIRECTION_LABEL[direction]})`}
                       className={cn(
-                        'inline-flex items-center gap-0.5',
-                        (key === 'quot' || key === 'fvm') && 'flex-row-reverse',
+                        'cursor-pointer px-2 py-1.5 text-left font-normal transition-colors duration-150',
+                        active ? 'text-indigo-300' : 'hover:text-zinc-300',
+                        numeric && 'text-right',
+                        width,
                       )}
                     >
-                      {label}
-                      {filters.sort === key && <ArrowDown size={10} className="text-zinc-500" />}
-                    </span>
-                  </th>
-                ))}
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-0.5',
+                          numeric && 'flex-row-reverse',
+                        )}
+                      >
+                        {label}
+                        {/*
+                          La freccia c'e' sempre, ma spenta: cosi' si vede
+                          *quale verso avrebbe* una colonna prima di cliccarla,
+                          e non solo dopo. Sulla colonna attiva si accende
+                          indaco, che in questa app e' il colore del "sei qui" e
+                          non tocca il verde dell'asta.
+                        */}
+                        <Arrow
+                          size={10}
+                          className={cn(
+                            'transition-opacity duration-150',
+                            active ? 'text-indigo-400 opacity-100' : 'opacity-0',
+                          )}
+                        />
+                      </span>
+                    </th>
+                  );
+                })}
                 <th className="px-2 py-1.5 text-left font-normal">nota</th>
+                <th className="w-8 px-2 py-1.5" />
               </tr>
             </thead>
-            <tbody>
+            {/*
+              Divisori appena percettibili invece dei bordi pieni di prima, e
+              zebratura all'1,5% di bianco. Su cinquecento righe il bordo netto
+              e' un reticolo che l'occhio deve scavalcare a ogni riga; la
+              zebratura invece lavora sotto la soglia della coscienza: non si
+              vede, ma il dito segue la riga giusta.
+            */}
+            <tbody className="divide-y divide-white/[0.05]">
               {rows.map((p) => {
                 const note = notes.get(p.id);
                 const owner = state.assignmentByPlayerId[p.id];
@@ -366,20 +457,26 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                         : 'Apri la scheda'
                     }
                     className={cn(
-                      'cursor-pointer border-t border-white/[0.04] transition-colors hover:bg-white/[0.03]',
+                      'group cursor-pointer transition-colors duration-100',
+                      'even:bg-white/[0.015] hover:bg-indigo-500/[0.06]',
                       taken && 'text-zinc-500 opacity-[0.35]',
                     )}
                   >
                     <td
                       className={cn(
-                        'max-w-[10rem] truncate px-2 py-1 text-zinc-100',
-                        taken && 'text-zinc-500 line-through',
+                        'max-w-[10rem] truncate px-2 py-1 font-medium text-zinc-100',
+                        taken && 'font-normal text-zinc-500 line-through',
                       )}
                     >
                       {p.name}
                     </td>
-                    <td className="truncate px-2 py-1 uppercase tracking-wide text-zinc-500">
-                      {p.team}
+                    <td className="px-2 py-1">
+                      {/* Il club e' contesto, non contenuto: pastiglia piccola
+                          e attenuata, cosi' la colonna dei nomi resta l'unica
+                          che l'occhio legge scorrendo. */}
+                      <span className="inline-block max-w-[7rem] truncate rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[11px] font-normal text-slate-400">
+                        {p.team}
+                      </span>
                     </td>
                     <td className="px-2 py-1">
                       {taken ? (
@@ -393,8 +490,8 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                     <td className="px-2 py-1">
                       {tier === null ? null : <TierBadge tier={tier} compact />}
                     </td>
-                    <td className="num px-2 py-1 text-right text-zinc-300">{p.quot}</td>
-                    <td className="num px-2 py-1 text-right text-zinc-500">{p.fvm}</td>
+                    <td className="num px-2 py-1 text-right text-slate-300">{p.quot}</td>
+                    <td className="num px-2 py-1 text-right text-slate-400">{p.fvm}</td>
                     <td
                       className="max-w-[14rem] truncate px-2 py-1 text-zinc-500"
                       title={note?.text ?? ''}
@@ -406,13 +503,35 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                       )}
                       {note?.text ?? ''}
                     </td>
+                    {/*
+                      L'azione della riga e' aprire la scheda, e la riga intera
+                      e' gia' il bersaglio. Questo e' solo il segno che lo dice:
+                      spento a riposo perche' cinquecento frecce accese sono
+                      rumore, acceso sulla riga sotto il puntatore.
+                    */}
+                    <td className="w-8 px-2 py-1 text-right">
+                      <ChevronRight
+                        size={13}
+                        aria-hidden
+                        className="inline opacity-0 transition-opacity duration-100 group-hover:opacity-80"
+                      />
+                    </td>
                   </tr>
                 );
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-2 py-6 text-center text-zinc-600">
-                    Nessuno svincolato con questi filtri.
+                  <td colSpan={8} className="p-3">
+                    <EmptyState
+                      icon={<SearchX size={22} />}
+                      title="Nessuno svincolato con questi filtri"
+                      hint={
+                        hasFilters
+                          ? 'Allarga la ricerca: togli la fascia, abbassa la quotazione minima, o cambia reparto.'
+                          : 'Il reparto e’ finito: tutti i giocatori di questo ruolo sono gia’ stati assegnati.'
+                      }
+                      className="border-0"
+                    />
                   </td>
                 </tr>
               )}
