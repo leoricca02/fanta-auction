@@ -22,6 +22,16 @@ body,
 html {
   height: 100dvh;
   -webkit-tap-highlight-color: transparent;
+  /* L'app e' solo scura: senza questo il menu a tendina nativo di `select` si
+   * apre bianco e il testo, che eredita il chiaro della pagina, sparisce. */
+  color-scheme: dark;
+}
+
+/* Firefox e Windows ignorano `color-scheme` sulle voci: le coloriamo a mano. */
+option,
+optgroup {
+  background-color: rgb(24 24 27);
+  color: rgb(228 228 231);
 }
 
 body {

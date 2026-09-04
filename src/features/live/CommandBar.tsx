@@ -218,8 +218,8 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
             </span>
           )}
           {abbr !== null && (
-            <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-semibold uppercase text-emerald-300">
-              {abbr}
+            <span className="max-w-[10rem] truncate rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-semibold text-emerald-300">
+              {teams.find((t) => t.abbr === abbr)?.name ?? abbr.toUpperCase()}
             </span>
           )}
           {phase !== null && text === '' && (

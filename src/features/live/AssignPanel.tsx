@@ -232,10 +232,10 @@ export function AssignPanel({
             <>
               A <span className="num text-zinc-300">{price}</span> possono rilanciare in{' '}
               <strong className="num text-zinc-200">{rivals.length}</strong>:{' '}
-              <span className="font-medium uppercase tracking-wide text-zinc-400">
+              <span className="font-medium text-zinc-400">
                 {rivals
-                  .map((r) => teams.find((t) => t.id === r.teamId)?.abbr ?? r.teamId)
-                  .join(' ')}
+                  .map((r) => teams.find((t) => t.id === r.teamId)?.name ?? r.teamId)
+                  .join(', ')}
               </span>
             </>
           )}
@@ -372,8 +372,8 @@ function TeamGrid({
               )}
             >
               <span className="flex items-baseline justify-between gap-1">
-                <span className="truncate text-xs font-semibold uppercase tracking-wide">
-                  {team.abbr}
+                <span className="truncate text-xs font-semibold" title={team.name}>
+                  {team.name}
                 </span>
                 <span
                   className={cn(
@@ -384,8 +384,7 @@ function TeamGrid({
                   {status.credits}
                 </span>
               </span>
-              <span className="mt-0.5 flex items-baseline justify-between gap-1 text-[10px] text-zinc-500">
-                <span className="truncate">{team.name}</span>
+              <span className="mt-0.5 flex items-baseline justify-end gap-1 text-[10px] text-zinc-500">
                 <span className="num shrink-0">
                   {status.blockedBy === 'ROLE_FULL' ? 'pieno' : `max ${status.maxBidAssoluto}`}
                 </span>

@@ -120,10 +120,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
   }, [config]);
 
   const rows = useMemo(() => [...stats.teams].sort(compareTeamStats(sort)), [stats.teams, sort]);
-  const nameById = useMemo(
-    () => new Map(teams.map((t) => [t.id, t.abbr.toUpperCase()])),
-    [teams],
-  );
+  const nameById = useMemo(() => new Map(teams.map((t) => [t.id, t.name])), [teams]);
 
   const { market, pace, mix } = stats;
   const verdict = heatVerdict(market.heatIndex, market.slotsFilled);
@@ -381,7 +378,7 @@ function DealList({ title, hint, deals, nameById, render }: DealListProps): JSX.
             <RoleBadge role={deal.role} size="xs" />
             <span className="min-w-0 flex-1 truncate text-zinc-100">{deal.name}</span>
             <span className="shrink-0 text-zinc-600">{deal.club}</span>
-            <span className="w-10 shrink-0 text-right text-zinc-400">
+            <span className="w-28 shrink-0 truncate text-right text-zinc-400">
               {nameById.get(deal.teamId) ?? deal.teamId}
             </span>
             <span className="w-20 shrink-0 text-right num text-zinc-200">

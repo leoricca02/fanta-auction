@@ -482,8 +482,8 @@ function RecentEvents(): JSX.Element {
               <span className="min-w-0 flex-1 truncate">
                 {byId.get(event.playerId)?.name ?? `#${event.playerId}`}
               </span>
-              <span className="w-10 shrink-0 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-                {teams.find((t) => t.id === event.teamId)?.abbr ?? event.teamId}
+              <span className="w-28 shrink-0 truncate text-[11px] font-medium text-zinc-500">
+                {teams.find((t) => t.id === event.teamId)?.name ?? event.teamId}
               </span>
               <span className="num w-10 shrink-0 text-right text-zinc-200">{event.price}</span>
               <button
