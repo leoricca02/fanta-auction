@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  CalendarDays,
   Check,
   Gavel,
   Loader2,
@@ -16,6 +17,7 @@ import { useAppStore } from './store/appStore';
 import { LivePage } from './features/live/LivePage';
 import { TeamsPage } from './features/teams/TeamsPage';
 import { FreeAgentsPanel } from './features/free/FreeAgentsPanel';
+import { GridPage } from './features/grid/GridPage';
 import { GoalsPanel } from './features/goals/GoalsPanel';
 import { SettingsPanel } from './features/settings/SettingsPanel';
 import { ImportConfirm } from './features/settings/ImportConfirm';
@@ -23,7 +25,7 @@ import { ListoneConfirm } from './features/settings/ListoneConfirm';
 import { EASE } from './ui/primitives';
 import { cn } from './ui/cn';
 
-type Tab = 'live' | 'teams' | 'free' | 'goals' | 'settings';
+type Tab = 'live' | 'teams' | 'free' | 'griglia' | 'goals' | 'settings';
 
 interface TabDef {
   readonly id: Tab;
@@ -35,6 +37,7 @@ const TABS: readonly TabDef[] = [
   { id: 'live', label: 'Asta', Icon: Gavel },
   { id: 'teams', label: 'Squadre', Icon: Shield },
   { id: 'free', label: 'Svincolati', Icon: Users },
+  { id: 'griglia', label: 'Griglia', Icon: CalendarDays },
   { id: 'goals', label: 'Obiettivi', Icon: Target },
   { id: 'settings', label: 'Impostazioni', Icon: Settings },
 ];
@@ -143,6 +146,7 @@ export function App(): JSX.Element {
         {tab === 'live' && <LivePage />}
         {tab === 'teams' && <TeamsPage />}
         {tab === 'free' && <FreeAgentsPanel embedded />}
+        {tab === 'griglia' && <GridPage />}
         {tab === 'goals' && <GoalsPanel embedded />}
         {tab === 'settings' && <SettingsPanel />}
       </main>

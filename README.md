@@ -336,6 +336,64 @@ unico dei tre, va lanciato **dopo** aver aggiornato `data/lista_calciatori_class
 Stampa le sessanta righe di quello che ha capito prima di scrivere il file: un parser di prosa
 si verifica leggendolo.
 
+### 🗓️ La griglia di alternanza
+
+Il calendario di Serie A visto dal fantacalcio: **venti righe, trentotto colonne**, ogni casella
+è l'avversario di quella giornata colorato per quanto è duro affrontarlo. `INT` maiuscolo è in
+casa, `int` minuscolo è fuori.
+
+Serve a una domanda sola, quella per cui si compra il secondo portiere: *se accoppio queste due
+squadre, quante giornate comode mi restano?* Clicchi due righe — fino a quattro — e in cima
+compare l'abbinamento: **voto su 100**, facili, medie, difficili, quante in casa e quante fuori.
+Ogni giornata l'anello bianco segna la partita che schiereresti davvero, cioè la più comoda fra
+quelle scelte. Il pulsante **Attaccanti** guarda le stesse partite dall'altra parte: il colore
+non è lo stesso, perché una difesa molle e un attacco molle non sono la stessa squadra —
+l'Udinese è *media* per un portiere e *facile* per un attaccante.
+
+Sopra la griglia stanno i **migliori abbinamenti** — le tre coppie e le due terne migliori
+possibili sull'intervallo di giornate scelto, calcolate per intero e non a campione: 190 coppie
+e 1140 terne sono poche abbastanza perché l'esaustivo costi meno di qualunque scorciatoia. Un
+click le carica. L'intervallo parte dalla prima giornata **ancora da giocare**, e i preset
+`prossime 5` e `prossime 10` sono la finestra in cui una scelta di formazione ha senso: sulle
+38 giornate intere tutte le squadre si equivalgono, perché tutte affrontano tutte.
+
+**I colori sono quelli di FantaLab**, non una stima di questo progetto: stanno in
+`src/data/difficulty.ts`, una riga per club con la colonna portieri e quella attaccanti. Sono
+stati letti dalla loro griglia incrociando la riga della Juventus con il calendario, casella per
+casella; le due occorrenze di ogni club — andata e ritorno, casa e fuori — hanno sempre lo stesso
+colore, quindi **la difficoltà non dipende dal campo**. La tabella si aggiorna a mano ed è
+l'unico posto da toccare se un giudizio cambia.
+
+Il **voto** è `100 − peso medio`, contando 0 una partita facile, 50 una media e 100 una
+difficile. È il conto di FantaLab, e i test lo ancorano ai loro numeri: Genoa + Udinese sulle 38
+giornate fa 87, Frosinone + Genoa dalla 3ª fa 86, Genoa + Parma + Udinese fa 99, Atalanta +
+Bologna fa 83 con 26 facili, 11 medie e 1 difficile. Sono gli stessi valori che stampa la loro
+griglia.
+
+> Resta una differenza, ed è solo cosmetica: **quante in casa e quante fuori**. Quando le squadre
+> di un abbinamento hanno lo stesso colore nella stessa giornata — un terzo delle giornate, i
+> colori sono tre — bisogna decidere quale delle due "giocheresti", e quella scelta non cambia la
+> difficoltà ma sposta il conto casa/fuori. Qui vince il club che hai scelto per primo.
+>
+> FantaLab fa lo stesso in **22 pareggi su 25** misurati su due abbinamenti; nei tre restanti
+> sceglie l'altro, e la loro regola non è ricostruibile perché si contraddice: sulla stessa coppia
+> di partite (Torino fuori contro Genoa in casa) in un abbinamento vince l'una e in un altro
+> l'altra. Non è il fattore campo, non è l'alternanza dei due portieri, non è l'orario — i turni
+> futuri sono tutti alle 15:00 — e non è la forza delle rose. Il risultato è **una unità di
+> scarto** sul riquadro casa/fuori: 20 contro 21 su Atalanta + Bologna, 18 contro 19 su
+> Udinese + Genoa + Parma. Facili, medie, difficili e voto restano identici.
+
+```bash
+node scripts/build-calendar.mjs   # rigenera src/data/calendar.ts
+```
+
+Le partite sono il calendario ufficiale di Fantacalcio.it, verificato prima di essere scritto:
+dieci partite per giornata, nessuna squadra due volte nello stesso turno, diciannove in casa e
+diciannove fuori per tutti, e i **nomi dei club uguali a quelli del listone** — se il calendario
+dicesse "Hellas Verona" dove il listone dice "Verona", lo script muore invece di produrre una
+griglia con un buco. Un club che il calendario ha e la tabella dei colori no non viene
+indovinato: la griglia lo salta e lo dice.
+
 ### 🎯 Obiettivi
 
 Strategia in markdown semplice (titoli, elenchi, **grassetto**, *corsivo*, `codice`) e lista
@@ -416,9 +474,9 @@ aspettare settembre.
 src/
 ├── domain/      logica pura — reducer, formazioni, ricerca, statistiche, checklist, backup
 ├── parse/       parser difensivo del listone .xlsx
-├── data/        fasce SosFanta e statistiche Fantacalcio.it, generate da scripts/
+├── data/        fasce SosFanta, statistiche e calendario Fantacalcio.it, generate da scripts/
 ├── store/       Zustand + Dexie
-├── features/    live · teams · free · goals · player · settings
+├── features/    live · teams · free · grid · goals · player · settings
 └── export/      xlsx nativo · report · pdf
 ```
 
@@ -458,7 +516,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 627 test
+npm test              # 658 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```
