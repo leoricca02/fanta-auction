@@ -43,6 +43,7 @@ export function RoleBadge({
       title={theme.label}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-md font-semibold leading-none',
+        'transition-colors duration-150',
         theme.chip,
         glow && theme.glow,
         size === 'xs' && 'h-4 w-4 text-[10px]',
@@ -56,7 +57,12 @@ export function RoleBadge({
   );
 }
 
-/** Contenitore in vetro. Il default e' la card, non il pannello a piena altezza. */
+/**
+ * Contenitore in vetro. Il default e' la card, non il pannello a piena altezza.
+ *
+ * A staccarlo dal fondo sono il bordo e il filo di luce in alto, non un'ombra:
+ * su un canvas gia' scuro un'ombra opaca annerisce e non solleva niente.
+ */
 export function Panel({
   children,
   className,
@@ -64,7 +70,11 @@ export function Panel({
   readonly children: ReactNode;
   readonly className?: string;
 }): JSX.Element {
-  return <div className={cn('glass rounded-xl shadow-panel', className)}>{children}</div>;
+  return (
+    <div className={cn('glass rounded-xl shadow-panel ring-1 ring-white/5', className)}>
+      {children}
+    </div>
+  );
 }
 
 export function SectionTitle({
@@ -114,7 +124,8 @@ export function Kpi({
     <div
       title={title}
       className={cn(
-        'rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 transition-colors hover:border-white/[0.12]',
+        'rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2',
+        'transition-colors duration-150 hover:border-white/20 hover:bg-white/[0.04]',
         className,
       )}
     >
@@ -171,8 +182,8 @@ export function IconButton({
       title={label}
       className={cn(
         'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-500',
-        'transition-colors hover:bg-white/[0.06] hover:text-zinc-200',
-        'focus:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500',
+        'transition-colors duration-150 hover:bg-white/[0.06] hover:text-zinc-200',
+        'focus-ring',
         className,
       )}
     >
@@ -188,11 +199,97 @@ export function CloseButton({ onClose }: { readonly onClose: () => void }): JSX.
       type="button"
       onClick={onClose}
       aria-label="Chiudi"
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
+      className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors duration-150 hover:bg-white/[0.06] hover:text-zinc-200"
     >
       <X size={14} />
       <Kbd>Esc</Kbd>
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+/**
+ * Stato vuoto, a due livelli.
+ *
+ * Una riga di testo grigio dice *che* non c'e' niente. Ma "non c'e' niente" ha
+ * sempre due letture — **e' rotto** oppure **non hai ancora fatto la cosa** —
+ * e in un'app che si usa sotto pressione la seconda va detta esplicitamente,
+ * altrimenti l'utente cerca il guasto invece di fare il gesto.
+ *
+ * Percio' due livelli, non uno: il titolo dice cosa manca, il suggerimento dice
+ * cosa fare. L'icona e' tenue di proposito — deve dare forma al vuoto, non
+ * riempirlo di attenzione: una lista vuota non e' un errore da segnalare.
+ */
+export function EmptyState({
+  icon,
+  title,
+  hint,
+  className,
+}: {
+  readonly icon: ReactNode;
+  readonly title: string;
+  /** Il gesto che riempirebbe questo vuoto. */
+  readonly hint?: ReactNode;
+  readonly className?: string;
+}): JSX.Element {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-white/[0.08] px-4 py-8 text-center',
+        className,
+      )}
+    >
+      <span className="text-slate-600 [&_svg]:stroke-1">{icon}</span>
+      <p className="text-sm font-medium text-slate-300">{title}</p>
+      {hint !== undefined && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+/**
+ * Un rettangolo che pulsa al posto di un dato che sta arrivando.
+ *
+ * Non e' uno spinner con un'altra faccia. Lo spinner dice "aspetta" e basta,
+ * e per farlo **cancella la pagina**: quando i dati arrivano il layout salta,
+ * e quel salto e' il motivo per cui un'app sembra lenta anche quando non lo e'.
+ * Lo scheletro invece disegna gia' la forma di cio' che sta per comparire, il
+ * riempimento non sposta niente, e la stessa attesa si percepisce piu' corta.
+ *
+ * Quindi la geometria non e' decorativa: uno scheletro che non combacia con la
+ * cosa vera fa esattamente il danno che dovrebbe evitare.
+ */
+export function Skeleton({ className }: { readonly className?: string }): JSX.Element {
+  return <span className={cn('block animate-pulse rounded bg-white/[0.06]', className)} />;
+}
+
+/**
+ * Lo scheletro di una tabella: un'intestazione e `rows` righe.
+ *
+ * Le larghezze delle celle sono irregolari di proposito. Barre tutte uguali si
+ * leggono come una griglia, cioe' come un elemento dell'interfaccia; irregolari
+ * si leggono come testo non ancora a fuoco, che e' quello che sono.
+ */
+export function SkeletonTable({
+  rows = 8,
+  className,
+}: {
+  readonly rows?: number;
+  readonly className?: string;
+}): JSX.Element {
+  const widths = ['w-32', 'w-24', 'w-40', 'w-28', 'w-36', 'w-20', 'w-32', 'w-28'];
+  return (
+    <div aria-hidden className={cn('flex flex-col gap-2 p-3', className)}>
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <Skeleton className={cn('h-3', widths[i % widths.length])} />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="ml-auto h-3 w-10" />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -371,7 +468,7 @@ export function InfoPopover({
           e.stopPropagation();
           setOpen(false);
         }}
-        className={cn('cursor-help focus:outline-none focus-visible:ring-1 focus-visible:ring-zinc-500', className)}
+        className={cn('focus-ring cursor-help rounded-md', className)}
       >
         {trigger}
       </button>
@@ -388,7 +485,7 @@ export function InfoPopover({
             style={{ width: POPOVER_WIDTH }}
             className={cn(
               'absolute top-full z-40 mt-1 block max-h-64 overflow-y-auto rounded-lg',
-              'border border-white/[0.12] bg-zinc-900/95 p-2.5 text-left shadow-pop backdrop-blur-xl',
+              'border border-white/10 bg-elevated/95 p-2.5 text-left shadow-pop backdrop-blur-xl',
               alignRight ? 'right-0' : 'left-0',
               panelClassName,
             )}

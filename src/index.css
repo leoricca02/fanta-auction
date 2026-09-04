@@ -27,15 +27,16 @@ html {
   color-scheme: dark;
 }
 
-/* Firefox e Windows ignorano `color-scheme` sulle voci: le coloriamo a mano. */
+/* Firefox e Windows ignorano `color-scheme` sulle voci: le coloriamo a mano.
+ * Stessa quota di `elevated`: la tendina galleggia sopra tutto. */
 option,
 optgroup {
-  background-color: rgb(24 24 27);
+  background-color: rgb(28 38 54);
   color: rgb(228 228 231);
 }
 
 body {
-  background: #09090b;
+  background: theme('colors.canvas');
   color: rgb(228 228 231);
   font-family: theme('fontFamily.sans');
   -webkit-font-smoothing: antialiased;
@@ -57,10 +58,16 @@ textarea {
   touch-action: manipulation;
 }
 
-/* Le tabelle dell'asta sono lunghe: una scrollbar spessa mangia colonne. */
+/* Le tabelle dell'asta sono lunghe: una scrollbar spessa mangia colonne.
+ *
+ * Nativa e non un plugin: `scrollbar-width` copre Firefox, le pseudo-classi
+ * `-webkit-` coprono Chrome ed Edge, e insieme fanno tutto quello che farebbe
+ * una dipendenza in piu'. Il pollice e' sui grigi ardesia della palette nuova,
+ * non piu' sullo zinco neutro: su un fondo bluastro il grigio puro vira al
+ * marrone. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgb(63 63 70) transparent;
+  scrollbar-color: rgb(51 65 85) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -69,12 +76,12 @@ textarea {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgb(63 63 70);
+  background: rgb(51 65 85);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgb(82 82 91);
+  background: rgb(71 85 105);
 }
 
 *::-webkit-scrollbar-track {
@@ -82,24 +89,69 @@ textarea {
 }
 
 @layer components {
-  /* Tasto fisico: compare nella command bar, nei suggerimenti e nei footer. */
+  /**
+   * Tasto fisico: command bar, suggerimenti, footer.
+   *
+   * Sta su `elevated` con un filo di luce in alto: e' l'unico elemento
+   * dell'app che deve sembrare *sporgente* invece che incassato, perche'
+   * rappresenta un tasto vero che si preme davvero.
+   */
   .kbd {
-    @apply inline-flex min-w-[1.25rem] items-center justify-center rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5
-      font-mono text-[10px] font-medium leading-none text-zinc-300 shadow-sm;
+    @apply inline-flex min-w-[1.25rem] items-center justify-center rounded border border-white/10 bg-elevated
+      px-1.5 py-0.5 font-mono text-[10px] font-medium leading-none text-zinc-400;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+      0 1px 2px 0 rgb(0 0 0 / 0.4);
   }
 
-  /* Ogni cifra critica dell'asta: nessun layout shift mentre il prezzo sale. */
+  /**
+   * Ogni cifra critica dell'asta: crediti, offerte, fantamedie, percentuali.
+   *
+   * `tabular-nums` e' il motivo per cui esiste: senza, ogni cifra ha la sua
+   * larghezza e il prezzo che sale da 99 a 100 sposta la colonna accanto. In
+   * una tabella di dodici rose il salto si vede a occhio nudo.
+   *
+   * `slashed-zero` e' l'aggiunta da cockpit: in monospazio uno zero e una O
+   * maiuscola si distinguono male, e i crediti sono pieni di zeri.
+   */
   .num {
     @apply font-mono tabular-nums tracking-tight;
+    font-variant-numeric: tabular-nums slashed-zero;
   }
 
-  /* Vetro delle card e dei pannelli. */
+  /* Vetro delle card e dei pannelli: e' il bordo a staccarli, non l'ombra. */
   .glass {
-    @apply border border-white/[0.08] bg-zinc-900/60 backdrop-blur-xl;
+    @apply border border-white/10 bg-panel/80 backdrop-blur-xl;
+  }
+
+  /**
+   * Campo di testo, numero o tendina.
+   *
+   * Erano dodici copie della stessa stringa di classi sparse per l'app, e
+   * bastava che una restasse indietro perche' una riga di form avesse il bordo
+   * di un'altra epoca. Il fondo e' un velo bianco, non un colore: cosi' il
+   * campo prende la quota del pannello che lo ospita invece di litigarci.
+   */
+  .field {
+    @apply rounded-lg border border-white/10 bg-white/[0.03] text-zinc-100 outline-none;
+    @apply transition-colors duration-150 placeholder:text-zinc-600;
+    @apply hover:border-white/20 focus:border-emerald-500/50 focus:bg-elevated/60;
   }
 }
 
 @layer utilities {
+  /**
+   * Anello di focus da tastiera, uno per tutta l'app.
+   *
+   * `focus-visible` e non `focus`: col mouse l'anello e' rumore, con il Tab e'
+   * l'unica cosa che dice dove sei. Lo stacco dal bersaglio serve perche' su un
+   * fondo scuro un anello attaccato si confonde col bordo del componente.
+   */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60;
+    @apply focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+  }
+
   /* Le frecce dello spinner numerico rubano larghezza al prezzo. */
   .no-spin::-webkit-outer-spin-button,
   .no-spin::-webkit-inner-spin-button {

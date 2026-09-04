@@ -22,7 +22,7 @@ import { GoalsPanel } from './features/goals/GoalsPanel';
 import { SettingsPanel } from './features/settings/SettingsPanel';
 import { ImportConfirm } from './features/settings/ImportConfirm';
 import { ListoneConfirm } from './features/settings/ListoneConfirm';
-import { EASE } from './ui/primitives';
+import { EASE, Skeleton, SkeletonTable } from './ui/primitives';
 import { cn } from './ui/cn';
 
 type Tab = 'live' | 'teams' | 'free' | 'griglia' | 'goals' | 'settings';
@@ -63,17 +63,39 @@ export function App(): JSX.Element {
   }, [ready, listone]);
 
   if (!ready) {
+    /*
+      Lo scheletro della schermata, non uno spinner al centro del vuoto.
+
+      `init` legge IndexedDB: su un listone da cinquecento righe con l'event log
+      dell'asta dietro puo' prendersi qualche decimo. Lo spinner centrato
+      cancella la pagina e poi la fa apparire di colpo, e quel salto e' quasi
+      tutto quello che si percepisce come lentezza. Qui la barra in alto e la
+      tabella ci sono gia', nella loro forma vera: quando i dati arrivano non si
+      sposta niente.
+    */
     return (
-      <div className="flex h-full items-center justify-center gap-2 text-sm text-zinc-500">
-        <Loader2 size={16} className="animate-spin" />
-        Carico i dati…
+      <div className="flex h-full flex-col bg-canvas text-zinc-200">
+        <div className="flex shrink-0 items-center gap-4 border-b border-white/[0.08] px-4 py-2">
+          <Skeleton className="h-6 w-6 rounded-md" />
+          <Skeleton className="h-4 w-28" />
+          <div className="ml-2 flex gap-2">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={i} className="h-6 w-20 rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <SkeletonTable rows={12} className="min-h-0 flex-1" />
+        <p className="flex items-center justify-center gap-2 pb-4 text-xs text-zinc-600">
+          <Loader2 size={13} className="animate-spin" />
+          Carico i dati…
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#09090b] text-zinc-200">
-      <header className="sticky top-0 z-20 flex shrink-0 items-center gap-4 border-b border-white/[0.08] bg-zinc-950/70 px-4 py-2 backdrop-blur-xl">
+    <div className="flex h-full flex-col bg-canvas text-zinc-200">
+      <header className="sticky top-0 z-20 flex shrink-0 items-center gap-4 border-b border-white/[0.08] bg-canvas/70 px-4 py-2 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-400 shadow-glow-emerald">
             <Gavel size={13} />

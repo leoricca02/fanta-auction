@@ -80,19 +80,19 @@ export function LeagueSetup(): JSX.Element {
               value={row.name}
               onChange={(e) => update(i, { name: e.target.value })}
               placeholder={`Squadra ${i + 1}`}
-              className="flex-1 rounded bg-white/[0.03] px-2 py-1 text-sm text-zinc-100 outline-none ring-1 ring-zinc-800"
+              className="field flex-1 px-2 py-1 text-sm"
             />
             <input
               value={row.abbr}
               onChange={(e) => update(i, { abbr: e.target.value.slice(0, 3) })}
               maxLength={3}
               placeholder="sig"
-              className={`w-16 rounded bg-white/[0.03] px-2 py-1 text-center text-sm uppercase text-zinc-100 outline-none ring-1 ${
+              className={`field w-16 border-0 px-2 py-1 text-center text-sm uppercase ring-1 ${
                 duplicates.has(row.abbr.trim().toLowerCase())
-                  ? 'ring-red-600'
+                  ? 'ring-rose-500/60'
                   : row.abbr.trim().length === 3
-                    ? 'ring-zinc-800'
-                    : 'ring-amber-700'
+                    ? 'ring-white/10'
+                    : 'ring-amber-500/50'
               }`}
             />
           </li>

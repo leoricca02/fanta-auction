@@ -33,17 +33,48 @@ export default {
           'monospace',
         ],
       },
+      /**
+       * Le quattro quote del cockpit, dal fondo alla superficie che galleggia.
+       *
+       * Non sono quattro colori scelti a occhio: sono **quattro distanze dallo
+       * schermo**, e l'occhio le legge come profondita' anche senza ombre.
+       * Percio' l'unico modo di dire "questo pannello sta sopra quell'altro" e'
+       * salire di una quota, mai aggiungere un'ombra nera.
+       *
+       * Sono un filo blu, non grigi neutri: sotto le tinte dei ruoli — ambra,
+       * smeraldo, ciano, rosa — un fondo neutro le fa sembrare sporche, mentre
+       * uno leggermente freddo le tiene sature. E' l'unico motivo del blu.
+       *
+       * Ogni token porta `<alpha-value>`, quindi `bg-panel/80` funziona: le
+       * superfici sfocate dell'asta sono quasi tutte traslucide, perche' il
+       * `backdrop-blur` sotto e' cio' che le fa sembrare vetro invece che
+       * cartone.
+       */
       colors: {
-        canvas: '#09090b',
-        surface: 'rgb(24 24 27 / <alpha-value>)',
+        /** Il fondo della pagina. Sotto non c'e' niente. */
+        canvas: 'rgb(11 15 23 / <alpha-value>)',
+        /** Card e pannelli a piena altezza: la quota di lavoro. */
+        panel: 'rgb(19 27 38 / <alpha-value>)',
+        /** Superfici annidate dentro un pannello. */
+        surface: 'rgb(22 32 46 / <alpha-value>)',
+        /** Cio' che galleggia: popover, picker, campi a fuoco. */
+        elevated: 'rgb(28 38 54 / <alpha-value>)',
       },
       boxShadow: {
         'glow-amber': '0 0 0 1px rgb(245 158 11 / 0.25), 0 0 18px -6px rgb(245 158 11 / 0.55)',
         'glow-emerald': '0 0 0 1px rgb(16 185 129 / 0.25), 0 0 18px -6px rgb(16 185 129 / 0.55)',
         'glow-sky': '0 0 0 1px rgb(14 165 233 / 0.25), 0 0 18px -6px rgb(14 165 233 / 0.55)',
         'glow-rose': '0 0 0 1px rgb(244 63 94 / 0.25), 0 0 18px -6px rgb(244 63 94 / 0.55)',
-        panel: '0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 8px 30px -12px rgb(0 0 0 / 0.8)',
-        pop: '0 20px 60px -20px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.06)',
+        /**
+         * Due sole ombre, e nessuna delle due e' una macchia nera.
+         *
+         * Su un fondo gia' scuro un'ombra opaca non stacca niente: annerisce e
+         * basta. Quello che stacca e' il **filo di luce in alto** — il bordo
+         * illuminato di una superficie fisica — piu' un alone largo e tenue che
+         * suggerisce l'altezza senza disegnarla. Il nero resta, ma diffuso.
+         */
+        panel: '0 1px 0 0 rgb(255 255 255 / 0.05) inset, 0 8px 28px -14px rgb(0 0 0 / 0.55)',
+        pop: '0 1px 0 0 rgb(255 255 255 / 0.06) inset, 0 18px 50px -22px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.08)',
       },
       keyframes: {
         'flash-ok': {

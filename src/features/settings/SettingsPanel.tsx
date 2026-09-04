@@ -291,7 +291,7 @@ function DangerZone(): JSX.Element {
                   void resetEverything();
                   setArming(false);
                 }}
-                className="rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-zinc-950 transition-colors hover:bg-rose-400"
+                className="focus-ring rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-zinc-950 transition-all duration-100 hover:bg-rose-400 active:scale-[0.98]"
               >
                 Sì, cancella tutto
               </button>

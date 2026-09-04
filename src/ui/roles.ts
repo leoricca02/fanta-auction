@@ -24,6 +24,15 @@ export interface RoleTheme {
   readonly bar: string;
   /** Ombra colorata per la card del ruolo. */
   readonly glow: string;
+  /**
+   * Tinta dell'alone volumetrico in testa alla scheda.
+   *
+   * E' il colore che il ruolo *irradia*, non un bordo: sfocato a `blur-3xl` e
+   * a opacita' bassa non si legge come elemento, si legge come luce. Serve a
+   * far riconoscere il reparto della scheda aperta con la coda dell'occhio,
+   * mentre si sta guardando il banditore invece dello schermo.
+   */
+  readonly aura: string;
   /** Anello di focus/selezione. */
   readonly ring: string;
 }
@@ -35,6 +44,7 @@ export const ROLE_THEME: Readonly<Record<Role, RoleTheme>> = {
     chip: 'text-amber-400 bg-amber-500/10 border border-amber-500/30',
     bar: 'bg-amber-500',
     glow: 'shadow-glow-amber',
+    aura: 'from-amber-500/40',
     ring: 'ring-amber-500/40',
   },
   D: {
@@ -43,6 +53,7 @@ export const ROLE_THEME: Readonly<Record<Role, RoleTheme>> = {
     chip: 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30',
     bar: 'bg-emerald-500',
     glow: 'shadow-glow-emerald',
+    aura: 'from-emerald-500/40',
     ring: 'ring-emerald-500/40',
   },
   C: {
@@ -51,6 +62,7 @@ export const ROLE_THEME: Readonly<Record<Role, RoleTheme>> = {
     chip: 'text-sky-400 bg-sky-500/10 border border-sky-500/30',
     bar: 'bg-sky-500',
     glow: 'shadow-glow-sky',
+    aura: 'from-sky-500/40',
     ring: 'ring-sky-500/40',
   },
   A: {
@@ -59,6 +71,7 @@ export const ROLE_THEME: Readonly<Record<Role, RoleTheme>> = {
     chip: 'text-rose-400 bg-rose-500/10 border border-rose-500/30',
     bar: 'bg-rose-500',
     glow: 'shadow-glow-rose',
+    aura: 'from-rose-500/40',
     ring: 'ring-rose-500/40',
   },
 };

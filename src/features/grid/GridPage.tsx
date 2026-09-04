@@ -45,8 +45,8 @@ import { roleTheme } from '../../ui/roles';
 /** Oltre quattro squadre l'abbinamento non si legge piu', e non si gioca. */
 const MAX_TEAMS = 4;
 
-const CONTROL =
-  'rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-zinc-200 outline-none transition-colors hover:border-white/20 focus:border-emerald-500/50';
+/** Tendine della barra: la finitura sta in `.field`, qui la densita'. */
+const CONTROL = 'field px-2 py-1 text-zinc-200';
 
 const MODE_LABEL: Readonly<Record<GridMode, string>> = {
   P: 'Portieri',
@@ -351,7 +351,7 @@ export function GridPage(): JSX.Element {
             <tr>
               <th
                 scope="col"
-                className="sticky left-0 top-0 z-20 bg-zinc-950 px-2 py-1.5 text-left text-[10px] font-medium uppercase tracking-wider text-zinc-500"
+                className="sticky left-0 top-0 z-20 bg-canvas px-2 py-1.5 text-left text-[10px] font-medium uppercase tracking-wider text-zinc-500"
               >
                 squadra
               </th>
@@ -362,7 +362,7 @@ export function GridPage(): JSX.Element {
                     ? 'Voto del calendario di questo club'
                     : "Voto che avresti aggiungendo il club all'abbinamento"
                 }
-                className="sticky top-0 z-10 bg-zinc-950 px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500"
+                className="sticky top-0 z-10 bg-canvas px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500"
               >
                 {combo === null ? 'voto' : 'voto +'}
               </th>
@@ -370,14 +370,14 @@ export function GridPage(): JSX.Element {
                 <th
                   key={d}
                   scope="col"
-                  className="num sticky top-0 z-10 bg-zinc-950 px-0 py-1.5 text-center text-[10px] font-normal text-zinc-500"
+                  className="num sticky top-0 z-10 bg-canvas px-0 py-1.5 text-center text-[10px] font-normal text-zinc-500"
                 >
                   {d}
                 </th>
               ))}
               {/* Riempimento: assorbe la larghezza che avanza quando le giornate
                   sono poche, cosi' le caselle restano della stessa misura. */}
-              <th scope="col" className="sticky top-0 z-10 w-full bg-zinc-950" />
+              <th scope="col" className="sticky top-0 z-10 w-full bg-canvas" />
             </tr>
           </thead>
           <tbody>
@@ -386,7 +386,7 @@ export function GridPage(): JSX.Element {
               const key = keyPlayers(players, row.team, prefs.mode, 2);
               return (
                 <tr key={row.team} className={cn(picked && 'bg-white/[0.04]')}>
-                  <th scope="row" className="sticky left-0 z-10 bg-zinc-950 p-0 text-left font-normal">
+                  <th scope="row" className="sticky left-0 z-10 bg-canvas p-0 text-left font-normal">
                     <button
                       type="button"
                       onClick={() => toggleTeam(row.team)}
