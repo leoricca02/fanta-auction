@@ -130,6 +130,29 @@ describe('buildModule', () => {
     expect(slots.filter((s) => s.slotId.startsWith('A'))).toHaveLength(1);
   });
 
+  it('3-4-1-2: il trequartista dietro le due punte', () => {
+    const slots = buildModule('3-4-1-2').slots;
+    expect(slots.filter((s) => s.slotId.startsWith('D')).map((s) => s.roleLabel)).toEqual([
+      'DC',
+      'DC',
+      'DC',
+    ]);
+    // Quattro in linea, poi il solo trequartista: l'ultima linea di mezzo e'
+    // sempre quella dei trequarti, e il suo picker accetta anche gli attaccanti.
+    expect(slots.filter((s) => s.slotId.startsWith('C')).map((s) => s.roleLabel)).toEqual([
+      'EST',
+      'MED',
+      'MED',
+      'EST',
+      'TRQ',
+    ]);
+    const trq = slots.find((s) => s.roleLabel === 'TRQ');
+    expect(trq?.roles.join()).toBe('C,A');
+    expect(slots.filter((s) => s.slotId.startsWith('A'))).toHaveLength(2);
+    // Le quattro linee del nome sono quattro righe di campo distinte.
+    expect(new Set(slots.map((s) => s.line)).size).toBe(5);
+  });
+
   it('3-5-2 e 5-3-2 hanno le etichette dei rispettivi reparti', () => {
     expect(
       buildModule('3-5-2')

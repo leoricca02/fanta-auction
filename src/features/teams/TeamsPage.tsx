@@ -83,7 +83,7 @@ export function TeamsPage(): JSX.Element {
                   type="button"
                   onClick={() => setSelected(completion.teamCode)}
                   className={cn(
-                    'relative flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors',
+                    'focus-ring relative flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors duration-150',
                     active ? 'text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.03]',
                   )}
                 >
@@ -91,22 +91,26 @@ export function TeamsPage(): JSX.Element {
                     <motion.span
                       layoutId="club-pill"
                       transition={{ duration: 0.2, ease: EASE }}
-                      className="absolute inset-0 rounded-lg border border-white/[0.08] bg-white/[0.06]"
+                      className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.06]"
                     />
                   )}
-                  <span className="relative flex-1 truncate font-medium uppercase tracking-wide">
-                    {completion.teamCode}
+                  <Crest code={completion.teamCode} active={active} complete={complete} />
+                  <span className="relative min-w-0 flex-1">
+                    <span className="block truncate font-medium">{completion.teamCode}</span>
+                    <span className="relative mt-1 block">
+                      <Meter
+                        value={completion.ratio}
+                        fill={complete ? 'bg-emerald-500' : 'bg-zinc-500'}
+                      />
+                    </span>
                   </span>
                   {complete ? (
                     <Check size={13} className="relative shrink-0 text-emerald-400" />
                   ) : (
-                    <span className="relative shrink-0">
-                      <Meter value={completion.ratio} className="w-10" />
+                    <span className="num relative shrink-0 text-right text-[11px] text-zinc-500">
+                      {completion.filledSlots}/{completion.totalSlots || 11}
                     </span>
                   )}
-                  <span className="num relative w-8 shrink-0 text-right text-[11px] text-zinc-500">
-                    {completion.filledSlots}/{completion.totalSlots || 11}
-                  </span>
                 </button>
               </li>
             );
@@ -131,5 +135,43 @@ export function TeamsPage(): JSX.Element {
         <PlayerCard key={cardPlayer.id} player={cardPlayer} onClose={() => setCardPlayerId(null)} />
       )}
     </div>
+  );
+}
+
+/**
+ * Lo stemma: le prime due lettere del club dentro un quadrato.
+ *
+ * Non e' un logo — non ne abbiamo, e cercarne venti su internet sarebbe una
+ * dipendenza da rete per una colonna che si scorre. Due lettere in un riquadro
+ * bastano a dare **ancoraggio spaziale**: dopo tre aperture l'occhio trova
+ * "JU" senza leggere, e scorrere venti righe di solo testo non permette
+ * questo.
+ *
+ * Verde a formazione completa: e' lo stesso segnale della spunta a destra,
+ * ma sta a sinistra, dove l'occhio comincia la riga.
+ */
+function Crest({
+  code,
+  active,
+  complete,
+}: {
+  readonly code: string;
+  readonly active: boolean;
+  readonly complete: boolean;
+}): JSX.Element {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'relative flex h-7 w-7 shrink-0 items-center justify-center rounded-md border text-[10px] font-bold uppercase tracking-tight transition-colors duration-150',
+        complete
+          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+          : active
+            ? 'border-white/20 bg-white/[0.08] text-zinc-200'
+            : 'border-white/10 bg-white/[0.03] text-zinc-500',
+      )}
+    >
+      {code.slice(0, 2)}
+    </span>
   );
 }

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { Search } from 'lucide-react';
+import { CornerDownLeft, Search, UserSearch } from 'lucide-react';
 
 import type { Player } from '../../domain/types';
 import { listFantaAvg } from '../../domain/player-stats';
@@ -8,7 +8,7 @@ import { STATS_INDEX } from '../../data/stats-index';
 import { normalizeName } from '../../parse/listone';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
-import { Kbd } from '../../ui/primitives';
+import { EmptyState, Kbd } from '../../ui/primitives';
 
 /**
  * Picker di uno slot (PRD §5.2).
@@ -144,10 +144,25 @@ export function SlotPicker({
 
   return (
     <div
-      className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-white/[0.1] bg-zinc-900/80 shadow-pop backdrop-blur-xl"
+      className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-white/[0.1] bg-elevated/85 shadow-pop backdrop-blur-xl"
       onKeyDown={handleKey}
     >
-      <div className="flex items-center gap-2 border-b border-white/[0.08] p-2">
+      {/*
+        Lo slot bersaglio, scritto grande sopra il campo di ricerca.
+        Compilando a raffica il picker resta montato e cambia contenuto sotto
+        le dita: senza un'etichetta ferma e leggibile si perde il conto di
+        quale slot si sta riempiendo, e undici Invii finiscono nel posto
+        sbagliato senza che niente lo segnali.
+      */}
+      <div className="flex flex-col gap-2 border-b border-white/[0.08] p-2">
+        <div className="flex items-center gap-1.5">
+          <span className="num rounded-md border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
+            {label}
+          </span>
+          <span className="text-[11px] text-zinc-600">stai riempiendo questo slot</span>
+        </div>
+
+        <div className="flex items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <Search
             size={13}
@@ -157,8 +172,8 @@ export function SlotPicker({
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={`${label} — digita per filtrare`}
-            className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] py-1 pl-7 pr-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+            placeholder="digita per filtrare"
+            className="field w-full py-1 pl-7 pr-2 text-sm"
           />
         </div>
         <button
@@ -180,6 +195,7 @@ export function SlotPicker({
         >
           tutta la rosa
         </button>
+        </div>
       </div>
 
       <ul ref={listRef} className="max-h-[60vh] flex-1 overflow-y-auto">
@@ -198,14 +214,16 @@ export function SlotPicker({
                 onMouseEnter={() => setIndex(i)}
                 onClick={(e) => onPick(player.id, e.shiftKey)}
                 className={cn(
-                  'relative flex w-full items-baseline gap-2 px-2 py-1 text-left text-sm transition-colors',
-                  i === index ? 'bg-white/[0.07]' : 'hover:bg-white/[0.03]',
+                  'relative flex w-full items-baseline gap-2 py-1 pl-2 pr-2 text-left text-sm transition-colors duration-150',
+                  i === index
+                    ? 'bg-emerald-500/[0.12] text-zinc-50'
+                    : 'hover:bg-white/[0.03]',
                 )}
               >
                 {i === index && (
                   <span
                     className={cn(
-                      'absolute inset-y-0 left-0 w-0.5 rounded-full',
+                      'absolute inset-y-0 left-0 w-1 rounded-r',
                       roleTheme(player.role).bar,
                     )}
                   />
@@ -233,15 +251,33 @@ export function SlotPicker({
                 <span className="num w-8 shrink-0 text-right text-xs text-zinc-400">
                   {player.quot}
                 </span>
+                {/* Il tasto che lo prende, sulla riga che lo prenderebbe. */}
+                <span
+                  className={cn(
+                    'shrink-0 transition-opacity duration-150',
+                    i === index ? 'opacity-100' : 'opacity-0',
+                  )}
+                >
+                  <Kbd>
+                    <CornerDownLeft size={9} />
+                  </Kbd>
+                </span>
               </button>
             </li>
           </Fragment>
         ))}
         {visible.length === 0 && (
-          <li className="px-2 py-3 text-sm text-zinc-500">
-            {query === ''
-              ? 'Nessun giocatore disponibile in questo club.'
-              : 'Nessun giocatore, in nessun ruolo, corrisponde.'}
+          <li className="p-2">
+            <EmptyState
+              icon={<UserSearch size={20} />}
+              title={query === '' ? 'Rosa esaurita' : 'Nessuna corrispondenza'}
+              hint={
+                query === ''
+                  ? 'Tutti i giocatori di questo club sono gia’ schierati altrove nella formazione.'
+                  : 'Nessuno, in nessun ruolo, corrisponde a quello che hai scritto. Svuota la ricerca per rivedere la rosa.'
+              }
+              className="border-0 py-6"
+            />
           </li>
         )}
         {outOfRole.length === 0 && !showAll && (

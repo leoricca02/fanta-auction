@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { ListChecks } from 'lucide-react';
+import { LayoutGrid, ListChecks, Shirt } from 'lucide-react';
 
 import type { Lineup, LineupSlot, Player, Role } from '../../domain/types';
 import {
@@ -19,6 +19,7 @@ import { offRoleCandidates, slotCandidates } from '../../domain/free-agents';
 import { cn } from '../../ui/cn';
 import { SlotPicker } from './SlotPicker';
 import { SetPiecePanel } from './SetPiecePanel';
+import { PitchView } from './PitchView';
 
 /**
  * Editor di formazione (PRD §5.2) — il collo di bottiglia del progetto.
@@ -73,6 +74,13 @@ export function LineupEditor({
 }: LineupEditorProps): JSX.Element {
   const [noteDraft, setNoteDraft] = useState(note);
   const [dropped, setDropped] = useState<readonly string[]>([]);
+  /**
+   * Lista o campo. La lista resta il default e non e' una preferenza estetica:
+   * e' l'unica vista in cui gli slot stanno in colonna nell'ordine in cui il
+   * picker li attraversa, ed e' quella su cui la raffica di undici Invii e'
+   * stata costruita. Il campo si guarda, la lista si compila.
+   */
+  const [view, setView] = useState<'lista' | 'campo'>('lista');
   const slotRefs = useRef(new Map<string, HTMLButtonElement>());
   const [, forceRender] = useReducer((n: number) => n + 1, 0);
 
@@ -182,7 +190,7 @@ export function LineupEditor({
         <select
           value={current.module}
           onChange={(e) => void handleModule(e.target.value)}
-          className="num rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-sm text-zinc-100 outline-none transition-colors hover:border-white/20 focus:border-emerald-500/50"
+          className="num field px-2 py-1 text-sm"
           aria-label="Modulo"
         >
           {MODULE_NAMES.map((name) => (
@@ -198,12 +206,32 @@ export function LineupEditor({
 
         <button
           type="button"
-          onClick={() => openPicker(firstEmptySlot(current))}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-zinc-950 shadow-glow-emerald transition-colors hover:bg-emerald-400"
+          onClick={() => {
+            // Compilare da campo non ha senso: il picker avanza in colonna.
+            setView('lista');
+            openPicker(firstEmptySlot(current));
+          }}
+          className="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-zinc-950 shadow-glow-emerald transition-all duration-100 hover:bg-emerald-400 active:scale-[0.98]"
         >
           <ListChecks size={14} />
           Compila dal primo slot vuoto
         </button>
+
+        <div className="ml-auto flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+          <ViewTab active={view === 'lista'} onClick={() => setView('lista')} icon={<LayoutGrid size={12} />}>
+            lista
+          </ViewTab>
+          <ViewTab
+            active={view === 'campo'}
+            onClick={() => {
+              closePicker();
+              setView('campo');
+            }}
+            icon={<Shirt size={12} />}
+          >
+            campo
+          </ViewTab>
+        </div>
       </header>
 
       {dropped.length > 0 && (
@@ -216,6 +244,18 @@ export function LineupEditor({
       )}
 
       <div className="flex min-h-0 gap-4">
+        {view === 'campo' ? (
+          <div className="min-h-0 min-w-0 max-w-md flex-1">
+            <PitchView
+              lineup={current}
+              byId={byId}
+              openSlot={openSlot}
+              duplicated={duplicated}
+              onOpenSlot={openPicker}
+              onOpenCard={onOpenCard}
+            />
+          </div>
+        ) : (
         <ol className="flex min-w-0 flex-1 flex-col gap-1">
           {current.slots.map((slot) => (
             <SlotRow
@@ -240,6 +280,7 @@ export function LineupEditor({
             />
           ))}
         </ol>
+        )}
 
         {activeSlot !== null && (
           <SlotPicker
@@ -266,10 +307,40 @@ export function LineupEditor({
           }}
           rows={3}
           placeholder="Come gioca, chi e' in dubbio, chi sta per partire..."
-          className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+          className="field px-2.5 py-2 text-sm"
         />
       </label>
     </section>
+  );
+}
+
+/** Una linguetta del selettore di vista. Due sole, e stanno sempre entrambe. */
+function ViewTab({
+  active,
+  onClick,
+  icon,
+  children,
+}: {
+  readonly active: boolean;
+  readonly onClick: () => void;
+  readonly icon: JSX.Element;
+  readonly children: React.ReactNode;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors duration-150',
+        active
+          ? 'bg-white/[0.08] text-zinc-100'
+          : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300',
+      )}
+    >
+      {icon}
+      {children}
+    </button>
   );
 }
 
@@ -339,17 +410,22 @@ function SlotRow({
           }
         }}
         className={cn(
-          'flex min-h-[32px] flex-1 items-center gap-1 rounded-lg border px-2 py-1 text-left text-sm transition-colors',
+          'flex min-h-[32px] flex-1 items-center gap-1 rounded-lg border px-2 py-1 text-left text-sm transition-colors duration-150',
           active
             ? 'border-emerald-500/60 bg-emerald-500/[0.07] shadow-glow-emerald'
             : slot.candidates.length === 0
-              ? 'border-dashed border-white/[0.12] text-zinc-600 hover:border-white/25'
-              : 'border-white/[0.08] bg-white/[0.03] text-zinc-100 hover:border-white/20',
+              ? // Slot vuoto: progetto, non buco. Tratteggio e fondo appena
+                // accennato, come una pianta architettonica dove il muro c'e'
+                // gia' ma non e' ancora costruito.
+                'border-dashed border-slate-700 bg-slate-800/30 text-slate-500 hover:border-slate-500'
+              : 'border-white/10 bg-white/[0.03] text-zinc-100 hover:border-white/20',
           'focus:border-emerald-500/60 focus:outline-none',
         )}
       >
         {slot.candidates.length === 0 ? (
-          <span className="text-zinc-600">vuoto</span>
+          // La sigla in filigrana dice *cosa* ci va, non solo che manca
+          // qualcuno: undici slot vuoti con le sigle giuste sono gia' il modulo.
+          <span className="num text-xs text-slate-600">{slot.roleLabel} da schierare</span>
         ) : (
           slot.candidates.map((id) => (
             <span
@@ -415,7 +491,7 @@ function SlotRow({
           if (noteDraft !== slot.note) onNote(noteDraft);
         }}
         placeholder="nota"
-        className="w-40 shrink-0 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2 py-1 text-xs text-zinc-300 outline-none transition-colors placeholder:text-zinc-700 focus:border-emerald-500/40"
+        className="field w-40 shrink-0 px-2 py-1 text-xs text-zinc-300"
       />
     </li>
   );
