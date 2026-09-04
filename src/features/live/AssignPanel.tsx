@@ -72,7 +72,7 @@ export function AssignPanel({
   const lineups = useMemo(() => makeLineupIndex(userData.lineups), [userData.lineups]);
 
   const shell =
-    'flex w-96 shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/[0.08] bg-zinc-950/60 p-3 backdrop-blur-xl';
+    'flex w-96 shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/[0.08] bg-panel/70 p-3 backdrop-blur-xl';
 
   if (player === null) {
     return (
@@ -211,7 +211,7 @@ export function AssignPanel({
               }}
               placeholder="—"
               className={cn(
-                'num no-spin h-11 w-24 rounded-lg border border-white/[0.08] bg-zinc-900/80 text-center text-2xl font-bold text-zinc-100 outline-none transition-all',
+                'num no-spin h-11 w-24 rounded-lg border border-white/10 bg-elevated/80 text-center text-2xl font-bold tracking-tight text-white outline-none transition-all duration-150',
                 'focus:border-emerald-500/50 focus:shadow-glow-emerald',
               )}
             />
@@ -220,6 +220,23 @@ export function AssignPanel({
             </StepButton>
           </div>
         </label>
+
+        {/*
+          Rilanci rapidi. All'asta il prezzo non sale di uno: sale a scatti,
+          e quattro pressioni del +1 sono quattro occasioni di perdere il
+          conto mentre il banditore va avanti. I salti sono quelli che si
+          sentono chiamare davvero.
+        */}
+        <div className="mt-2 flex items-center gap-1">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-600">rilancia</span>
+          {QUICK_RAISES.map((step) => (
+            <QuickRaise
+              key={step}
+              step={step}
+              onClick={() => onPriceChange((price ?? 0) + step)}
+            />
+          ))}
+        </div>
 
         <p className="mt-2 text-[11px] leading-snug text-zinc-500">
           {price === null ? (
@@ -290,9 +307,41 @@ function StepButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-400 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-zinc-100"
+      className={cn(
+        'focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10',
+        'bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-zinc-400',
+        'transition-all duration-150 hover:border-white/25 hover:text-zinc-100 hover:shadow-[0_0_12px_-4px_rgb(16_185_129_/_0.5)]',
+        'active:scale-95',
+      )}
     >
       {children}
+    </button>
+  );
+}
+
+/** I salti che si sentono chiamare davvero: +1 lo fa gia' il bottone accanto. */
+const QUICK_RAISES = [5, 10, 25] as const;
+
+function QuickRaise({
+  step,
+  onClick,
+}: {
+  readonly step: number;
+  readonly onClick: () => void;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Aggiungi ${step} crediti`}
+      className={cn(
+        'num focus-ring rounded-md border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02]',
+        'px-2 py-0.5 text-[11px] font-semibold text-zinc-400',
+        'transition-all duration-150 hover:border-emerald-500/40 hover:text-emerald-300',
+        'active:scale-95',
+      )}
+    >
+      +{step}
     </button>
   );
 }
@@ -338,6 +387,11 @@ function TeamGrid({
   readonly onPick: ((team: FantaTeam) => void) | null;
 }): JSX.Element {
   const byTeam = new Map(statuses.map((s) => [s.teamId, s]));
+  // Prima del primo colpo battuto tutti hanno il budget intero: dodici barre
+  // piene non dicono niente. Dal primo in poi il confronto e' l'informazione,
+  // e allora la barra c'e' per tutti — anche per chi non ha ancora speso,
+  // altrimenti la griglia si legge a macchie invece che a colpo d'occhio.
+  const started = Object.keys(state.assignmentByPlayerId).length > 0;
 
   return (
     <ul className="grid grid-cols-2 gap-1.5">
@@ -362,7 +416,10 @@ function TeamGrid({
                     : undefined
               }
               className={cn(
-                'w-full rounded-lg border px-2 py-1.5 text-left transition-all',
+                'w-full rounded-lg border px-2 py-1.5 text-left transition-all duration-100',
+                // Chiudere l'acquisto e' l'azione piu' pesante della schermata:
+                // deve rispondere sotto il dito, non solo cambiare colore.
+                clickable && 'active:scale-[0.98]',
                 blocked
                   ? 'border-white/[0.04] bg-transparent text-zinc-700 opacity-60'
                   : team.isUser
@@ -389,12 +446,63 @@ function TeamGrid({
                   {status.blockedBy === 'ROLE_FULL' ? 'pieno' : `max ${status.maxBidAssoluto}`}
                 </span>
               </span>
+              {started && <BudgetBar state={state} teamId={team.id} dimmed={blocked} />}
               <RoleSlots state={state} teamId={team.id} highlight={role} />
             </button>
           </li>
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Quanto budget e' rimasto a quella squadra, come frazione di quello iniziale.
+ *
+ * La cifra dei crediti sopra dice **quanto ha**; questa barra dice **a che
+ * punto e'**, ed e' un'altra domanda. Trecento crediti residui sono tanti a
+ * meta' asta e sono un problema alla fine, e il numero da solo non distingue
+ * i due casi: la barra si', perche' e' relativa al punto di partenza.
+ *
+ * Il colore e' la soglia oltre la quale il comportamento al tavolo cambia:
+ * sopra meta' budget si rilancia, sotto si sceglie, sotto il 15% si tira
+ * avanti a 1 credito. Chi e' fuori gioco a questo prezzo la porta spenta,
+ * perche' il riquadro e' gia' spento e due segnali di "no" sono uno di troppo.
+ *
+ * Chi la mostra e quando lo decide `TeamGrid`: qui si disegna e basta.
+ */
+function BudgetBar({
+  state,
+  teamId,
+  dimmed,
+}: {
+  readonly state: LeagueState;
+  readonly teamId: string;
+  readonly dimmed: boolean;
+}): JSX.Element | null {
+  const t = teamState(state, teamId);
+  const budget = t.credits + t.spent;
+  if (budget === 0) return null;
+
+  const share = t.credits / budget;
+  const fill = dimmed
+    ? 'bg-zinc-700'
+    : share > 0.5
+      ? 'bg-emerald-500'
+      : share > 0.15
+        ? 'bg-amber-500'
+        : 'bg-rose-500';
+
+  return (
+    <span
+      className="mt-1 flex h-1 w-full overflow-hidden rounded-full bg-white/[0.07]"
+      title={`${t.credits} di ${budget} crediti (${Math.round(share * 100)}%)`}
+    >
+      <span
+        className={cn('h-full rounded-full transition-[width] duration-300', fill)}
+        style={{ width: `${Math.max(2, Math.round(share * 100))}%` }}
+      />
+    </span>
   );
 }
 

@@ -1,7 +1,19 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, CornerDownLeft, Search, TriangleAlert } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Check,
+  CornerDownLeft,
+  Coins,
+  Search,
+  TriangleAlert,
+  User,
+  Users,
+  Zap,
+} from 'lucide-react';
 
+import type { Command } from '../../domain/command';
 import type { Player, Role, Tag } from '../../domain/types';
 import { parseCommand } from '../../domain/command';
 import { isAmbiguous, normalizeQuery, searchInPhase } from '../../domain/search';
@@ -187,11 +199,20 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
 
   return (
     <div className="flex flex-col gap-1.5">
-      {/* Pill: icona, input, e a destra lo stato di cio' che hai gia' digitato. */}
+      {/*
+        Il pannello dell'input.
+
+        Il fuoco e' **indaco**, non verde, ed e' una distinzione voluta: in
+        questa app il verde vuol dire "si puo' chiudere". Se il bordo si
+        accendesse di verde solo perche' hai cliccato nella barra, il colore
+        che conferma l'assegnazione varrebbe la meta'. L'indaco dice "sto
+        scrivendo", il glow verde dice "Invio assegna": due fatti diversi,
+        due colori diversi, e si vedono insieme sull'ultimo comando completo.
+      */}
       <div
         className={cn(
-          'group flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-zinc-900/60 px-3 py-2.5 backdrop-blur-xl transition-all',
-          'focus-within:border-emerald-500/40 focus-within:bg-zinc-900/80',
+          'group flex items-center gap-2.5 rounded-xl border border-white/10 bg-elevated/90 px-3 py-2.5 backdrop-blur-md transition-all duration-150',
+          'focus-within:border-indigo-500/70 focus-within:ring-2 focus-within:ring-indigo-500/20',
           ready && 'focus-within:shadow-glow-emerald',
         )}
       >
@@ -212,16 +233,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         />
 
         <div className="flex shrink-0 items-center gap-1.5">
-          {price !== null && (
-            <span className="num rounded-md border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-xs font-semibold text-zinc-200">
-              {price} cr
-            </span>
-          )}
-          {abbr !== null && (
-            <span className="max-w-[10rem] truncate rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-semibold text-emerald-300">
-              {teams.find((t) => t.abbr === abbr)?.name ?? abbr.toUpperCase()}
-            </span>
-          )}
           {phase !== null && text === '' && (
             <span
               className={cn(
@@ -233,7 +244,18 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
               fase {phase}
             </span>
           )}
+          {/*
+            Le scorciatoie mostrate sono solo quelle che esistono davvero: la
+            barra non ascolta ne' Tab ne' Esc, e disegnare un tasto che non fa
+            niente e' peggio che non disegnarlo.
+          */}
           <span className="hidden items-center gap-1 sm:flex">
+            {hits.length > 1 && (
+              <Kbd>
+                <ArrowUp size={9} />
+                <ArrowDown size={9} />
+              </Kbd>
+            )}
             {ready ? (
               <Kbd>
                 <CornerDownLeft size={10} />
@@ -244,6 +266,14 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
           </span>
         </div>
       </div>
+
+      <CommandPreview
+        command={command}
+        player={selected}
+        ambiguous={ambiguous}
+        teamName={abbr === null ? null : (teams.find((t) => t.abbr === abbr)?.name ?? null)}
+        abbr={abbr}
+      />
 
       <AnimatePresence initial={false}>
         {feedback !== null && (
@@ -270,7 +300,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         </p>
       )}
 
-      <ul className="flex flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900/40">
+      <ul className="flex flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-surface/50">
         {hits.map((hit, i) => {
           const note = noteByPlayer.get(hit.player.id) ?? null;
           const firstLine = note?.text.split('\n')[0] ?? '';
@@ -355,6 +385,114 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     </div>
   );
 });
+
+/**
+ * La striscia di conferma del comando.
+ *
+ * Prima stava tutta dentro la barra, stretta fra il testo e la scorciatoia:
+ * due pastiglie appiccicate a destra, lette per ultime o non lette affatto.
+ * Ma il comando dell'asta e' irreversibile a meno di un annulla, e la domanda
+ * dell'ultimo mezzo secondo prima di Invio e' sempre la stessa — **cosa sto
+ * per fare, a chi, per quanto**.
+ *
+ * Quindi diventa una riga sua, sotto l'input, con i quattro pezzi nell'ordine
+ * in cui li si controlla: azione, giocatore, prezzo, acquirente. I chip
+ * mancanti non lasciano buchi: il comando cresce da sinistra mentre digiti, e
+ * la riga si allunga fino a essere completa. Vederla piena *e'* la conferma.
+ *
+ * Legge `command`, non lo interpreta: il parsing resta tutto in
+ * `parseCommand`, qui si disegna soltanto quello che ha gia' deciso.
+ */
+function CommandPreview({
+  command,
+  player,
+  ambiguous,
+  teamName,
+  abbr,
+}: {
+  readonly command: Command;
+  readonly player: Player | null;
+  readonly ambiguous: boolean;
+  readonly teamName: string | null;
+  readonly abbr: string | null;
+}): JSX.Element | null {
+  // Con la sola ricerca non c'e' niente da confermare: la riga comparirebbe a
+  // ogni lettera per dire "stai cercando", che si vede gia' dai risultati.
+  if (command.kind !== 'evaluate' && command.kind !== 'assign') return null;
+
+  const assigning = command.kind === 'assign';
+  const price = command.price;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.14, ease: EASE }}
+      className="flex flex-wrap items-center gap-1.5 px-1"
+    >
+      <PreviewChip
+        icon={assigning ? <Zap size={11} /> : <Users size={11} />}
+        tone={assigning ? 'emerald' : 'sky'}
+        label={assigning ? 'assegna' : 'valuta'}
+      />
+
+      <PreviewChip
+        icon={<User size={11} />}
+        tone={player === null || ambiguous ? 'muted' : 'plain'}
+        label={
+          player === null
+            ? 'nessun giocatore'
+            : ambiguous
+              ? `${player.name} · da scegliere`
+              : player.name
+        }
+      />
+
+      <PreviewChip icon={<Coins size={11} />} tone="amber" label={`${price} cr`} mono />
+
+      {assigning && (
+        <PreviewChip
+          icon={<CornerDownLeft size={11} />}
+          tone="emerald"
+          label={teamName ?? (abbr ?? '').toUpperCase()}
+        />
+      )}
+    </motion.div>
+  );
+}
+
+/** Tinte della striscia: soft, perche' e' conferma e non allarme. */
+const CHIP_TONE = {
+  emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+  sky: 'border-sky-500/30 bg-sky-500/10 text-sky-300',
+  amber: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
+  plain: 'border-white/10 bg-white/[0.04] text-zinc-200',
+  muted: 'border-dashed border-white/10 bg-transparent text-zinc-600',
+} as const;
+
+function PreviewChip({
+  icon,
+  tone,
+  label,
+  mono = false,
+}: {
+  readonly icon: JSX.Element;
+  readonly tone: keyof typeof CHIP_TONE;
+  readonly label: string;
+  readonly mono?: boolean;
+}): JSX.Element {
+  return (
+    <span
+      className={cn(
+        'inline-flex max-w-[14rem] items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium leading-none',
+        CHIP_TONE[tone],
+      )}
+    >
+      <span className="shrink-0">{icon}</span>
+      <span className={cn('truncate', mono && 'num')}>{label}</span>
+    </span>
+  );
+}
 
 /**
  * Evidenzia nel nome il pezzo che corrisponde a quello che hai digitato.

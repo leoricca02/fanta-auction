@@ -21,7 +21,7 @@ import { userTeam } from '../../domain/config';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
-import { EASE, Kbd, Meter, SectionTitle, SlideOver } from '../../ui/primitives';
+import { EASE, EmptyState, Kbd, Meter, SectionTitle, SlideOver } from '../../ui/primitives';
 import { PlayerCard } from '../player/PlayerCard';
 import { FreeAgentsPanel } from '../free/FreeAgentsPanel';
 import { GoalsPanel } from '../goals/GoalsPanel';
@@ -236,7 +236,7 @@ function OverlayButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1.5 text-xs text-zinc-300 transition-colors hover:border-white/20 hover:bg-white/[0.06] hover:text-zinc-100"
+      className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-xs text-zinc-300 transition-all duration-100 hover:border-white/25 hover:bg-white/[0.06] hover:text-zinc-100 active:scale-[0.98]"
     >
       <span className="text-zinc-500">{icon}</span>
       {label}
@@ -453,11 +453,39 @@ function RecentEvents(): JSX.Element {
   const byId = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
   const recent = [...events].slice(-8).reverse();
 
+  /*
+    L'ultimo colpo battuto si accende per un istante.
+
+    All'asta si guarda il banditore, non lo schermo: quando si torna a guardare
+    bisogna sapere in mezzo secondo **se il colpo e' entrato**. Il messaggio in
+    cima lo dice a parole, ma passa e si perde; l'anello sulla riga dice dove
+    e' finito, e resta il tempo di essere visto con la coda dell'occhio.
+
+    Si spegne da solo dopo un secondo e mezzo: un anello permanente
+    diventerebbe parte dell'arredamento e smetterebbe di significare "adesso".
+  */
+  const newestId = recent[0]?.id ?? null;
+  const [flashId, setFlashId] = useState<string | null>(null);
+  const seen = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (newestId === null || newestId === seen.current) return;
+    // Al primo render la lista esiste gia': lampeggiare sarebbe una bugia.
+    const first = seen.current === null;
+    seen.current = newestId;
+    if (first) return;
+    setFlashId(newestId);
+    const timer = window.setTimeout(() => setFlashId(null), 1500);
+    return () => window.clearTimeout(timer);
+  }, [newestId]);
+
   if (recent.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-4 text-center text-xs text-zinc-600">
-        Nessuna assegnazione registrata.
-      </p>
+      <EmptyState
+        icon={<History size={22} />}
+        title="Nessuna assegnazione registrata"
+        hint="Batti il primo colpo dalla barra: nome, prezzo, sigla. Da qui potrai annullarlo."
+      />
     );
   }
 
@@ -475,8 +503,10 @@ function RecentEvents(): JSX.Element {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18, ease: EASE }}
               className={cn(
-                'flex items-center gap-2 px-2 py-1 text-xs transition-colors hover:bg-white/[0.03]',
+                'relative flex items-center gap-2 px-2 py-1 text-xs transition-all duration-200 hover:bg-white/[0.03]',
                 event.undone ? 'text-zinc-600 line-through opacity-60' : 'text-zinc-300',
+                event.id === flashId &&
+                  'animate-pulse bg-emerald-500/10 ring-2 ring-inset ring-emerald-500/50',
               )}
             >
               <span className="min-w-0 flex-1 truncate">
@@ -492,7 +522,7 @@ function RecentEvents(): JSX.Element {
                   void (event.undone ? redoAssignment(event.id) : undoAssignment(event.id))
                 }
                 title={event.undone ? 'Ripristina' : 'Annulla'}
-                className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-zinc-500 no-underline transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
+                className="focus-ring inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-zinc-500 no-underline transition-all duration-150 hover:bg-white/[0.06] hover:text-zinc-200 active:scale-[0.98]"
               >
                 {event.undone ? <Redo2 size={11} /> : <Undo2 size={11} />}
                 {event.undone ? 'ripristina' : 'annulla'}
