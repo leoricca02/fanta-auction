@@ -37,7 +37,8 @@ import {
   specialistLabel,
   specialistsOf,
 } from '../../domain/specialists';
-import { injuryOf, makeInjuryIndex } from '../../domain/injuries';
+import type { Unavailability } from '../../domain/injuries';
+import { injuryOf, makeInjuryIndex, unavailableLabel } from '../../domain/injuries';
 import { TIER_BLOCKS } from '../../data/tiers';
 import { INJURIES_UPDATED_AT, INJURY_NOTES } from '../../data/injuries';
 import { SPECIALIST_BLOCKS, SPECIALISTS_UPDATED_AT } from '../../data/specialists';
@@ -166,8 +167,8 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
     () => makeHierarchyIndex(players, SPECIALIST_BLOCKS),
     [players],
   );
-  // Il commento della guida sull'infortunio: c'e' solo per chi e' in fascia
-  // INFORTUNATI, e nemmeno per tutti.
+  // La riga della tabella indisponibili: aggancia dentro la rosa del club, e
+  // vale anche per chi la guida non aveva messo in fascia INFORTUNATI.
   const injuryIndex = useMemo(() => makeInjuryIndex(players, INJURY_NOTES), [players]);
   const injury = injuryOf(player.id, injuryIndex);
 
@@ -560,34 +561,42 @@ function HierarchyChip({
 }
 
 /**
- * Il commento della guida sull'infortunio, per intero.
+ * La riga della tabella indisponibili, per intero.
  *
  * E' l'unico posto dove c'e' scritto **quando torna**, ed e' la differenza fra
- * "non prenderlo" e "prendilo a saldo". Resta la prosa della fonte: ridurla a
- * un numero di giornate vorrebbe dire inventarsi una precisione che nessuno ha.
+ * "non prenderlo" e "prendilo a saldo". Il chip porta gia' la giornata, perche'
+ * e' la cifra su cui si decide; il popover porta il motivo, con le parole della
+ * fonte, perche' un crociato e un affaticamento non valgono la stessa giornata.
  */
-function InjuryChip({ text }: { readonly text: string }): JSX.Element {
+function InjuryChip({ note }: { readonly note: Unavailability }): JSX.Element {
+  const chip = (
+    <Chip icon={<TriangleAlert size={11} />} className="border-yellow-500/30 text-yellow-300">
+      {unavailableLabel(note)}
+    </Chip>
+  );
+  // Squalifiche e diffide la fonte le scrive senza motivo: senza testo il
+  // popover sarebbe una scatola vuota che invita a cliccare per niente.
+  if (note.text === '') return chip;
   return (
-    <InfoPopover
-      label="Quanto sta fuori"
-      trigger={
-        <Chip icon={<TriangleAlert size={11} />} className="border-yellow-500/30 text-yellow-300">
-          infortunato
-        </Chip>
-      }
-    >
+    <InfoPopover label="Quanto sta fuori" trigger={chip}>
       <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">Quanto sta fuori</p>
-      <p className="text-[12px] leading-snug text-zinc-300">{text}</p>
-      <SourceLine date={INJURIES_UPDATED_AT} />
+      <p className="text-[12px] leading-snug text-zinc-300">{note.text}</p>
+      <SourceLine date={INJURIES_UPDATED_AT} source="tabella indisponibili" />
     </InfoPopover>
   );
 }
 
 /** La fonte e la sua data: un infortunio di tre settimane fa e' un'altra cosa. */
-function SourceLine({ date }: { readonly date: string }): JSX.Element {
+function SourceLine({
+  date,
+  source = 'guida',
+}: {
+  readonly date: string;
+  readonly source?: string;
+}): JSX.Element {
   return (
     <p className="mt-2 border-t border-white/[0.08] pt-1.5 text-[10px] text-zinc-600">
-      guida SosFanta, {date}
+      {source} SosFanta, {date}
     </p>
   );
 }
@@ -846,8 +855,8 @@ function QuickBadges({
   readonly team: string;
   readonly playerId: number;
   readonly hierarchy: HierarchyIndex;
-  /** Commento della guida, `null` se la fonte non dice per quanto. */
-  readonly injury: string | null;
+  /** Riga della tabella indisponibili, `null` se e' disponibile. */
+  readonly injury: Unavailability | null;
 }): JSX.Element {
   const penaltyTaker = specialists.some((r) => r.kind === 'rigori' && r.rank === 1);
   return (
@@ -880,14 +889,15 @@ function QuickBadges({
         </Chip>
       )}
 
-      {tier === 'INFORTUNATI' &&
-        (injury === null ? (
+      {injury !== null ? (
+        <InjuryChip note={injury} />
+      ) : (
+        tier === 'INFORTUNATI' && (
           <Chip icon={<TriangleAlert size={11} />} className="border-yellow-500/30 text-yellow-300">
             infortunato
           </Chip>
-        ) : (
-          <InjuryChip text={injury} />
-        ))}
+        )
+      )}
 
       {target && (
         <Chip icon={<Target size={11} />} className="border-emerald-500/40 text-emerald-300">

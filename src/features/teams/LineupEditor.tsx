@@ -18,6 +18,7 @@ import { duplicatedCandidates } from '../../domain/lineup';
 import { offRoleCandidates, slotCandidates } from '../../domain/free-agents';
 import { cn } from '../../ui/cn';
 import { SlotPicker } from './SlotPicker';
+import { SetPiecePanel } from './SetPiecePanel';
 
 /**
  * Editor di formazione (PRD §5.2) — il collo di bottiglia del progetto.
@@ -253,7 +254,9 @@ export function LineupEditor({
         )}
       </div>
 
-      <label className="mt-2 flex flex-col gap-1">
+      <SetPiecePanel teamCode={teamCode} players={players} onOpenCard={onOpenCard} />
+
+      <label className="flex flex-col gap-1">
         <span className="text-[11px] uppercase tracking-wider text-zinc-500">Nota squadra</span>
         <textarea
           value={noteDraft}

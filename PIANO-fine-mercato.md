@@ -5,9 +5,12 @@
 > Serve a riaprire il lavoro da zero senza il contesto della sessione in cui è stato preparato.
 
 Quando arrivano le tre cose — **listone definitivo `.xlsx`**, **link della guida alle fasce**,
-**link di rigoristi e tiratori** — c'è da fare, nell'ordine: un backup, un import, **tre**
+**link di rigoristi e tiratori** — c'è da fare, nell'ordine: un backup, un import, le
 rigenerazioni di dataset e un giro di test da riallineare. Nessuna funzione da scrivere: gli
 specialisti sono stati costruiti il 2026-08-25 e a settembre si limitano a rigenerarsi (§5).
+
+Dal 2026-09-04 c'è un quarto script, `build-injuries.mjs`, e la sua fonte è una quarta pagina:
+la **tabella indisponibili** (§3-bis).
 
 Le statistiche della scorsa stagione **non si toccano**: il perché è al §4.
 
@@ -19,12 +22,15 @@ Le statistiche della scorsa stagione **non si toccano**: il perché è al §4.
 - [§1 — Import del listone definitivo](#1--import-del-listone-definitivo)
 - [§2 — Il listone di test e i numeri che si romperanno](#2--il-listone-di-test-e-i-numeri-che-si-romperanno)
 - [§3 — Rigenerare le fasce](#3--rigenerare-le-fasce)
+- [§3-bis — Rigenerare gli indisponibili](#3-bis--rigenerare-gli-indisponibili)
 - [§4 — Statistiche 2025/26: niente da fare, ed è giusto così](#4--statistiche-202526-niente-da-fare-ed-è-giusto-così)
 - [§5 — Specialisti: rigoristi, punizioni, corner](#5--specialisti-rigoristi-punizioni-corner)
 - [§6 — Verifiche finali prima dell'asta](#6--verifiche-finali-prima-dellasta)
 - [§7 — Rollback](#7--rollback)
 - [Appendice A — Stato del progetto al 2026-08-25](#appendice-a--stato-del-progetto-al-2026-08-25)
 - [Appendice B — Decisioni da prendere, non da indovinare](#appendice-b--decisioni-da-prendere-non-da-indovinare)
+- [Appendice C — Passata del 1º settembre 2026](#appendice-c--passata-del-1º-settembre-2026-mercato-chiuso-fonti-non-ancora-definitive)
+- [Appendice D — Passata del 4 settembre 2026](#appendice-d--passata-del-4-settembre-2026-fonti-aggiornate)
 
 ---
 
@@ -118,19 +124,25 @@ npm test    # adesso serve a qualcosa: guarda cosa cade
 
 ### 2.1 I numeri fissi da riallineare
 
-Cadranno quasi certamente questi, tutti legati alle dimensioni del listone di agosto
-(587 righe totali, 538 id in lista dopo il mercato 2026; 537 e 516 prima):
+Cadranno quasi certamente questi. I valori in tabella sono quelli della revisione del
+2026-09-04 (592 righe totali, 533 id in lista; 587 e 538 il 1º settembre, 537 e 516 ad agosto):
 
 | File | Riga | Asserzione oggi |
 | --- | --- | --- |
-| `src/parse/listone.test.ts` | 62 | `totalRows` = **587** |
-| `src/parse/listone.test.ts` | 75 | id unici = **538** |
-| `src/export/native.test.ts` | 69, 72 | conserva **587** righe |
-| `src/domain/free-agents.test.ts` | 225 | svincolati totali = **538** |
-| `src/domain/free-agents.test.ts` | 280 | dopo un'assegnazione = **515** |
-| `src/domain/listone-diff.test.ts` | 98 | `kept` = **538** |
-| `src/domain/metrics.test.ts` | 251 | `freeAgents.total` = **538** |
-| `src/store/appStore.test.ts` | 81 | `listone.count` = **538** |
+| `src/parse/listone.test.ts` | 62 | `totalRows` = **592** |
+| `src/parse/listone.test.ts` | 63 | fuori lista = **59** |
+| `src/parse/listone.test.ts` | 70 | ruoli = **P 65 / D 189 / C 192 / A 87** |
+| `src/parse/listone.test.ts` | 75 | id unici = **533** |
+| `src/export/native.test.ts` | 69, 72 | conserva **592** righe |
+| `src/domain/free-agents.test.ts` | 225 | svincolati totali = **533** |
+| `src/domain/free-agents.test.ts` | 280 | dopo un'assegnazione = **532** |
+| `src/domain/listone-diff.test.ts` | 98 | `kept` = **533** |
+| `src/domain/metrics.test.ts` | 251 | `freeAgents.total` = **533** |
+| `src/store/appStore.test.ts` | 81 | `listone.count` = **533** |
+
+Il grosso si fa con due sostituzioni sui file di test — il vecchio totale col nuovo, le vecchie
+righe con le nuove — e poi restano la distribuzione per ruolo e i due conteggi degli obiettivi,
+che vanno letti dall'output di `npm test`.
 
 Sono numeri da **aggiornare al valore nuovo**, non da rendere generici: valgono come
 protezione proprio perché sono espliciti. Se un domani il parser perdesse cinquanta righe in
@@ -166,14 +178,12 @@ lasci lì com'è sapendo che serve solo a esercitare la UI.
 node scripts/build-tiers.mjs
 ```
 
-Riscarica la guida SosFanta e riscrive **due** dataset generati, che non si modificano a mano:
-`src/data/tiers.ts` e `src/data/injuries.ts` — quest'ultimo sono i commenti della fascia
-`INFORTUNATI`, cioè le uniche righe della guida che dicono per quanto uno starà fuori, e finisce
-nel popover del chip *infortunato*. Aggiorna anche `TIERS_UPDATED_AT` e `INJURIES_UPDATED_AT`,
-che l'app mostra per dire quanto è vecchia la fonte.
+Riscarica la guida SosFanta e riscrive `src/data/tiers.ts`, che non si modifica a mano.
+Aggiorna anche `TIERS_UPDATED_AT`, che l'app mostra per dire quanto è vecchia la fonte.
 
-Se la guida cambia impaginazione e i paragrafi non si agganciano più a nessun infortunato, lo
-script muore invece di scrivere un file vuoto.
+> **Dal 2026-09-04 scrive un file solo.** Fino a quella data raccoglieva anche i commenti della
+> fascia `INFORTUNATI` e li metteva in `src/data/injuries.ts`. Adesso gli infortuni hanno una
+> fonte loro, la tabella indisponibili: §3-bis.
 
 ### 3.2 Le due cose da cambiare a mano prima di lanciarlo
 
@@ -208,6 +218,51 @@ Lo script stampa una riga per ruolo (`P: 12 fasce, 78 giocatori`). Poi:
 - l'aggancio è **per nome normalizzato**, non per id, perché la guida non pubblica gli id. Il
   test di §2.2 è il termometro;
 - apri l'app e guarda tre schede: un top, uno da `SCOMMESSE`, un neopromosso.
+
+---
+
+## §3-bis — Rigenerare gli indisponibili
+
+```bash
+node scripts/build-injuries.mjs
+```
+
+Fonte, una pagina sola:
+
+```
+https://www.sosfanta.com/indisponibili-e-squalificati/tabella-indisponibili-seriea-fantacalcio-asta-infortunati-tempi-recupero-squalificati-diffidati/
+```
+
+È una **tabella**, non una guida, ed è il posto in cui SosFanta scrive *quando torna*:
+
+```html
+<p><strong>ATALANTA</strong></p>
+<p><em>Infortunati:</em></p>
+<p><strong>Hien</strong> - Fuori per una lesione ..., in dubbio per la 6a.</p>
+<p><em>Squalificati:</em> -</p>
+<p><em>Diffidati:</em> -</p>
+```
+
+Tre cose da sapere prima di toccarla:
+
+1. **Legge il listone**, come `build-specialists.mjs`, ma solo per i nomi dei venti club: servono
+   a riconoscere le intestazioni e a scrivere il club come lo scrive il listone. Quindi va
+   lanciato **dopo** §2, non prima.
+2. **L'aggancio nome → giocatore lo fa il dominio**, dentro la rosa di quel club
+   (`src/domain/injuries.ts`). È più sicuro di quello delle fasce, che va per ruolo: due omonimi
+   nella stessa rosa non prendono niente, nessuno dei due.
+3. **La giornata è un campo, la frase resta prosa.** `matchday` c'è solo quando la fonte scrive
+   `per la 6a`; "in dubbio per la 6a" e "rientro previsto per la 6a" restano due frasi diverse,
+   che la scheda mostra per intero. Il test *«legge la giornata di rientro dalla quasi totalità
+   degli infortuni»* è il sensore: se la fonte cambiasse forma alla frase, il chip resterebbe
+   muto senza fallire da nessun'altra parte.
+
+Squalificati e diffidati vengono letti dallo stesso giro e finiscono nello stesso file. Fuori dal
+campionato sono vuoti — al 2026-09-04 lo erano tutti e venti — e lo script accetta sia i nomi in
+riga dopo l'etichetta sia i paragrafi in grassetto degli infortunati.
+
+Se non legge nessun infortunato in venti squadre, muore: "nessuno infortunato" è un risultato
+plausibile a leggersi ed è il più insidioso dei file monchi.
 
 ---
 
@@ -427,7 +482,7 @@ Cosa esiste già, per non riscriverlo per sbaglio:
 | Dataset | File generato | Script | Aggancio |
 | --- | --- | --- | --- |
 | Fasce guida SosFanta | `src/data/tiers.ts` | `scripts/build-tiers.mjs` | per **nome** normalizzato |
-| Infortunati, quanto stanno fuori | `src/data/injuries.ts` | `scripts/build-tiers.mjs` | per **nome** normalizzato |
+| Indisponibili, quanto stanno fuori | `src/data/injuries.ts` | `scripts/build-injuries.mjs` | per **nome, dentro la rosa** |
 | Statistiche 2025/26 | `src/data/stats.ts` | `scripts/build-stats.mjs` | per **id** Fantacalcio.it |
 | Specialisti piazzati | `src/data/specialists.ts` | `scripts/build-specialists.mjs` | per **nome, dentro la rosa** |
 
@@ -462,6 +517,36 @@ Gudmundsson e Mandragora, che nel listone definitivo non sono più in rosa, e in
 rigorista viola agganciato è Mastantuono. Lo script li scarta correttamente, ma è il segnale che
 la fonte è indietro rispetto al mercato. Il listone, invece, è quello definitivo:
 non va riscaricato.
+
+## Appendice D — Passata del 4 settembre 2026 (fonti aggiornate)
+
+Il giro annunciato in Appendice C, più una fonte nuova. **Gli URL degli script non sono
+cambiati**: il *kit asta* linka gli stessi tre.
+
+**Il listone era di nuovo diverso.** Fantacalcio.it ne aveva pubblicato una revisione il
+4 settembre, quindi §1 e §2 si sono rifatti per intero. Numeri nuovi, questi sì da usare come
+metro al prossimo giro: **592 righe**, **533 id in lista** (P 65, D 189, C 192, A 87),
+**59 fuori lista**, **490 su 492** nomi delle fasce agganciati, **365 su 533** giocatori con
+statistiche 2025/26, **240 nomi** in 60 blocchi di specialisti, **41 infortunati** tutti
+agganciati, **663 test** verdi.
+
+Nel repo, alla riapertura, `data/lista_calciatori_classic.xlsx` non era più tracciato: un commit
+precedente aveva versionato al suo posto `data/lista calciatori_classic.xlsx`, con uno spazio, e
+i test morivano con `ENOENT` prima di arrivare a un'asserzione. Se ricapita, il sintomo è
+inconfondibile: **tutti** i file di test rossi, nessuna asserzione fallita.
+
+Le fonti erano finalmente allineate al mercato: le prose dei rigoristi non parlano più di
+Gudmundsson, e la Fiorentina ha una gerarchia intera. La guida ai portieri resta corta, 23 nomi.
+
+**Fonte nuova: la tabella indisponibili** (§3-bis). Ha sostituito i commenti della guida come
+sorgente degli infortuni — decisione dell'utente, presa sapendo che si perdeva la prosa lunga
+sui big. In cambio il chip vale per tutti e 41 gli infortunati invece che per gli 8 commentati,
+e porta la giornata di rientro.
+
+**Aggiunto in Squadre il pannello *Piazzati***
+(`src/features/teams/SetPiecePanel.tsx`): le tre gerarchie del club sotto la formazione, fino al
+terzo nome, con i nomi agganciati che aprono la scheda. Stessa fonte dei badge nella scheda
+giocatore, domanda opposta — non "questo che posto ha" ma "di questi undici, chi calcia".
 
 ---
 

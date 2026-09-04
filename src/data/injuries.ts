@@ -1,54 +1,303 @@
 /**
- * Commenti della guida sugli infortunati: quanto stara' fuori, con le parole
- * della fonte. GENERATO, non modificare a mano: rigenera con
- * `node scripts/build-tiers.mjs`, che scrive questo file insieme alle fasce.
+ * Indisponibili di Serie A: infortunati, squalificati, diffidati, con la
+ * giornata di rientro quando la fonte la scrive. GENERATO, non modificare a
+ * mano: rigenera con `node scripts/build-injuries.mjs`.
  *
- * Fonte: https://www.sosfanta.com/guida-asta-fantacalcio/guida-asta-fantacalcio-2026-2027-tutti-consigli-fasce-chi-prendere
+ * Fonte: https://www.sosfanta.com/indisponibili-e-squalificati/tabella-indisponibili-seriea-fantacalcio-asta-infortunati-tempi-recupero-squalificati-diffidati/
  */
-import type { InjuryNote } from '../domain/injuries';
+import type { UnavailableNote } from '../domain/injuries';
 
-/** Data di scarico della guida: un infortunio invecchia in fretta. */
-export const INJURIES_UPDATED_AT = '2026-09-01';
+export const INJURIES_SOURCE_URL = 'https://www.sosfanta.com/indisponibili-e-squalificati/tabella-indisponibili-seriea-fantacalcio-asta-infortunati-tempi-recupero-squalificati-diffidati/';
 
-export const INJURY_NOTES: readonly InjuryNote[] = [
+/** Data di scarico della tabella: un infortunio invecchia in fretta. */
+export const INJURIES_UPDATED_AT = '2026-09-04';
+
+export const INJURY_NOTES: readonly UnavailableNote[] = [
   {
-    role: 'D',
-    name: 'Buongiorno',
-    text: 'Alessandro Buongiorno è ai box per un infortunio al menisco che lo ha costretto a operarsi. Un paio di mesi di stop e rientro previsto dopo la sosta nazionali di novembre. Dovrebbe saltare indicativamente le prime 10/11 giornate di Serie A e sfrutterà la pausa per tornare in condizione per la 12a. Quando tornerà al 100% della condizione il titolare dovrebbe essere lui. L\'ultima stagione, a livello di prestazioni, è stata travagliata ma la cura Allegri potrebbe riportarlo ai suoi livelli. Al fantacalcio, causa infortunio, non è più tra i top ma si può prendere in prospettiva per avere un potenziale big a prezzo di saldo.',
-  },
-  {
-    role: 'D',
+    team: 'Atalanta',
+    kind: 'infortunato',
     name: 'Hien',
-    text: 'Isak Hien rientrerà solamente a ottobre inoltrato dopo la lesione muscolare della coscia sinistra rimediata ai Mondiali con la sua Svezia. Il centrale dell\'Atalanta salterà diverse partite per poi rientrare e giocarsi il posto con Scalvini e Koussonou (Kristensen infatti salvo sorprese sarà titolare). L\'ultima stagione 28 presenze, 1 gol e 5,86 di fanta media e diversi acciacchi fisici. Al fantacalcio si può prendere solo a pochi crediti con la speranza di guadagnarci nel lungo periodo un solido comprimario di una squadra di media-alta classifica.',
+    text: 'Fuori per una lesione del tendine prossimale del muscolo semimembranoso della coscia sinistra, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
-    role: 'D',
-    name: 'Parisi',
-    text: 'Fabiano Parisi è ai box fino a novembre-dicembre a causa della rottura del legamento crociato. Infortunatosi nella penultima giornata di campionato contro la Juventus, Parisi aveva finalmente trovato spazio e continuità con la Fiorentina a cavallo tra il girone di andata e di ritorno. 5,98 di fantamedia in 23 presenze (1 gol e 1 assist e 6 ammonizioni). Più attento alla fase difensiva che di spinta era diventato fondamentale in un\'annata difficile come quella della Fiorentina. Se i tempi di recupero dovessero essere confermati è più verosimile puntarci all\'asta di riparazione.',
+    team: 'Atalanta',
+    kind: 'infortunato',
+    name: 'Sulemana K.',
+    text: 'Lesione del collaterale mediale di secondo grado del ginocchio sinistro, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
-    role: 'C',
-    name: 'Thuram K.',
-    text: 'Khephren Thuram se sta bene è titolare nel centrocampo della Juventus, ma attenzione all\'infortunio e al rischio operazione. 34 partite a voto, 3 gol e 2 assist: questi i suoi numeri nella passata stagione, ha avuto qualche acciacco nel finale di campionato e anche nel pre-campionato. Classico giocatore più da rendimento che da bonus, non ci aspettiamo una grossa crescita da questo punto di vista.',
+    team: 'Bologna',
+    kind: 'infortunato',
+    name: 'El Azzouzi O.',
+    text: 'Lesione del bicipite femorale della coscia sinistra, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
-    role: 'C',
-    name: 'Konè I.',
-    text: 'Si è infortunato ai Mondiali Ismael Koné, ne avrà per mesi: da capire se riuscirà a tornare verso il mese di dicembre o se direttamente a inizio 2027, si capirà in seguito. È stato operato per una doppia frattura, alla tibia e alla fibula. Una volta che sarà al 100%, sicuramente tornerà a essere titolare nella mediana del Sassuolo (6 gol in 35 partite a voto nella passata stagione). Ma al momento è ai box e servirà prudenza. Per il fantacalcio si può prendere o da ultimo slot in un reparto con tutti titolari di fatto oppure se ne riparla direttamente all\'asta di riparazione, quando sarà già tornato o pronto a farlo.',
+    team: 'Bologna',
+    kind: 'infortunato',
+    name: 'Orsolini',
+    text: 'Lesione ai flessori della coscia sinistra, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
-    role: 'C',
-    name: 'Pessina',
-    text: '5 gol e 1 assist in Serie B per il capitano del Monza Matteo Pessina, in 37 partite: le ha giocate praticamente tutte. È un intoccabile, lo era già in Serie A e lo sarà anche con il nuovo allenatore Ivan Juric. Negli anni è diventato un mediano puro, ma con un plus importantissimo per il fantacalcio: i rigori. Un infortunio serio al ginocchio subito in preparazione lo terrà ai box fino alla fine di ottobre o all\'inizio novembre.',
+    team: 'Cagliari',
+    kind: 'infortunato',
+    name: 'Idrissi R.',
+    text: 'Intervento chirurgico di ricostruzione del legamento crociato anteriore del ginocchio sinistro, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
-    role: 'C',
+    team: 'Como',
+    kind: 'infortunato',
     name: 'Addai',
-    text: 'Jayden Addai si è infortunato gravemente a febbraio riportando la rottura del tendine d’Achille. Il giocatore è giovane ed è molto interessante, ma un infortunio così delicato impone cautela per le scelte all’asta, se ne può riparlare all’asta di riparazione in modo da valutare bene il suo recupero nei prossimi mesi. Al massimo da ultimo slot, aspettando il suo recupero e sfruttando il fatto che è stato spostato tra i centrocampisti.',
+    text: 'Operato a causa della rottura del tendine d\'Achille della gamba sinistra, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
-    role: 'A',
+    team: 'Fiorentina',
+    kind: 'infortunato',
+    name: 'Parisi',
+    text: 'Intervento chirurgico per la lesione del legamento crociato anteriore del ginocchio destro, in dubbio per la 10a.',
+    matchday: 10,
+  },
+  {
+    team: 'Genoa',
+    kind: 'infortunato',
+    name: 'Venturino',
+    text: 'Intervento chirurgico di “pulizia” del tendine rotuleo, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Inter',
+    kind: 'infortunato',
+    name: 'Spence',
+    text: 'Non si è ancora allenato in gruppo per un ritardo di condizione, in dubbio per la 5a ma c\'è il rischio che torni dopo la sosta.',
+    matchday: 5,
+  },
+  {
+    team: 'Juventus',
+    kind: 'infortunato',
+    name: 'Cabal',
+    text: 'Lesione di basso grado del muscolo semimembranoso della coscia sinistra, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Juventus',
+    kind: 'infortunato',
+    name: 'Ekhator',
+    text: 'Lesione di medio grado del muscolo semitendinoso, in dubbio per la 9a.',
+    matchday: 9,
+  },
+  {
+    team: 'Juventus',
+    kind: 'infortunato',
     name: 'Yildiz',
-    text: 'Kenan Yildiz inizia la stagione con un infortunio, tornerà probabilmente a fine novembre perché si opera. Questo incide molto sul suo prezzo all\'asta e anche sulla strategia, vi serve un reparto molto coperto. Una volta che sarà tornato sarà ovviamente titolare, però servirà cautela per le sue condizioni perché intanto perde un paio di mesi di fantacalcio e questo va considerato.',
+    text: 'Operato per frattura al quinto metatarso del piede sinistro, in dubbio per la 13a.',
+    matchday: 13,
+  },
+  {
+    team: 'Juventus',
+    kind: 'infortunato',
+    name: 'Thuram K.',
+    text: 'Intervento di condroplastica per la guarigione della condropatia rotulea del ginocchio destro, in dubbio per la 17a.',
+    matchday: 17,
+  },
+  {
+    team: 'Lazio',
+    kind: 'infortunato',
+    name: 'Patric',
+    text: 'Autorizzato a osservare alcuni giorni di temporanea indisponibilità per completare un percorso clinico già programmato, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Lazio',
+    kind: 'infortunato',
+    name: 'Dele-Bashiru',
+    text: 'Lesione di primo grado ai flessori della coscia destra, in dubbio per la 4a.',
+    matchday: 4,
+  },
+  {
+    team: 'Lazio',
+    kind: 'infortunato',
+    name: 'Marusic',
+    text: 'Stiramento ai flessori, in dubbio per la 4a.',
+    matchday: 4,
+  },
+  {
+    team: 'Lazio',
+    kind: 'infortunato',
+    name: 'Rovella',
+    text: 'Lesione muscolare al polpaccio, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Lazio',
+    kind: 'infortunato',
+    name: 'Cataldi',
+    text: 'Intervento chirurgico per risolvere i problemi con la pubalgia, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Lecce',
+    kind: 'infortunato',
+    name: 'Geubbels',
+    text: 'Trauma distorsivo alla caviglia sinistra, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Milan',
+    kind: 'infortunato',
+    name: 'Gabbia',
+    text: 'Infortunio alla caviglia, in dubbio per la 4a.',
+    matchday: 4,
+  },
+  {
+    team: 'Monza',
+    kind: 'infortunato',
+    name: 'Ciurria',
+    text: 'Problema fisico, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Monza',
+    kind: 'infortunato',
+    name: 'Pessina',
+    text: 'Operato per lussazione della rotula del ginocchio destro, in dubbio per la 9a.',
+    matchday: 9,
+  },
+  {
+    team: 'Napoli',
+    kind: 'infortunato',
+    name: 'Giovane',
+    text: 'Intervento di correzione per ernia inguinale, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Napoli',
+    kind: 'infortunato',
+    name: 'Marianucci',
+    text: 'Lesione di alto grado del collaterale mediale del ginocchio sinistro, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Napoli',
+    kind: 'infortunato',
+    name: 'Mctominay',
+    text: 'Intervento di correzione mediante ablazione (PFA) in seguito all\'insorgenza di una lieve aritmia benigna, rientro previsto per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Napoli',
+    kind: 'infortunato',
+    name: 'Buongiorno',
+    text: 'Intervento chirurgico di riparazione della radice del menisco mediale del ginocchio destro, in dubbio per la 12a.',
+    matchday: 12,
+  },
+  {
+    team: 'Parma',
+    kind: 'infortunato',
+    name: 'Nicolussi Caviglia',
+    text: 'Sindrome pubalgica, in dubbio per la 12a.',
+    matchday: 12,
+  },
+  {
+    team: 'Sassuolo',
+    kind: 'infortunato',
+    name: 'Boloca',
+    text: 'Intervento chirurgico in artroscopia al ginocchio sinistro per la pulizia meniscale e l’applicazione di PRP, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Sassuolo',
+    kind: 'infortunato',
+    name: 'Candè',
+    text: 'Intervento di ricostruzione del Legamento Crociato Anteriore del ginocchio destro, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Sassuolo',
+    kind: 'infortunato',
+    name: 'Pieragnolo',
+    text: 'Intervento chirurgico di ricostruzione del Legamento Crociato Anteriore del ginocchio destro, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Sassuolo',
+    kind: 'infortunato',
+    name: 'Walukiewicz',
+    text: 'Fuori per un problema fisico, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Sassuolo',
+    kind: 'infortunato',
+    name: 'Konè I.',
+    text: 'Intervento di riduzione della frattura della gamba sinistra, in dubbio per la 20a.',
+    matchday: 20,
+  },
+  {
+    team: 'Torino',
+    kind: 'infortunato',
+    name: 'Casadei',
+    text: 'Affaticamento muscolare, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Udinese',
+    kind: 'infortunato',
+    name: 'Chakvetadze',
+    text: 'Frattura al terzo metatarso del piede destro, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Udinese',
+    kind: 'infortunato',
+    name: 'Zanoli',
+    text: 'Intervento chirurgico per lesione del legamento crociato anteriore del ginocchio destro, in dubbio per la 4a.',
+    matchday: 4,
+  },
+  {
+    team: 'Udinese',
+    kind: 'infortunato',
+    name: 'Palma',
+    text: 'Lesione all\'adduttore, in dubbio per la 6a',
+    matchday: 6,
+  },
+  {
+    team: 'Udinese',
+    kind: 'infortunato',
+    name: 'Zaniolo',
+    text: 'Stiramento, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Venezia',
+    kind: 'infortunato',
+    name: 'Moreno M.',
+    text: 'Fastidio muscolare, in dubbio per la 3a.',
+    matchday: 3,
+  },
+  {
+    team: 'Venezia',
+    kind: 'infortunato',
+    name: 'Franjic',
+    text: 'Si teme una dislocazione della clavicola, in dubbio per la 5a.',
+    matchday: 5,
+  },
+  {
+    team: 'Venezia',
+    kind: 'infortunato',
+    name: 'Adorante',
+    text: 'Operazione per un problema alla schiena, in dubbio per la 7a.',
+    matchday: 7,
+  },
+  {
+    team: 'Venezia',
+    kind: 'infortunato',
+    name: 'Sverko',
+    text: 'Infortunio alle anche, in dubbio per la 7a.',
+    matchday: 7,
   },
 ];

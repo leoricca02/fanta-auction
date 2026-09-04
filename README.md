@@ -15,11 +15,11 @@ se quel giocatore è titolare e se puoi ancora permettertelo.
 
 ---
 
-> **Versione di fine mercato 2026/27**, aggiornata il 1º settembre 2026, a mercato chiuso.
-> Il listone è quello definitivo di Fantacalcio.it: 538 giocatori in lista, 49 fuori lista.
-> Fasce, specialisti dei piazzati e commenti sugli infortunati vengono dalla guida SosFanta e
-> si rigenerano con i tre script di `scripts/` ogni volta che la fonte cambia — è un comando,
-> non una riscrittura.
+> **Versione di fine mercato 2026/27**, aggiornata il 4 settembre 2026, a mercato chiuso.
+> Il listone è quello definitivo di Fantacalcio.it: 533 giocatori in lista, 59 fuori lista.
+> Fasce e specialisti dei piazzati vengono dalla guida SosFanta, gli infortunati dalla sua
+> tabella indisponibili, e si rigenerano con gli script di `scripts/` ogni volta che la fonte
+> cambia — è un comando, non una riscrittura.
 
 ---
 
@@ -198,18 +198,35 @@ Fantacalcio.it: sul listone di fine mercato 2026-27 prende 490 nomi su 492, e ch
 non ha badge.
 
 ```bash
-node scripts/build-tiers.mjs   # riscarica la guida: src/data/tiers.ts + src/data/injuries.ts
+node scripts/build-tiers.mjs   # riscarica la guida e rigenera src/data/tiers.ts
 ```
 
 Lo script muore nominando la pagina se la guida introduce una fascia che `TIER_ORDER` non
 conosce o se il markup cambia: meglio nessun aggiornamento che un file monco.
 
-**Quanto sta fuori.** Della fascia `INFORTUNATI` lo stesso script raccoglie anche il commento
-della guida, che è l'unico posto in cui c'è scritto *quando torna*: passando il mouse sul chip
-**infortunato** — o toccandolo, da tablet — si legge la frase della fonte per intero,
-"rientro previsto dopo la sosta di novembre". Resta prosa: ridurla a un numero di giornate
-vorrebbe dire inventarsi una precisione che la fonte non ha. All'asta è la differenza fra
-"non prenderlo" e "prendilo a saldo".
+---
+
+### 🩹 Chi è fermo, e fino a quando
+
+La fascia `INFORTUNATI` della guida dice *che* uno è fermo. La **tabella indisponibili** di
+SosFanta dice **per quanto**, con la giornata, e lo dice per tutti invece che per gli otto big
+che la guida commenta. All'asta è la differenza fra "non prenderlo" e "prendilo a saldo".
+
+Il chip in cima alla scheda porta la cifra su cui si decide — **infortunato · rientro 13a** —
+e passandoci sopra, o toccandolo da tablet, si legge il motivo con le parole della fonte:
+*"Operato per frattura al quinto metatarso del piede sinistro"*. Un crociato e un affaticamento
+non valgono la stessa giornata.
+
+```bash
+node scripts/build-injuries.mjs   # riscarica la tabella e rigenera src/data/injuries.ts
+```
+
+L'aggancio è **per nome dentro la rosa del club**, come per i piazzati e non come per le fasce:
+la tabella pubblica squadra per squadra, quindi il campo si restringe a venticinque uomini
+invece di cinquecento. Due omonimi nella stessa rosa non prendono niente, nessuno dei due.
+
+La stessa tabella elenca squalificati e diffidati, che lo script legge e mette nello stesso
+file: fuori dal campionato sono vuoti, a stagione in corso no.
 
 ---
 
@@ -223,7 +240,7 @@ formazioni, così durante la chiamata non serve aprire la scheda.
 
 L'aggancio è **per id**: la tabella delle statistiche pubblica lo stesso id di Fantacalcio.it
 che il listone mette nella colonna `#`, quindi non c'è nessun nome da normalizzare e nessuna
-omonimia da sciogliere. Sul listone di fine mercato 2026-27 aggancia 371 giocatori su 538: i restanti sono
+omonimia da sciogliere. Sul listone di fine mercato 2026-27 aggancia 365 giocatori su 533: i restanti sono
 arrivi dall'estero e promossi dalla B, e per loro la scheda dice **"non ha giocato"** invece di
 mostrare degli zeri. Sotto le 12 presenze la scheda avvisa che quella fantamedia è un campione
 piccolo, non una stagione.
@@ -312,6 +329,10 @@ Chi calcia i **rigori**, le **punizioni** e i **corner**, squadra per squadra, c
 di SosFanta. Il primo rigorista ha un chip acceso in cima alla scheda, accanto allo stato di
 formazione: dopo "titolare" è il fatto più pesante che ci sia su un giocatore. Sotto, la sezione
 *Piazzati* elenca gli incarichi fino al terzo posto — oltre, la gerarchia è teorica.
+
+Le stesse tre gerarchie stanno anche in **Squadre**, sotto la formazione: lì la domanda non è
+"questo che posto ha" ma "di questi undici, chi calcia", ed è l'unico momento in cui si guardano
+tutti insieme. I nomi agganciati aprono la scheda con un clic.
 
 **Il podio della squadra** sta sotto il badge: mouse sopra, o dito, e si apre la gerarchia
 intera di quel club — chi tira per primo, chi dopo. "Terzo" da solo non dice niente; terzo
@@ -442,7 +463,7 @@ A parità di chiave vince il record più recente, mai il file.
 | **`.pdf`** | Riepilogo stampabile delle 12 rose |
 | **`.json`** | Backup completo dei dati utente |
 
-L'export nativo **riscrive dentro il file originale** invece di rigenerarlo: le 587 righe e
+L'export nativo **riscrive dentro il file originale** invece di rigenerarlo: le 592 righe e
 le colonne che l'app non usa devono sopravvivere intatte, perché *"reimportabile"* non ammette
 il quasi.
 
@@ -521,8 +542,8 @@ npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```
 
-I test girano sul **listone vero**, non su fixture inventate: 538 giocatori, distribuzione
-P 64 / D 189 / C 194 / A 91. Il replay simula un'asta completa da 300 assegnazioni e verifica
+I test girano sul **listone vero**, non su fixture inventate: 533 giocatori, distribuzione
+P 65 / D 189 / C 192 / A 87. Il replay simula un'asta completa da 300 assegnazioni e verifica
 che ne escano 12 rose da 25.
 
 C'è anche una guardia sul costo a fine asta — con 300 eventi la piega dell'event log sta in
