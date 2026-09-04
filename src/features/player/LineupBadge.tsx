@@ -12,10 +12,18 @@ import { cn } from '../../ui/cn';
  * ballottaggio, e non serve leggere niente.
  */
 
+/**
+ * Stessa finitura satinata delle fasce, perche' i due badge stanno fianco a
+ * fianco: se uno e' piatto e l'altro no, quello piatto sembra disabilitato.
+ * Lo scarto del gradiente segue lo stato — pieno sul titolare, appena
+ * accennato sulla panchina, nullo su chi non ha formazione.
+ */
 const STYLE: Readonly<Record<LineupStatus, string>> = {
-  TITOLARE: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30',
-  BALLOTTAGGIO: 'bg-amber-500/10 text-amber-400 border border-amber-500/30',
-  PANCHINA: 'bg-white/[0.04] text-zinc-400 border border-white/[0.08]',
+  TITOLARE:
+    'bg-gradient-to-br from-emerald-400/20 to-emerald-600/10 text-emerald-300 border border-emerald-400/40',
+  BALLOTTAGGIO:
+    'bg-gradient-to-br from-amber-400/20 to-amber-600/10 text-amber-300 border border-amber-400/40',
+  PANCHINA: 'bg-gradient-to-br from-white/[0.07] to-white/[0.03] text-zinc-400 border border-white/10',
   NON_INSERITO: 'bg-transparent text-zinc-600 border border-dashed border-zinc-700',
 };
 

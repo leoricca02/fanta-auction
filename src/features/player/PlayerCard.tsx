@@ -28,7 +28,7 @@ import { makeTierIndex, tierOf } from '../../domain/tiers';
 import type { SeasonStats } from '../../domain/player-stats';
 import { formatAvg, formatPenalties, statsOf } from '../../domain/player-stats';
 import type { Highlight } from '../../domain/highlights';
-import { highlightsOf, rankLabel } from '../../domain/highlights';
+import { highlightsOf, rankLabel, rankingsOf } from '../../domain/highlights';
 import type { HierarchyIndex, SetPiece, SpecialistRole } from '../../domain/specialists';
 import {
   hierarchyOf,
@@ -182,7 +182,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
       initial={{ opacity: 0, x: 12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.2, ease: EASE }}
-      className="flex h-full w-[28rem] shrink-0 flex-col gap-4 overflow-y-auto border-l border-white/[0.08] bg-zinc-950/80 p-4 backdrop-blur-xl"
+      className="relative flex h-full w-[28rem] shrink-0 flex-col gap-4 overflow-y-auto border-l border-white/[0.08] bg-panel/80 p-4 backdrop-blur-xl"
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -191,20 +191,43 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
         }
       }}
     >
+      {/*
+        Alone del ruolo: luce, non elemento.
+
+        Sfocato a `blur-3xl` e al 20% non ha bordi da leggere — tinge la testata
+        e basta. Serve al riconoscimento periferico: durante la chiamata si
+        guarda il banditore, e il rosa in cima dice "attaccante" senza che
+        l'occhio torni sulla scheda. `pointer-events-none` perche' sta sopra
+        l'intestazione e non deve rubare il clic alla X.
+      */}
+      <div
+        aria-hidden
+        className={cn(
+          'pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent opacity-20 blur-3xl',
+          theme.aura,
+        )}
+      />
+
       {/* Testata: ruolo con glow, nome in risalto, club. */}
-      <header className="flex items-start gap-3">
+      <header className="relative flex items-start gap-3">
         <motion.div layoutId={`role-${player.id}`}>
           <RoleBadge role={player.role} size="lg" glow />
         </motion.div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-xl font-bold leading-tight tracking-tight text-zinc-100">
+          {/*
+            Gerarchia in tre gradini: il nome e' l'unica cosa bianca piena
+            della scheda, il club e' attenuato, il ruolo e' colore e basta.
+            Chi apre la scheda sa gia' chi ha cercato: il nome conferma, non
+            informa, e deve costare zero fatica di lettura.
+          */}
+          <h3 className="truncate text-xl font-bold leading-tight tracking-tight text-white">
             {player.name}
           </h3>
-          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500">
-            <span className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 font-medium uppercase tracking-wide text-zinc-300">
+          <p className="mt-1 flex items-center gap-1.5 text-xs">
+            <span className="rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-medium uppercase tracking-wide text-zinc-400">
               {player.team}
             </span>
-            <span className={theme.text}>{theme.label}</span>
+            <span className={cn('font-medium', theme.text)}>{theme.label}</span>
           </p>
         </div>
         <CloseButton
@@ -304,7 +327,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
             onBlur={flush}
             rows={4}
             placeholder="Rigorista, spinge sempre, rientra dopo la sosta…  **grassetto**, *corsivo*, - elenchi"
-            className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50 focus:bg-white/[0.05]"
+            className="field px-2.5 py-2 text-sm"
           />
         ) : (
           <button
@@ -328,7 +351,10 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
             void (target ? removeObjectiveTarget(player.id) : addObjectiveTarget(player.id))
           }
           className={cn(
-            'inline-flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+            'focus-ring inline-flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium',
+            // Il bottone cede sotto il dito: cento millisecondi di scala
+            // valgono piu' di qualsiasi conferma scritta.
+            'transition-all duration-100 active:scale-[0.98]',
             target
               ? 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
               : 'bg-emerald-500 text-zinc-950 shadow-glow-emerald hover:bg-emerald-400',
@@ -416,7 +442,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
           }}
           rows={2}
           placeholder="Come gioca, chi e’ in dubbio…"
-          className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-sm text-zinc-300 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+          className="field px-2.5 py-2 text-sm text-zinc-300"
         />
       </section>
     </motion.div>
@@ -475,18 +501,55 @@ function SpecialistSection({
               playerId={playerId}
               hierarchy={hierarchy}
               icon={<Icon size={11} />}
+              /* `title` porta l'etichetta intera del dominio: la pillola
+                 abbrevia, il testo accessibile no. */
+              title={specialistLabel(role)}
               className={cn(
                 first
                   ? 'border-emerald-500/40 text-emerald-300'
                   : 'border-white/[0.08] text-zinc-400',
               )}
             >
-              {specialistLabel(role)}
+              {KIND_SHORT[role.kind]}
+              <RankPip rank={role.rank} first={first} />
             </HierarchyChip>
           );
         })}
       </div>
     </section>
+  );
+}
+
+/** Etichetta della pillola: l'ordinale sta nel pip accanto, non nel testo. */
+const KIND_SHORT: Readonly<Record<SetPiece, string>> = {
+  rigori: 'rigori',
+  punizioni: 'punizioni',
+  corner: 'corner',
+};
+
+/**
+ * L'ordinale della gerarchia, staccato dall'etichetta.
+ *
+ * "rigorista 1o" letto tutto d'un fiato costringe a cercare la cifra dentro
+ * una parola. Separandola in un pastiglia si legge la posizione **prima** del
+ * tipo di piazzato, che e' l'ordine giusto: il primo rigorista di una squadra
+ * vale, il terzo non calcia mai.
+ *
+ * Il primo posto e' pieno, gli altri sono un contorno: la differenza si deve
+ * vedere prima di mettere a fuoco il numero.
+ */
+function RankPip({ rank, first }: { readonly rank: number; readonly first: boolean }): JSX.Element {
+  return (
+    <span
+      className={cn(
+        'num inline-flex h-4 min-w-[1rem] items-center justify-center rounded px-1 text-[10px] font-bold leading-none',
+        first
+          ? 'bg-emerald-500/25 text-emerald-200'
+          : 'bg-white/[0.06] text-zinc-400 ring-1 ring-inset ring-white/10',
+      )}
+    >
+      {rank}°
+    </span>
   );
 }
 
@@ -513,6 +576,7 @@ function HierarchyChip({
   icon,
   children,
   className,
+  title,
 }: {
   readonly kind: SetPiece;
   readonly team: string;
@@ -521,10 +585,12 @@ function HierarchyChip({
   readonly icon: React.ReactNode;
   readonly children: React.ReactNode;
   readonly className?: string;
+  /** Etichetta estesa: la pillola abbrevia, questa no. */
+  readonly title?: string;
 }): JSX.Element {
   const slots = hierarchyOf(team, kind, hierarchy);
   const chip = (
-    <Chip icon={icon} className={cn(className)}>
+    <Chip icon={icon} className={cn(className)} title={title}>
       {children}
     </Chip>
   );
@@ -625,6 +691,23 @@ function SeasonSection({
   readonly stats: SeasonStats | null;
 }): JSX.Element {
   const keeper = player.role === 'P';
+
+  /*
+    Il percentile dentro il ruolo, per le tre cifre in cima.
+    E' lo stesso calcolo dei punti di forza qui sotto, e non e' un dato nuovo:
+    una fantamedia 6,41 letta da sola non dice niente, la stessa cifra come
+    "meta' classifica fra i difensori" dice tutto. La barra e' l'unica cosa in
+    questa scheda che risponde alla domanda "e' tanto o poco?".
+  */
+  const ranks = useMemo(
+    () =>
+      stats === null
+        ? new Map<string, number>()
+        : new Map(rankingsOf(stats, RANK_INDEX, ADVANCED_INDEX).map((h) => [h.metric.key, h.share])),
+    [stats],
+  );
+  const percentile = (key: string): number | undefined => ranks.get(key);
+
   return (
     <section className="flex flex-col gap-1.5">
       <SectionTitle
@@ -652,9 +735,25 @@ function SeasonSection({
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2">
-            <Stat label="fantamedia" value={formatAvg(stats.fantaAvg)} accent="text-emerald-300" />
-            <Stat label="media voto" value={formatAvg(stats.avg)} />
-            <Stat label="presenze" value={stats.played} />
+            <Stat
+              label="fantamedia"
+              value={formatAvg(stats.fantaAvg)}
+              accent="text-emerald-300"
+              percentile={percentile('fantaAvg')}
+              barFill="bg-emerald-400/80"
+            />
+            <Stat
+              label="media voto"
+              value={formatAvg(stats.avg)}
+              percentile={percentile('avg')}
+              barFill="bg-sky-400/70"
+            />
+            <Stat
+              label="presenze"
+              value={stats.played}
+              percentile={percentile('presence')}
+              barFill="bg-zinc-400/70"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-1">
@@ -762,7 +861,7 @@ function HighlightColumn({
       {items.map((h) => (
         <div
           key={h.metric.key}
-          className="rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1"
+          className="rounded-md border border-white/10 bg-surface/50 px-2 py-1"
         >
           <div className="flex items-baseline justify-between gap-1.5">
             <span className="truncate text-[11px] text-zinc-300">{h.metric.label}</span>
@@ -773,7 +872,7 @@ function HighlightColumn({
           <div className="text-[10px] text-zinc-500">
             {rankLabel(h, stats.role)} <span className="num">su {h.pool}</span>
           </div>
-          <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
             <div
               className={cn('h-full rounded-full', bar)}
               // La barra e' la posizione, non il valore: piena = primo del ruolo.
@@ -795,27 +894,39 @@ function MicroStat({
   readonly value: React.ReactNode;
 }): JSX.Element {
   return (
-    <div className="flex items-baseline justify-between gap-2 rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1">
+    <div className="flex items-baseline justify-between gap-2 rounded-md border border-white/10 bg-surface/50 px-2 py-1">
       <span className="truncate text-[11px] text-zinc-500">{label}</span>
       <span className="num shrink-0 text-xs font-medium text-zinc-200">{value}</span>
     </div>
   );
 }
 
-/** Una cifra della griglia. `mono` spegne il font tabellare per i contenuti non numerici. */
+/**
+ * Una cifra della griglia. `mono` spegne il font tabellare per i contenuti non
+ * numerici.
+ *
+ * `percentile` — quando c'e' — disegna sotto la cifra la posizione nel ruolo,
+ * da 0 a 1. Non e' decorazione: e' la sola cosa che trasforma un numero in un
+ * giudizio senza scrivere una parola. Quando manca, la barra non c'e' e la
+ * card resta esattamente com'era: nessuna barra vuota che finge un dato.
+ */
 function Stat({
   label,
   value,
   accent,
   mono = true,
+  percentile,
+  barFill = 'bg-emerald-400/80',
 }: {
   readonly label: string;
   readonly value: React.ReactNode;
   readonly accent?: string;
   readonly mono?: boolean;
+  readonly percentile?: number | undefined;
+  readonly barFill?: string;
 }): JSX.Element {
   return (
-    <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+    <div className="rounded-lg border border-white/10 bg-surface/50 px-3 py-2 transition-colors duration-150 hover:border-white/20">
       <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
       <div
         className={cn(
@@ -826,6 +937,17 @@ function Stat({
       >
         {value}
       </div>
+      {percentile !== undefined && (
+        <div
+          className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.07]"
+          title={`Posizione nel ruolo: ${Math.round(percentile * 100)}° percentile`}
+        >
+          <div
+            className={cn('h-full rounded-full', barFill)}
+            style={{ width: `${Math.max(3, Math.round(percentile * 100))}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -929,13 +1051,16 @@ function Chip({
   icon,
   children,
   className,
+  title,
 }: {
   readonly icon: React.ReactNode;
   readonly children: React.ReactNode;
   readonly className?: string;
+  readonly title?: string | undefined;
 }): JSX.Element {
   return (
     <span
+      title={title}
       className={cn(
         'inline-flex items-center gap-1 rounded-md border bg-white/[0.03] px-1.5 py-0.5 text-[11px] font-medium leading-none',
         className,

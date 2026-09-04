@@ -11,7 +11,7 @@ import { compareTeamStats, computeAuctionStats } from '../../domain/stats';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
-import { CloseButton, RoleBadge, SectionTitle } from '../../ui/primitives';
+import { CloseButton, EmptyState, RoleBadge, SectionTitle } from '../../ui/primitives';
 
 /**
  * L'asta in numeri — overlay `t`.
@@ -128,7 +128,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
   return (
     <div
       className={cn(
-        'flex flex-col gap-4 overflow-y-auto bg-zinc-950/80 p-4 backdrop-blur-xl',
+        'flex flex-col gap-4 overflow-y-auto bg-panel/80 p-4 backdrop-blur-xl',
         embedded ? 'min-h-0 flex-1' : 'h-full w-[68rem] max-w-full border-l border-white/[0.08]',
       )}
     >
@@ -150,9 +150,11 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
       </header>
 
       {stats.empty ? (
-        <p className="rounded-lg border border-dashed border-white/[0.08] px-4 py-10 text-center text-sm text-zinc-500">
-          Nessuna assegnazione ancora. Le statistiche compaiono dal primo colpo battuto.
-        </p>
+        <EmptyState
+          icon={<BarChart3 size={24} />}
+          title="L’asta non e’ ancora partita"
+          hint="Ogni cifra di questa schermata e’ misurata sui colpi battuti: compare dal primo."
+        />
       ) : (
         <>
           {/* 1 — le cinque cifre che decidono se rilanci adesso o aspetti. */}
@@ -195,7 +197,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 2 — dove vanno i crediti, reparto per reparto. */}
-          <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+          <section className="rounded-xl border border-white/10 bg-surface/50 p-3">
             <SectionTitle className="mb-2">Dove vanno i crediti</SectionTitle>
             <ul className="flex flex-col gap-1.5">
               {stats.byRole.map((role) => (
@@ -228,7 +230,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 3 — il dato che nessun altro al tavolo ha. */}
-          <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+          <section className="rounded-xl border border-white/10 bg-surface/50 p-3">
             <SectionTitle className="mb-1">Che roba e&apos; uscita finora</SectionTitle>
             <p className="mb-2 text-xs text-zinc-400">
               <strong className="text-emerald-400">{pct(mix.starterShare)}</strong> dei giocatori
@@ -275,7 +277,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 5 — chi mi puo' ancora battere. */}
-          <section className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+          <section className="overflow-hidden rounded-xl border border-white/10 bg-surface/50">
             <SectionTitle className="border-b border-white/[0.08] px-3 py-2">
               Squadra per squadra — clicca una colonna per ordinare
             </SectionTitle>
@@ -338,18 +340,35 @@ interface TileProps {
   readonly title?: string;
 }
 
+/**
+ * Una cifra del cruscotto: etichetta, valore in mono tabellare, barra, nota.
+ *
+ * La barra sta **fra** il valore e la nota, non in fondo: e' la lettura veloce
+ * della stessa cifra, quindi va letta insieme a lei. La nota sotto e' il
+ * dettaglio, e chi ha gia' capito dalla barra non la legge.
+ *
+ * Il riempimento cambia colore al crescere, e non e' decorazione: sopra l'80%
+ * dei crediti bruciati la domanda non e' piu' "quanto ho speso" ma "quanto mi
+ * resta", e il colore lo dice prima della cifra.
+ */
 function Tile({ label, value, hint, tone, bar, title }: TileProps): JSX.Element {
+  const fill =
+    bar === undefined || bar < 0.6
+      ? 'bg-emerald-500'
+      : bar < 0.85
+        ? 'bg-amber-500'
+        : 'bg-rose-500';
   return (
     <div
-      className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition-colors hover:border-white/[0.14]"
+      className="rounded-xl border border-white/10 bg-surface/50 p-3 transition-colors duration-150 hover:border-white/20"
       title={title}
     >
       <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
-      <div className="num mt-0.5 text-2xl font-semibold text-zinc-100">{value}</div>
+      <div className="num mt-0.5 text-2xl font-semibold tracking-tight text-white">{value}</div>
       {bar !== undefined && (
-        <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className="h-full rounded-full bg-emerald-500"
+            className={cn('h-full rounded-full transition-[width] duration-300', fill)}
             style={{ width: `${Math.min(bar * 100, 100)}%` }}
           />
         </div>
@@ -369,7 +388,7 @@ interface DealListProps {
 
 function DealList({ title, hint, deals, nameById, render }: DealListProps): JSX.Element {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+    <div className="rounded-xl border border-white/10 bg-surface/50 p-3">
       <SectionTitle>{title}</SectionTitle>
       {hint !== undefined && <p className="mb-1 text-[10px] text-zinc-600">{hint}</p>}
       <ol className="mt-1 flex flex-col gap-1">
