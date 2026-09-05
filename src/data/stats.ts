@@ -12,7 +12,7 @@ export const STATS_SOURCE_URL = 'https://www.fantacalcio.it/statistiche-serie-a/
 export const STATS_SEASON = '2025/26';
 
 /** Data di scarico, per capire quanto e' vecchio il file. */
-export const STATS_UPDATED_AT = '2026-08-27';
+export const STATS_UPDATED_AT = '2026-09-05';
 
 export const SEASON_STATS: readonly SeasonStats[] = [
   { id: 5512, name: 'De Luca', team: 'Cremonese', role: 'A', played: 1, avg: 7, fantaAvg: 10, goals: 1, assists: 0, conceded: 0, cleanSheets: null, goodGames: 1, penScored: 1, penTaken: 1, penSaved: 0, yellow: 0, red: 0 },

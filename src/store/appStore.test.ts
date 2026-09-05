@@ -78,8 +78,8 @@ describe('init e caricamento del listone', () => {
     await store().init();
     await store().importListone(listoneFile());
 
-    expect(store().players).toHaveLength(533);
-    expect(store().listone?.count).toBe(533);
+    expect(store().players).toHaveLength(531);
+    expect(store().listone?.count).toBe(531);
     expect(store().pendingListone).toBeNull();
     expect(store().message?.kind).toBe('ok');
 
@@ -92,7 +92,7 @@ describe('init e caricamento del listone', () => {
     await store().importListone(listoneFile());
     await reload();
 
-    expect(store().players).toHaveLength(533);
+    expect(store().players).toHaveLength(531);
     expect(store().listone?.filename).toBe('lista_calciatori_classic.xlsx');
   });
 
@@ -101,7 +101,7 @@ describe('init e caricamento del listone', () => {
     await store().importListone(listoneFile());
     await store().importListone(fakeFile('rotto.xlsx', new Uint8Array([1, 2, 3])));
 
-    expect(store().players).toHaveLength(533);
+    expect(store().players).toHaveLength(531);
     expect(store().message?.kind).toBe('error');
     expect(store().pendingListone).toBeNull();
   });
@@ -362,7 +362,7 @@ describe('re-import del listone', () => {
 
     expect(store().pendingListone).not.toBeNull();
     expect(store().pendingListone?.plan.firstImport).toBe(false);
-    expect(store().players).toHaveLength(533);
+    expect(store().players).toHaveLength(531);
   });
 
   it('annullare non lascia tracce', async () => {
@@ -377,7 +377,7 @@ describe('re-import del listone', () => {
     await reload();
 
     expect(store().pendingListone).toBeNull();
-    expect(store().players).toHaveLength(533);
+    expect(store().players).toHaveLength(531);
   });
 
   it('e bloccato con assegnazioni attive, e si sblocca annullandole', async () => {
@@ -529,7 +529,7 @@ describe('resetEverything', () => {
 
     // Torna a essere un primo import: nessuna conferma da dare.
     expect(store().pendingListone).toBeNull();
-    expect(store().players).toHaveLength(533);
+    expect(store().players).toHaveLength(531);
   });
 });
 

@@ -10,7 +10,7 @@ import type { UnavailableNote } from '../domain/injuries';
 export const INJURIES_SOURCE_URL = 'https://www.sosfanta.com/indisponibili-e-squalificati/tabella-indisponibili-seriea-fantacalcio-asta-infortunati-tempi-recupero-squalificati-diffidati/';
 
 /** Data di scarico della tabella: un infortunio invecchia in fretta. */
-export const INJURIES_UPDATED_AT = '2026-09-04';
+export const INJURIES_UPDATED_AT = '2026-09-05';
 
 export const INJURY_NOTES: readonly UnavailableNote[] = [
   {

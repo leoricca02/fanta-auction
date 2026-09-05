@@ -550,6 +550,41 @@ giocatore, domanda opposta — non "questo che posto ha" ma "di questi undici, c
 
 ---
 
+## Appendice E — Passata del 5 settembre 2026 (campionato iniziato)
+
+Prima passata a **stagione in corso**: la 3ª giornata si stava giocando mentre girava.
+Gli URL degli script non sono cambiati, di nuovo. Le quattro fonti risultavano tutte più
+fresche del giro precedente — fasce e rigoristi modificati lo stesso 5 settembre alle 13:57
+e 13:58, piazzati e indisponibili il 3 settembre.
+
+**Il listone era ancora diverso**: Fantacalcio.it lo rifà a ogni giornata, e adesso le colonne
+delle presenze si muovono. Numeri nuovi, da usare come metro al prossimo giro: **593 righe**,
+**531 id in lista** (P 64, D 189, C 192, A 86), **62 fuori lista**, **489 su 492** nomi delle
+fasce agganciati, **362 su 531** giocatori con statistiche 2025/26, **241 nomi** in 60 blocchi
+di specialisti, **41 infortunati**, **708 test** verdi.
+
+**Due dataset non si sono mossi di una riga.** `injuries.ts` e `stats.ts` hanno cambiato solo la
+data di scarico: la tabella indisponibili non era stata toccata dal 3 settembre, e le statistiche
+2025/26 sono una stagione chiusa (§4 lo diceva, e ora è verificato invece che assunto).
+
+**Una cosa nuova, che da qui in avanti ricapita ogni sabato.** `build-calendar.mjs` è morto su
+*«Giornata 3: stato partita "1" sconosciuto»*: `data-match-status` vale `0` da giocare, `4`
+giocata, e `1` **in corso** — comparso su Roma-Atalanta mentre si giocava. Era il comportamento
+voluto di un parser difensivo, ma a campionato iniziato non è più un caso limite: lo script ora
+conosce il terzo codice e lo conta come *non ancora giocata*, perché il risultato non è
+definitivo e la griglia di alternanza guarda le giornate chiuse.
+
+Da sapere per il prossimo giro: **le date delle giornate future si spostano**. Il diff di
+`calendar.ts` è stato di 52 righe, quasi tutte rinvii di orario e giornata sui turni da
+settembre in poi, non solo i `played` della 3ª.
+
+**Le statistiche avanzate (Sofascore) restano ferme** e non si rigenerano da riga di comando:
+l'API risponde 403 a `curl` e il dump si riprende dal browser (vedi il README). Sono comunque
+cifre 2025/26, cioè una stagione chiusa: non c'è niente da riscaricare finché non si vuole
+passare alla stagione in corso.
+
+---
+
 ## Appendice B — Decisioni da prendere, non da indovinare
 
 Quattro cose che vanno chieste invece che decise di testa propria quando si riapre il lavoro:

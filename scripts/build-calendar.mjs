@@ -99,11 +99,17 @@ function parseMatchday(html, matchday) {
     if (date === null) throw new Error(`Giornata ${matchday}: partita senza data.`);
 
     // Il risultato non distingue niente: la fonte stampa `0 - 0` anche sulle
-    // partite di maggio. Lo stato invece si: `0` da giocare, `4` giocata. Un
-    // terzo codice e' un caso che non conosco, e va guardato invece che
-    // indovinato.
+    // partite di maggio. Lo stato invece si: `0` da giocare, `1` in corso, `4`
+    // giocata. Un quarto codice e' un caso che non conosco, e va guardato
+    // invece che indovinato.
+    //
+    // `1` e' comparso il 2026-09-05 su Roma-Atalanta mentre si giocava, e ha
+    // fermato lo script: era il comportamento voluto, ma la stagione e' in
+    // corso e da qui in avanti succede ogni sabato. Vale come **non ancora
+    // giocata**: il risultato non e' definitivo, e la griglia di alternanza
+    // guarda le giornate chiuse.
     const status = /data-match-status="(\d+)"/.exec(block);
-    if (status === null || (status[1] !== '0' && status[1] !== '4')) {
+    if (status === null || !['0', '1', '4'].includes(status[1])) {
       throw new Error(
         `Giornata ${matchday}: stato partita "${status === null ? '?' : status[1]}" sconosciuto.`,
       );

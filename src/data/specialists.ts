@@ -18,14 +18,14 @@ export const SPECIALISTS_SOURCE_URLS = [
 ] as const;
 
 /** Data di scarico delle pagine, mostrata all'utente. */
-export const SPECIALISTS_UPDATED_AT = '2026-09-04';
+export const SPECIALISTS_UPDATED_AT = '2026-09-05';
 
 export const SPECIALIST_BLOCKS: readonly SpecialistBlock[] = [
   { team: 'Atalanta', kind: 'rigori', names: ['Kessiè', 'Scamacca', 'Samardzic', 'Ederson D.S.', 'De Ketelaere', 'Krstovic'] },
   { team: 'Bologna', kind: 'rigori', names: ['Orsolini', 'Dovbyk', 'Bernardeschi', 'Ferguson'] },
   { team: 'Cagliari', kind: 'rigori', names: ['Nzola', 'Fazzini', 'Deiola', 'Mina'] },
   { team: 'Como', kind: 'rigori', names: ['Da Cunha', 'Kean', 'Paz N.', 'Douvikas', 'Baturina'] },
-  { team: 'Fiorentina', kind: 'rigori', names: ['Mastantuono', 'Pellegrino M.', 'Beto'] },
+  { team: 'Fiorentina', kind: 'rigori', names: ['Mastantuono', 'Pellegrino M.', 'Goncalves P.', 'Beto'] },
   { team: 'Frosinone', kind: 'rigori', names: ['Schmid', 'Calò', 'Bobcek'] },
   { team: 'Genoa', kind: 'rigori', names: ['Colombo', 'Messias', 'Vitinha O.', 'Baldanzi', 'Ostigard'] },
   { team: 'Inter', kind: 'rigori', names: ['Calhanoglu', 'Zielinski'] },

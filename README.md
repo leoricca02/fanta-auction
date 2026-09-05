@@ -15,8 +15,8 @@ se quel giocatore è titolare e se puoi ancora permettertelo.
 
 ---
 
-> **Versione di fine mercato 2026/27**, aggiornata il 4 settembre 2026, a mercato chiuso.
-> Il listone è quello definitivo di Fantacalcio.it: 533 giocatori in lista, 59 fuori lista.
+> **Versione di campionato in corso 2026/27**, aggiornata il 5 settembre 2026, alla 3ª giornata.
+> Il listone è quello di Fantacalcio.it: 531 giocatori in lista, 62 fuori lista.
 > Fasce e specialisti dei piazzati vengono dalla guida SosFanta, gli infortunati dalla sua
 > tabella indisponibili, e si rigenerano con gli script di `scripts/` ogni volta che la fonte
 > cambia — è un comando, non una riscrittura.
@@ -197,7 +197,7 @@ colonna degli svincolati, che ci si può anche ordinare e filtrare.
 Non è un tag: `obiettivo`/`alternativa`/`evita` restano il tuo giudizio e finiscono nel backup,
 la fascia è un **dato derivato dal listone** che si ricalcola a ogni import e non occupa spazio
 fra i tuoi dati. L'aggancio è per nome normalizzato, perché la guida non pubblica gli id di
-Fantacalcio.it: sul listone di fine mercato 2026-27 prende 490 nomi su 492, e chi non aggancia semplicemente
+Fantacalcio.it: sul listone del 5 settembre 2026 prende 489 nomi su 492, e chi non aggancia semplicemente
 non ha badge.
 
 ```bash
@@ -243,7 +243,7 @@ formazioni, così durante la chiamata non serve aprire la scheda.
 
 L'aggancio è **per id**: la tabella delle statistiche pubblica lo stesso id di Fantacalcio.it
 che il listone mette nella colonna `#`, quindi non c'è nessun nome da normalizzare e nessuna
-omonimia da sciogliere. Sul listone di fine mercato 2026-27 aggancia 365 giocatori su 533: i restanti sono
+omonimia da sciogliere. Sul listone del 5 settembre 2026 aggancia 362 giocatori su 531: i restanti sono
 arrivi dall'estero e promossi dalla B, e per loro la scheda dice **"non ha giocato"** invece di
 mostrare degli zeri. Sotto le 12 presenze la scheda avvisa che quella fantamedia è un campione
 piccolo, non una stagione.
@@ -578,7 +578,7 @@ A parità di chiave vince il record più recente, mai il file.
 | **`.pdf`** | Riepilogo stampabile delle 12 rose |
 | **`.json`** | Backup completo dei dati utente |
 
-L'export nativo **riscrive dentro il file originale** invece di rigenerarlo: le 592 righe e
+L'export nativo **riscrive dentro il file originale** invece di rigenerarlo: le 593 righe e
 le colonne che l'app non usa devono sopravvivere intatte, perché *"reimportabile"* non ammette
 il quasi.
 
@@ -659,8 +659,8 @@ npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```
 
-I test girano sul **listone vero**, non su fixture inventate: 533 giocatori, distribuzione
-P 65 / D 189 / C 192 / A 87. Il replay simula un'asta completa da 300 assegnazioni e verifica
+I test girano sul **listone vero**, non su fixture inventate: 531 giocatori, distribuzione
+P 64 / D 189 / C 192 / A 86. Il replay simula un'asta completa da 300 assegnazioni e verifica
 che ne escano 12 rose da 25.
 
 C'è anche una guardia sul costo a fine asta — con 300 eventi la piega dell'event log sta in

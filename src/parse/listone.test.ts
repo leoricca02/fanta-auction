@@ -58,21 +58,21 @@ describe('normalizeName', () => {
 describe('parseListone — file reale', () => {
   const result = parseListone(readListoneBytes());
 
-  it('carica 533 giocatori escludendo i 59 fuori lista', () => {
-    expect(result.totalRows).toBe(592);
-    expect(result.excludedCount).toBe(59);
-    expect(result.players).toHaveLength(533);
+  it('carica 531 giocatori escludendo i 62 fuori lista', () => {
+    expect(result.totalRows).toBe(593);
+    expect(result.excludedCount).toBe(62);
+    expect(result.players).toHaveLength(531);
   });
 
   it('rispetta la distribuzione per ruolo di §2.1', () => {
     const byRole = { P: 0, D: 0, C: 0, A: 0 };
     for (const p of result.players) byRole[p.role] += 1;
-    expect(byRole).toEqual({ P: 65, D: 189, C: 192, A: 87 });
+    expect(byRole).toEqual({ P: 64, D: 189, C: 192, A: 86 });
   });
 
   it('usa "#" come id primario e non produce duplicati', () => {
     const ids = new Set(result.players.map((p) => p.id));
-    expect(ids.size).toBe(533);
+    expect(ids.size).toBe(531);
   });
 
   it('conserva il nome originale e affianca searchKey normalizzata', () => {
@@ -96,17 +96,17 @@ describe('parseListone — file reale', () => {
       bytes.byteOffset,
       bytes.byteOffset + bytes.byteLength,
     ) as ArrayBuffer;
-    expect(parseListone(ab).players).toHaveLength(533);
+    expect(parseListone(ab).players).toHaveLength(531);
   });
 
   it('legge il foglio richiesto per nome', () => {
     expect(parseListone(readListoneBytes(), { sheetName: 'Lista calciatori' }).players).toHaveLength(
-      533,
+      531,
     );
   });
 
   it('e memoizzato dalla fixture con lo stesso risultato', () => {
-    expect(realListone()).toHaveLength(533);
+    expect(realListone()).toHaveLength(531);
     expect(realListone()).toBe(realListone());
   });
 });

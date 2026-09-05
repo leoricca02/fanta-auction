@@ -9,7 +9,7 @@ import type { TierBlock } from '../domain/tiers';
 export const TIERS_SOURCE_URL = 'https://www.sosfanta.com/guida-asta-fantacalcio/guida-asta-fantacalcio-2026-2027-tutti-consigli-fasce-chi-prendere';
 
 /** Data di scarico della guida, mostrata all'utente per capire quanto e' vecchia. */
-export const TIERS_UPDATED_AT = '2026-09-04';
+export const TIERS_UPDATED_AT = '2026-09-05';
 
 export const TIER_BLOCKS: readonly TierBlock[] = [
   {
@@ -295,7 +295,7 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'A',
     tier: 'FASCIA MEDIA',
-    names: ['Santos A.', 'Dovbyk', 'De Ketelaere', 'Raspadori', 'Laurientè', 'Colombo', 'Diao', 'Esposito Se.'],
+    names: ['Santos A.', 'Dovbyk', 'Diao', 'De Ketelaere', 'Raspadori', 'Laurientè', 'Colombo', 'Esposito Se.'],
   },
   {
     role: 'A',
@@ -315,7 +315,7 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'A',
     tier: 'LOW COST 1ª FASCIA',
-    names: ['Bowie', 'Adams C.', 'Cutrone', 'Maldini', 'Tourè E.', 'Geubbels', 'Ghedjemis', 'Vitinha O.', 'Yeboah J.'],
+    names: ['Bowie', 'Adams C.', 'Cutrone', 'Maldini', 'Tourè E.', 'Geubbels', 'Ghedjemis', 'Vitinha O.', 'Yeboah J.', 'Osmajic'],
   },
   {
     role: 'A',
@@ -330,7 +330,7 @@ export const TIER_BLOCKS: readonly TierBlock[] = [
   {
     role: 'A',
     tier: 'JOLLY 3ª FASCIA',
-    names: ['Osmajic', 'Noslin', 'Sulemana K.', 'Birligea', 'Borrelli', 'Camarda', 'Frigan', 'Giovane', 'Havel', 'Kulenovic', 'N\'Dri', 'Lontani'],
+    names: ['Noslin', 'Sulemana K.', 'Birligea', 'Camarda', 'Frigan', 'Giovane', 'Havel', 'Kulenovic', 'N\'Dri', 'Lontani', 'Enem'],
   },
   {
     role: 'A',
