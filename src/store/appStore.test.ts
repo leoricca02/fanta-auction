@@ -228,6 +228,30 @@ describe('assegnazioni', () => {
     expect(store().userData.events.every((e) => e.undone)).toBe(true);
     expect(reduce(store().userData.events, store().leagueConfig()).slotsFilled).toBe(0);
   });
+
+  it('clearAuctionLog cancella anche i colpi gia annullati', async () => {
+    const portieri = store().players.filter((p) => p.role === 'P').slice(0, 3);
+    for (const p of portieri) await store().assign(p.id, 'leo', 10, 'P');
+    await store().undoAssignment(store().userData.events[0]?.id ?? '');
+
+    await store().clearAuctionLog();
+    await reload();
+
+    expect(store().userData.events).toHaveLength(0);
+    expect(reduce(store().userData.events, store().leagueConfig()).slotsFilled).toBe(0);
+  });
+
+  it('clearAuctionLog non tocca le aspettative', async () => {
+    const portieri = store().players.filter((p) => p.role === 'P').slice(0, 1);
+    await store().assign(portieri[0]?.id ?? 0, 'leo', 10, 'P');
+    await store().setExpectation(1, { matches: 30, goals: 10 });
+
+    await store().clearAuctionLog();
+    await reload();
+
+    expect(store().userData.events).toHaveLength(0);
+    expect(store().userData.expectations).toHaveLength(1);
+  });
 });
 
 describe('note e obiettivi', () => {

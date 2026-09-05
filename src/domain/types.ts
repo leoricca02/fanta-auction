@@ -143,8 +143,12 @@ export interface FantaTeam {
 }
 
 /**
- * Evento di assegnazione. Append-only: nessun hard delete, l'annullamento
- * si esprime con `undone: true` (PRD §3).
+ * Evento di assegnazione. Append-only: l'annullamento si esprime con
+ * `undone: true` (PRD §3), e nessuna singola assegnazione si cancella mai.
+ *
+ * L'unica cancellazione vera e' *Azzera asta*, che svuota il log intero: si
+ * usa dopo una prova a vuoto, dove i colpi annullati non sono storia di
+ * niente. Un evento per volta resta intoccabile.
  */
 export interface AssignmentEvent {
   readonly id: string;

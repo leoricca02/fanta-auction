@@ -606,8 +606,10 @@ La suite ne copre il **100% dei branch**, ed è una soglia che fa fallire `npm r
 non un obiettivo morale.
 
 **2. Lo stato di lega è sempre `reduce(events, config)`.** Rose, crediti e slot non si mutano
-mai a mano. Nessun hard delete: annullare è `undone: true`, e per questo si può annullare
-un'assegnazione che non è l'ultima e ripristinarla dopo.
+mai a mano. Annullare è `undone: true`, e per questo si può annullare un'assegnazione che
+non è l'ultima e ripristinarla dopo. La sola cancellazione vera è *Azzera asta*, che butta il
+log intero — serve a ripulire dopo una prova, e chiede conferma; un evento per volta non si
+cancella mai.
 
 **3. Si scrive prima di renderizzare.** Ogni azione attende la scrittura su IndexedDB e solo
 dopo aggiorna la vista, così un crash a metà asta non perde l'acquisto appena battuto.

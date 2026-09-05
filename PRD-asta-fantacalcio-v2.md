@@ -160,12 +160,16 @@ interface AssignmentEvent {
   teamId: string;
   price: number;                // prezzo effettivamente pagato
   phase: Role;
-  undone: boolean;              // soft delete, mai hard delete
+  undone: boolean;              // soft delete: un evento per volta non si cancella mai
 }
 ```
 
 Lo stato di lega è sempre `reduce(events) → LeagueState`. Nessuna mutazione diretta di
 rose, crediti o slot.
+
+*Azzera asta* (§5.1) è l'eccezione dichiarata: cancella il log per intero, annullati compresi.
+Serve alle prove a vuoto, dove una lista di colpi barrati non è storia di niente. Sotto asta
+restano `Ctrl Z` e l'annulla riga per riga, che restano soft.
 
 ### 3.1 Backup — requisito critico
 

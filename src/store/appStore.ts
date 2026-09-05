@@ -115,6 +115,8 @@ export interface AppState {
   undoLast: () => Promise<void>;
   redoLast: () => Promise<void>;
   undoAllAssignments: () => Promise<void>;
+  /** Cancella l'event log dell'asta. Hard delete: non si ripristina. */
+  clearAuctionLog: () => Promise<void>;
   /** Accende o spegne §5.5. Non tocca le aspettative gia' inserite. */
   setExpectationsEnabled: (enabled: boolean) => Promise<void>;
   updateLineup: (teamCode: string, mutate: (lineup: Lineup) => Lineup) => Promise<Lineup>;
@@ -478,6 +480,34 @@ export const useAppStore = create<AppState>((set, get) => ({
           text:
             `${changed.length} assegnazioni annullate. Restano nel log: ` +
             `puoi ripristinarle una per una dall'asta.`,
+        },
+      }));
+    });
+  },
+
+  /**
+   * Cancella l'event log e riparte da zero (§5.1).
+   *
+   * E' l'altra meta' di `undoAllAssignments`, e la differenza e' tutta qui:
+   * quella annulla, questa cancella. Una prova a vuoto lascia dietro di se'
+   * una lista di colpi annullati che non e' storia di niente, e riaprire
+   * "Ultime assegnazioni" su venti righe barrate della sessione di ieri
+   * confonde e basta.
+   *
+   * Non si ripristina: chi chiama deve aver fatto confermare, e il backup
+   * resta l'unica rete.
+   */
+  clearAuctionLog() {
+    return enqueue(async () => {
+      const count = get().userData.events.length;
+      if (count === 0) return;
+
+      await store.clearEvents();
+      set((current) => ({
+        userData: { ...current.userData, events: [] },
+        message: {
+          kind: 'ok',
+          text: `Asta azzerata: ${count} ${count === 1 ? 'colpo cancellato' : 'colpi cancellati'} dal log.`,
         },
       }));
     });

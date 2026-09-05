@@ -206,6 +206,21 @@ export async function saveEvent(event: AssignmentEvent): Promise<void> {
   await db.events.put(event);
 }
 
+/**
+ * Cancella l'event log dell'asta, davvero.
+ *
+ * E' l'eccezione all'assenza di hard delete sugli eventi, e serve alle prove a
+ * vuoto: si batte mezza fase per prendere la mano, e quel che resta non deve
+ * sopravvivere alla prova. Il soft delete lascerebbe le righe annullate in
+ * "Ultime assegnazioni", e ripartire pulito vuol dire anche non vederle piu'.
+ *
+ * Chi chiama deve aver fatto confermare: da qui non si torna indietro se non
+ * da un backup.
+ */
+export async function clearEvents(): Promise<void> {
+  await db.events.clear();
+}
+
 export async function saveSourceFile(filename: string, bytes: Uint8Array): Promise<void> {
   await db.sourceFiles.put({ key: 'listone', filename, bytes });
 }
