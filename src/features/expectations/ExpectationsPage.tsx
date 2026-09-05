@@ -5,7 +5,7 @@ import type { Expectation, Player } from '../../domain/types';
 import { compareByFvmDesc } from '../../domain/free-agents';
 import { reduce } from '../../domain/reducer';
 import { normalizeQuery } from '../../domain/search';
-import type { MovementRole } from '../../domain/valuation';
+import type { DynamicPrice, MovementRole } from '../../domain/valuation';
 import {
   MOVEMENT_ROLES,
   dynamicPrice,
@@ -178,7 +178,10 @@ export function ExpectationsPage(): JSX.Element {
           ) : (
             <>
               tasso {role} <span className="text-zinc-300">{rate.rate.toFixed(2)}</span> su{' '}
-              {rate.sample} aste
+              {rate.sample} {rate.sample === 1 ? 'asta' : 'aste'}
+              {rate.source === 'provisional' && (
+                <span className="ml-1 text-amber-300/70">provvisorio</span>
+              )}
             </>
           )}
         </span>
@@ -257,7 +260,7 @@ export function ExpectationsPage(): JSX.Element {
                   player={player}
                   role={role}
                   expectation={expectations.get(player.id) ?? null}
-                  price={dynamicPrice(player, expectations, rates)?.price ?? null}
+                  quote={dynamicPrice(player, expectations, rates)}
                   taken={state.assignmentByPlayerId[player.id] !== undefined}
                 />
               ))}
@@ -291,13 +294,13 @@ function Row({
   player,
   role,
   expectation,
-  price,
+  quote,
   taken,
 }: {
   readonly player: Player;
   readonly role: MovementRole;
   readonly expectation: Expectation | null;
-  readonly price: number | null;
+  readonly quote: DynamicPrice | null;
   readonly taken: boolean;
 }): JSX.Element {
   const setExpectation = useAppStore((s) => s.setExpectation);
@@ -366,11 +369,24 @@ function Row({
       <td className="num py-0.5 pl-6 pr-1 text-right text-xs text-zinc-400">
         {value === null ? <span className="text-zinc-700">—</span> : value.toFixed(1)}
       </td>
+      {/*
+        Il provvisorio si vede che e' provvisorio senza leggere niente: grigio
+        invece di verde, e una tilde davanti. Sotto le tre aste il tasso e' un
+        rimbalzo su un colpo o due, e questa colonna si scorre con la coda
+        dell'occhio.
+      */}
       <td className="num py-0.5 pr-1 text-right">
-        {price === null ? (
+        {quote === null ? (
           <span className="text-zinc-700">—</span>
+        ) : quote.provisional ? (
+          <span
+            title={`Provvisorio: il tasso ${role} poggia su ${quote.sample === 1 ? 'una sola asta' : `${quote.sample} aste`}`}
+            className="text-zinc-500"
+          >
+            ~{quote.price}
+          </span>
         ) : (
-          <span className="font-semibold text-emerald-400">{price}</span>
+          <span className="font-semibold text-emerald-400">{quote.price}</span>
         )}
       </td>
 

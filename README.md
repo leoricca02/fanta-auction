@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-704%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-708%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -428,6 +428,15 @@ andato, e a chi.
 
 ### 💰 Aspettative e prezzo dinamico
 
+> [!IMPORTANT]
+> **In fase di testing.** È l'unica parte dell'app che propone un numero invece di mostrarne
+> uno, ed è arrivata da poco: la formula è misurata contro i prezzi veri (vedi
+> [Quanto ci si può fidare](#quanto-ci-si-può-fidare)), ma sul campo non ha ancora visto
+> un'asta intera.
+>
+> Si toglie da **Impostazioni → Prezzo dinamico**: l'app torna esattamente com'era prima, e
+> nessuna aspettativa viene cancellata. Vedi [Si può spegnere](#si-può-spegnere).
+
 Risponde a una domanda sola, quella che sotto asta non ci si ricorda di farsi:
 
 > *Se penso che Yildiz faccia gli stessi numeri di Kolo Muani, e Kolo Muani è appena andato
@@ -462,8 +471,28 @@ cosa e spegne il prezzo invece di falsarlo.
 > **Ogni reparto sta per conto suo, e non si prestano niente.** La simulazione misura 0,96
 > crediti per punto sui difensori e 1,90 sugli attaccanti: prestare il tasso dei D alla fase A
 > dimezzerebbe ogni consiglio, e proprio all'apertura del reparto, quando escono i nomi grossi.
-> Il prezzo di conseguenza. I primi **tre colpi di ogni fase non hanno consigliato**, e la
-> schermata lo dice a parole invece di mostrare un trattino.
+> Il prezzo di conseguenza: finché nel reparto non è stata battuta **nessuna** asta di un
+> giocatore che hai valutato, non c'è consigliato — e la schermata lo dice a parole invece di
+> mostrare un trattino.
+
+#### I primi colpi: provvisorio, e lo dice
+
+Il consigliato esce **dalla prima asta valutata del reparto**, ma sotto le tre aste è marcato
+provvisorio: grigio invece di verde, un `~` davanti al numero in tabella, nessuna scorciatoia
+che lo scrive nella casella del prezzo, e il campione a parole (*«su una sola asta»*).
+
+La differenza è misurata, non estetica. Su 8 ordini di chiamata diversi, tavolo a ±20%:
+
+| Il tasso poggia su | Errore mediano | q90 | Sbagliato di oltre metà |
+| --- | --- | --- | --- |
+| 1 asta | 42% | 142% | 38% dei casi |
+| 30+ aste | 36% | 100% | 34% dei casi |
+
+La mediana regge; è la coda che no. Il primo tasso dei centrocampisti, su quegli 8 ordini, è
+uscito fra **0,62 e 6,00** crediti per punto contro 1,54 di fine asta — un consiglio anche
+quadruplo, e proprio sui primi nomi grossi. Da tre aste in su lo stesso intervallo si stringe a
+0,68-1,47. Due consigli per reparto valgono più di due schermate vuote, ma non valgono quanto
+gli altri, e si vede.
 
 #### Quanto ci si può fidare
 
@@ -625,7 +654,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 704 test
+npm test              # 708 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```

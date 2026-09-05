@@ -103,8 +103,24 @@ export function valueOf(
 // ---------------------------------------------------------------------------
 
 /**
- * Aste valutate sotto le quali il tasso di un reparto non si regge da solo.
- * Con una o due aste il tasso e' il prezzo di quelle due aste, non del tavolo.
+ * Aste valutate sotto le quali il tasso di un reparto non e' ancora un dato:
+ * con una o due, e' il prezzo di quelle due aste, non del tavolo.
+ *
+ * **Non e' una soglia di silenzio**, e' una soglia di fiducia: sotto, il
+ * prezzo si mostra lo stesso ma marcato `provisional`. La simulazione dice
+ * perche' la distinzione serve — 8 ordini di chiamata, tavolo a +/-20%:
+ *
+ *   tasso su 1 asta   errore mediano 42%, q90 142%, oltre meta' nel 38% dei casi
+ *   tasso su 30+ aste errore mediano 36%, q90 100%, oltre meta' nel 34% dei casi
+ *
+ * La mediana regge; e' la coda che no. Il primo tasso dei centrocampisti, sui
+ * quegli 8 ordini, e' uscito fra 0,62 e 6,00 crediti per punto contro 1,54 di
+ * fine asta: un consiglio quadruplo, e proprio sui primi nomi grossi. Da tre
+ * aste in su lo stesso intervallo si stringe a 0,68-1,47.
+ *
+ * Da qui la scelta: il numero esce dal primo colpo perche' due consigli per
+ * reparto valgono piu' di due schermate vuote, ma chi lo mostra deve dire che
+ * poggia su un'asta sola.
  */
 export const MIN_SAMPLE = 3;
 
@@ -113,16 +129,19 @@ export const MIN_SAMPLE = 3;
  * ho abbastanza aste" da "non hai valutato nessuno".
  */
 export type RateSource =
-  /** Dalle aste di questo stesso reparto: l'unico caso in cui c'e' un prezzo. */
+  /** Da `MIN_SAMPLE` aste in su di questo stesso reparto: il tasso e' un dato. */
   | 'role'
-  /** Il reparto e' partito da poco: meno di `MIN_SAMPLE` aste valutate. */
-  | 'warming'
-  /** Nessuna asta valutata in questo reparto. */
+  /**
+   * Una o due aste valutate. Il tasso c'e' e il prezzo si calcola, ma e' un
+   * rimbalzo su pochi colpi: la UI deve mostrarlo in tono minore e dirlo.
+   */
+  | 'provisional'
+  /** Nessuna asta valutata in questo reparto: niente su cui misurare. */
   | 'none';
 
 export interface RoleRate {
   readonly role: MovementRole;
-  /** Crediti per punto di `V`. `null` quando non c'e' niente su cui misurarlo. */
+  /** Crediti per punto di `V`. `null` solo quando non c'e' nessuna asta valutata. */
   readonly rate: number | null;
   /** Aste **valutate** del reparto: quelle senza aspettativa non contano. */
   readonly sample: number;
@@ -180,9 +199,10 @@ function ratiosByRole(
  * fase A dimezzerebbe ogni consiglio, e lo farebbe proprio all'apertura del
  * reparto, quando escono i nomi grossi. Meglio nessun numero.
  *
- * Conseguenza accettata: all'inizio di ogni fase i primi `MIN_SAMPLE` colpi
- * non hanno prezzo dinamico (`source: 'warming'`). E' il costo di non mentire
- * sulla scala, e dura tre aste.
+ * All'apertura di un reparto il tasso esce dalla prima asta valutata, ma marcato
+ * `provisional` finche' non arriva a `MIN_SAMPLE`: sopra sta la misura di quel
+ * reparto, sotto un rimbalzo su un colpo o due. Il consiglio c'e' in entrambi i
+ * casi; cambia quanto pesa, e la UI lo deve dire.
  */
 export function marketRates(
   state: LeagueState,
@@ -194,16 +214,16 @@ export function marketRates(
 
   for (const role of MOVEMENT_ROLES) {
     const own = ratios[role];
-    if (own.length >= MIN_SAMPLE) {
-      out[role] = { role, rate: median(own), sample: own.length, source: 'role' };
-    } else {
-      out[role] = {
-        role,
-        rate: null,
-        sample: own.length,
-        source: own.length > 0 ? 'warming' : 'none',
-      };
+    if (own.length === 0) {
+      out[role] = { role, rate: null, sample: 0, source: 'none' };
+      continue;
     }
+    out[role] = {
+      role,
+      rate: median(own),
+      sample: own.length,
+      source: own.length >= MIN_SAMPLE ? 'role' : 'provisional',
+    };
   }
 
   return out;
@@ -221,16 +241,24 @@ export interface DynamicPrice {
   readonly price: number;
   readonly rate: number;
   readonly sample: number;
+  /**
+   * `true` sotto `MIN_SAMPLE` aste: il prezzo c'e' ma poggia su uno o due
+   * colpi. Chi lo mostra deve dirlo e mostrarlo in tono minore — non e' lo
+   * stesso numero del terzo colpo in poi.
+   */
+  readonly provisional: boolean;
 }
 
 /**
  * Prezzo consigliato per un giocatore, o `null`.
  *
  * `null` non e' zero ed e' il caso piu' frequente: portiere, nessuna
- * aspettativa inserita, aspettativa che vale zero, oppure reparto appena
- * aperto senza abbastanza aste. La UI deve dire *quale* dei quattro —
- * "valutalo" e "aspetta tre aste" sono due schermate diverse, e `marketRates`
- * porta con se' il motivo in `source`.
+ * aspettativa inserita, aspettativa che vale zero, oppure reparto in cui non
+ * e' ancora stata battuta **nessuna** asta valutata. La UI deve dire *quale*
+ * dei quattro — "valutalo" e "aspetta la prima asta" sono due schermate
+ * diverse, e `marketRates` porta con se' il motivo in `source`.
+ *
+ * Quando il prezzo c'e', puo' comunque essere `provisional`: vedi `MIN_SAMPLE`.
  */
 export function dynamicPrice(
   player: Player,
@@ -246,7 +274,7 @@ export function dynamicPrice(
   const value = valueOf(expectation, player.role, weights);
   if (value <= 0) return null;
 
-  const { rate, sample } = rates[player.role];
+  const { rate, sample, source } = rates[player.role];
   if (rate === null) return null;
 
   return {
@@ -255,5 +283,6 @@ export function dynamicPrice(
     price: Math.max(1, Math.round(value * rate)),
     rate,
     sample,
+    provisional: source === 'provisional',
   };
 }

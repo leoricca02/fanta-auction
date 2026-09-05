@@ -118,13 +118,18 @@ describe('marketRates', () => {
     expect(rates.D).toEqual({ role: 'D', rate: null, sample: 0, source: 'none' });
   });
 
-  it('sotto MIN_SAMPLE il reparto e\' ancora in riscaldamento', () => {
+  it('sotto MIN_SAMPLE il tasso c\'e\' ma e\' provvisorio', () => {
     const events = [event(1, 20, 'D'), event(2, 20, 'D')];
     const rates = marketRates(reduce(events, config), expectations);
     expect(MIN_SAMPLE).toBe(3);
-    expect(rates.D.source).toBe('warming');
-    expect(rates.D.rate).toBeNull();
+    expect(rates.D.source).toBe('provisional');
+    expect(rates.D.rate).toBe(2);
     expect(rates.D.sample).toBe(2);
+  });
+
+  it('il tasso esce dalla prima asta valutata', () => {
+    const rates = marketRates(reduce([event(1, 20, 'D')], config), expectations);
+    expect(rates.D).toEqual({ role: 'D', rate: 2, sample: 1, source: 'provisional' });
   });
 
   it('da MIN_SAMPLE in poi misura i crediti per punto di V', () => {
@@ -155,7 +160,7 @@ describe('marketRates', () => {
     const events = [event(1, 20, 'D'), event(2, 20, 'D'), event(3, 500, 'D')];
     const rates = marketRates(reduce(events, config), withoutOne);
     expect(rates.D.sample).toBe(2);
-    expect(rates.D.source).toBe('warming');
+    expect(rates.D.source).toBe('provisional');
   });
 
   it('un\'aspettativa che vale zero non e\' un rapporto', () => {
@@ -250,9 +255,23 @@ describe('dynamicPrice', () => {
     expect(dynamicPrice(find(4), expectations, rates)).toBeNull();
     // Portiere: fuori scope per costruzione.
     expect(dynamicPrice(find(9), makeExpectationIndex([...rows, expectation(9, { matches: 30 })]), rates)).toBeNull();
-    // Reparto senza abbastanza aste.
+    // Reparto senza nemmeno un'asta valutata: non c'e' niente da misurare.
     const cold = marketRates(reduce([], config), expectations);
     expect(dynamicPrice(find(1), expectations, cold)).toBeNull();
+  });
+
+  it('dice quando poggia su una sola asta', () => {
+    const expectations = makeExpectationIndex([...rows, expectation(4, { goals: 10 })]);
+
+    const young = marketRates(reduce([event(1, 60, 'A')], config), expectations);
+    expect(dynamicPrice(find(4), expectations, young)).toMatchObject({
+      price: 60,
+      sample: 1,
+      provisional: true,
+    });
+
+    const grown = marketRates(reduce(events, config), expectations);
+    expect(dynamicPrice(find(4), expectations, grown)?.provisional).toBe(false);
   });
 
   it('porta con se\' quante aste lo sostengono', () => {

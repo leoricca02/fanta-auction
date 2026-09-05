@@ -339,12 +339,37 @@ function DynamicPriceHint({
   const quote = dynamicPrice(player, expectations, rates);
 
   if (quote === null) {
-    const { sample } = rates[player.role];
     return (
       <p className="rounded-lg border border-dashed border-white/[0.08] px-2.5 py-1.5 text-[11px] leading-snug text-zinc-500">
-        Valutato, ma il reparto {player.role} ha {sample} su {MIN_SAMPLE} aste valutate: il
-        prezzo consigliato arriva al terzo colpo.
+        Valutato, ma nel reparto {player.role} non è ancora stata battuta nessuna asta di un
+        giocatore che hai valutato: il prezzo consigliato esce da lì.
       </p>
+    );
+  }
+
+  /*
+    Provvisorio: il prezzo c'e' gia', ma poggia su una o due aste. Sulla
+    simulazione il primo tasso dei centrocampisti e' uscito fra 0,62 e 6,00
+    contro 1,54 di fine asta — un consiglio anche quadruplo, e proprio sui
+    primi nomi grossi. Quindi il numero si mostra, ma in tono minore: niente
+    cifra grande verde, niente bacchetta che lo scrive nella casella, e il
+    campione scritto a parole. Un numero da tenere d'occhio, non da seguire.
+  */
+  if (quote.provisional) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.02] px-2.5 py-1.5">
+        <span className="shrink-0 whitespace-nowrap text-[10px] uppercase tracking-wider text-zinc-600">
+          provvisorio
+        </span>
+        <span className="num text-base font-semibold leading-none text-zinc-300">
+          {quote.price}
+        </span>
+        <span className="ml-auto text-right text-[10px] leading-tight text-zinc-600">
+          su {quote.sample === 1 ? 'una sola asta' : `${quote.sample} aste`} {player.role}
+          <br />
+          si assesta al {MIN_SAMPLE}° colpo
+        </span>
+      </div>
     );
   }
 

@@ -211,8 +211,8 @@ export function ExpectationSection({ player }: { readonly player: Player }): JSX
         value={value}
         price={quote?.price ?? null}
         rate={quote?.rate ?? null}
+        provisional={quote?.provisional ?? false}
         sample={rate.sample}
-        source={rate.source}
         role={player.role}
       />
     </section>
@@ -223,20 +223,24 @@ export function ExpectationSection({ player }: { readonly player: Player }): JSX
  * La riga del prezzo. Ha quattro stati e li dice tutti a parole, perche' un
  * trattino solo non distingue "non l'hai valutato" da "il reparto non e'
  * ancora partito", e sono due cose da fare diverse.
+ *
+ * Il quarto stato e' il **provvisorio**: il prezzo c'e' dalla prima asta, ma
+ * finche' non arriva a `MIN_SAMPLE` e' un rimbalzo su pochi colpi. Si mostra
+ * senza il verde e col campione scritto accanto — vedi `MIN_SAMPLE`.
  */
 function PriceRow({
   value,
   price,
   rate,
+  provisional,
   sample,
-  source,
   role,
 }: {
   readonly value: number | null;
   readonly price: number | null;
   readonly rate: number | null;
+  readonly provisional: boolean;
   readonly sample: number;
-  readonly source: 'role' | 'warming' | 'none';
   readonly role: 'D' | 'C' | 'A';
 }): JSX.Element {
   if (value === null || value <= 0) {
@@ -254,11 +258,21 @@ function PriceRow({
       <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-2">
         <ValueChip value={value} />
         <p className="text-[11px] leading-snug text-zinc-500">
-          {source === 'warming'
-            ? `Il reparto ${role} è appena partito: ${sample} ${
-                sample === 1 ? 'asta valutata' : 'aste valutate'
-              } su ${MIN_SAMPLE}. Il prezzo arriva al terzo colpo.`
-            : `Nessuna asta valutata nel reparto ${role}: il prezzo compare quando ${MIN_SAMPLE} giocatori che hai valutato saranno stati battuti.`}
+          {`Nessuna asta valutata nel reparto ${role}: il prezzo compare appena viene battuto un giocatore che hai valutato.`}
+        </p>
+      </div>
+    );
+  }
+
+  if (provisional) {
+    return (
+      <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.02] px-2.5 py-2">
+        <ValueChip value={value} />
+        <span className="num text-xl font-semibold leading-none text-zinc-300">{price}</span>
+        <p className="text-[11px] leading-snug text-zinc-500">
+          crediti, ma <strong className="font-medium text-zinc-400">provvisori</strong>: il tasso{' '}
+          {role} poggia su {sample === 1 ? 'una sola asta' : `${sample} aste`}. Si assesta dal{' '}
+          {MIN_SAMPLE}° colpo.
         </p>
       </div>
     );

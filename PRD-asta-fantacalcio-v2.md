@@ -350,12 +350,18 @@ prezzo(x)    = max(1, round( tasso[ruolo] × V(x) ))
   0,96 crediti per punto sui difensori e 1,90 sugli attaccanti: prestare il tasso dei D
   alla fase A dimezzerebbe ogni consiglio, e proprio all'apertura del reparto, quando
   escono i nomi grossi.
-- Conseguenza accettata: l'asta è sequenziale P → D → C → A, quindi **i primi 3 colpi di
-  ogni fase non hanno prezzo**. È il costo di non mentire sulla scala, e dura tre aste.
+- **Il prezzo esce dalla prima asta valutata, marcato provvisorio.** Sotto le 3 aste il
+  tasso non è ancora una misura del tavolo: la simulazione, su 8 ordini di chiamata,
+  vede il primo tasso dei centrocampisti uscire fra 0,62 e 6,00 crediti per punto contro
+  1,54 di fine asta — un consiglio anche quadruplo, e proprio sui primi nomi grossi. Da
+  3 aste in su lo stesso intervallo si stringe a 0,68-1,47. Due consigli per reparto
+  valgono più di due schermate vuote, ma **la UI deve dire su cosa poggiano**: niente
+  cifra grande, niente scorciatoia che lo scrive nella casella del prezzo, e il campione
+  a parole. `DynamicPrice.provisional` porta il flag.
 
 `null` non è zero, ed è il caso più frequente. Quattro stati distinti, che la UI deve
 dire a parole perché sono quattro cose da fare diverse: portiere · non valutato ·
-aspettativa che vale zero · reparto con meno di 3 aste.
+aspettativa che vale zero · reparto senza nemmeno un'asta valutata.
 
 #### 5.5.1 Dove si compila
 
