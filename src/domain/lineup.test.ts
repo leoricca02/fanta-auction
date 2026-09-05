@@ -138,7 +138,62 @@ describe('§4.1 — dato sporco: giocatore in piu slot', () => {
 
   it('lineupPlacement senza formazione non riporta slot', () => {
     const placement = lineupPlacement(1, 'Milan', makeLineupIndex([]));
-    expect(placement).toEqual({ status: 'NON_INSERITO', slots: [], duplicated: false });
+    expect(placement).toEqual({
+      status: 'NON_INSERITO',
+      slots: [],
+      duplicated: false,
+      ballotRank: null,
+      ballotSize: null,
+    });
+  });
+
+  it('ballotRank e ballotSize danno la posizione nel ballottaggio', () => {
+    const lineups = makeLineupIndex([makeLineup('Roma', [makeSlot('a', [7, 8, 9], 'PC')])]);
+    expect(lineupPlacement(7, 'Roma', lineups)).toMatchObject({
+      status: 'BALLOTTAGGIO',
+      ballotRank: 1,
+      ballotSize: 3,
+    });
+    expect(lineupPlacement(9, 'Roma', lineups)).toMatchObject({ ballotRank: 3, ballotSize: 3 });
+  });
+
+  it('il ballottaggio non tocca gli altri stati', () => {
+    const lineups = makeLineupIndex([makeLineup('Roma', [makeSlot('a', [7], 'PC')])]);
+    expect(lineupPlacement(7, 'Roma', lineups)).toMatchObject({
+      status: 'TITOLARE',
+      ballotRank: null,
+      ballotSize: null,
+    });
+    expect(lineupPlacement(8, 'Roma', lineups)).toMatchObject({
+      status: 'PANCHINA',
+      ballotRank: null,
+    });
+  });
+
+  it('fra piu ballottaggi vince la posizione migliore', () => {
+    const lineups = makeLineupIndex([
+      makeLineup('Lazio', [makeSlot('a', [1, 2, 7], 'TRQ'), makeSlot('b', [7, 3], 'PC')]),
+    ]);
+    // Terzo in uno slot, primo nell'altro: conta il posto migliore, come per
+    // lo stato piu' forte.
+    expect(lineupPlacement(7, 'Lazio', lineups)).toMatchObject({
+      status: 'BALLOTTAGGIO',
+      duplicated: true,
+      ballotRank: 1,
+      ballotSize: 2,
+    });
+  });
+
+  it('titolare in uno slot e ballottaggio in un altro resta senza rank', () => {
+    const lineups = makeLineupIndex([
+      makeLineup('Inter', [makeSlot('a', [7], 'MED'), makeSlot('b', [8, 7], 'TRQ')]),
+    ]);
+    // Vince TITOLARE, e il rank di un ballottaggio perso non va mostrato.
+    expect(lineupPlacement(7, 'Inter', lineups)).toMatchObject({
+      status: 'TITOLARE',
+      ballotRank: null,
+      ballotSize: null,
+    });
   });
 
   it('duplicatedCandidates elenca chi compare in piu slot', () => {

@@ -144,7 +144,11 @@ export function AssignPanel({
       </motion.header>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <LineupBadge status={placement.status} />
+        <LineupBadge
+          status={placement.status}
+          rank={placement.ballotRank}
+          rankOf={placement.ballotSize}
+        />
         {note?.tag != null && (
           <span
             className={cn(

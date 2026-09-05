@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-708%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-712%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -80,6 +80,12 @@ Il resto della rosa resta raggiungibile, in qualsiasi slot (vedi sotto).
 
 Cambiare modulo conserva tutto ciò che continua a starci, e ti dice chi resta fuori.
 
+> [!IMPORTANT]
+> **In un ballottaggio l'ordine conta.** Il primo nome dello slot è quello che secondo te
+> scende in campo, il secondo è chi glielo insidia, e così via. Non è una sfumatura da
+> editor: è la scommessa che l'app ti rimanda addosso ovunque, perché il primo di un
+> ballottaggio e il terzo dello stesso slot non valgono gli stessi soldi.
+
 > [!TIP]
 > **Fuori ruolo — nessuno slot è chiuso.** I giocatori compatibili di ruolo sono solo i
 > **consigliati**, quelli che stanno in cima e che la raffica di `Invio` consuma. Sotto
@@ -106,9 +112,18 @@ inline: è l'informazione che serve adesso, e andarla a cercare altrove costa pi
 tempo che hai.
 
 ```
-Dimarco        D   Inter   [TITOLARE]   quot 32   ★obiettivo
+Dimarco        D   Inter   [TITOLARE]        quot 32   ★obiettivo
   "spinge sempre, rigorista sui piazzati"
+Carlos Augusto D   Inter   [BALLOTTAGGIO 2°]  quot 13
 ```
+
+Sul ballottaggio il badge porta anche **la posizione nello slot**: `1°` è il primo nome che hai
+messo in formazione, quello che tu stesso ritieni più sicuro di giocare, `2°` chi gli sta dietro.
+Due giocatori con lo stesso `[BALLOTTAGGIO]` non sono la stessa cosa e il numero è l'unica cosa
+che li distingue mentre il rilancio sale. Il badge è lo stesso in **Asta**, **Svincolati**,
+**Obiettivi**, nel pannello di assegnazione e nella scheda giocatore; il passaggio del mouse lo
+dice a parole — *"Secondo nel ballottaggio su 3"*. Negli svincolati, l'ordinamento per stato
+mette i primi nomi prima dei secondi.
 
 | Tasto | Effetto |
 | --- | --- |
@@ -654,7 +669,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 708 test
+npm test              # 712 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```

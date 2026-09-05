@@ -3,11 +3,11 @@ import { Target } from 'lucide-react';
 
 import { isBlankMarkdown } from '../../domain/markdown';
 import { sortedTargets } from '../../domain/objectives';
-import { lineupStatus, makeLineupIndex } from '../../domain/lineup';
+import { makeLineupIndex } from '../../domain/lineup';
 import { reduce } from '../../domain/reducer';
 import { useAppStore } from '../../store/appStore';
 import { CloseButton, EmptyState, SectionTitle } from '../../ui/primitives';
-import { LineupBadge } from '../player/LineupBadge';
+import { LineupPlacementBadge } from '../player/LineupBadge';
 import { Markdown } from './Markdown';
 
 /**
@@ -181,7 +181,11 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
                     )}
                   </span>
                   {player !== undefined && (
-                    <LineupBadge status={lineupStatus(player.id, player.team, lineups)} compact />
+                    <LineupPlacementBadge
+                      playerId={player.id}
+                      team={player.team}
+                      lineups={lineups}
+                    />
                   )}
                   {owner === undefined ? (
                     <span className="w-24 shrink-0 text-right text-xs text-emerald-400">libero</span>

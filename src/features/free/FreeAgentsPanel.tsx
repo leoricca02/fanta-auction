@@ -13,7 +13,7 @@ import {
 import type { Player, Role, Tag } from '../../domain/types';
 import { PHASE_ORDER, TAGS } from '../../domain/types';
 import { compareByFvmDesc, compareByQuotDesc, makeNoteIndex } from '../../domain/free-agents';
-import { lineupStatus, makeLineupIndex } from '../../domain/lineup';
+import { lineupPlacement, lineupStatus, makeLineupIndex } from '../../domain/lineup';
 import { reduce } from '../../domain/reducer';
 import { normalizeQuery } from '../../domain/search';
 import type { Tier } from '../../domain/tiers';
@@ -23,7 +23,7 @@ import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
 import { CloseButton, EmptyState, SectionTitle } from '../../ui/primitives';
-import { LineupBadge } from '../player/LineupBadge';
+import { LineupPlacementBadge } from '../player/LineupBadge';
 import { PlayerCard } from '../player/PlayerCard';
 import { TierBadge } from '../player/TierBadge';
 
@@ -198,9 +198,17 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
       fvm: compareByFvmDesc,
       name: (a, b) => a.name.localeCompare(b.name, 'it'),
       team: (a, b) => a.team.localeCompare(b.team, 'it') || compareByQuotDesc(a, b),
-      status: (a, b) =>
-        lineupStatus(a.id, a.team, lineups).localeCompare(lineupStatus(b.id, b.team, lineups)) ||
-        compareByQuotDesc(a, b),
+      status: (a, b) => {
+        const pa = lineupPlacement(a.id, a.team, lineups);
+        const pb = lineupPlacement(b.id, b.team, lineups);
+        return (
+          pa.status.localeCompare(pb.status) ||
+          // Dentro il ballottaggio l'ordine dei candidati e' una gerarchia:
+          // i primi nomi valgono piu' dei secondi e vanno visti prima.
+          (pa.ballotRank ?? 0) - (pb.ballotRank ?? 0) ||
+          compareByQuotDesc(a, b)
+        );
+      },
       tier: compareByTier(tiers, compareByQuotDesc),
     };
     return [...filtered].sort(sorters[filters.sort]);
@@ -484,7 +492,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                           {abbrById.get(owner.teamId) ?? owner.teamId} · {owner.price}
                         </span>
                       ) : (
-                        <LineupBadge status={lineupStatus(p.id, p.team, lineups)} compact />
+                        <LineupPlacementBadge playerId={p.id} team={p.team} lineups={lineups} />
                       )}
                     </td>
                     <td className="px-2 py-1">

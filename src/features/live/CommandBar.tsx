@@ -17,7 +17,7 @@ import type { Command } from '../../domain/command';
 import type { Player, Role, Tag } from '../../domain/types';
 import { parseCommand } from '../../domain/command';
 import { isAmbiguous, normalizeQuery, searchInPhase } from '../../domain/search';
-import { lineupStatus, makeLineupIndex } from '../../domain/lineup';
+import { makeLineupIndex } from '../../domain/lineup';
 import { listFantaAvg } from '../../domain/player-stats';
 import { STATS_SEASON } from '../../data/stats';
 import { STATS_INDEX } from '../../data/stats-index';
@@ -25,7 +25,7 @@ import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
 import { EASE, Kbd, RoleBadge } from '../../ui/primitives';
-import { LineupBadge } from '../player/LineupBadge';
+import { LineupPlacementBadge } from '../player/LineupBadge';
 
 /**
  * Command bar dell'asta (PRD §5.1).
@@ -335,9 +335,10 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
                   <span className="w-16 shrink-0 truncate text-xs uppercase tracking-wide text-zinc-500">
                     {hit.player.team}
                   </span>
-                  <LineupBadge
-                    status={lineupStatus(hit.player.id, hit.player.team, lineupIndex)}
-                    compact
+                  <LineupPlacementBadge
+                    playerId={hit.player.id}
+                    team={hit.player.team}
+                    lineups={lineupIndex}
                   />
                   <span
                     className="num w-12 shrink-0 text-right text-xs text-emerald-300/80"

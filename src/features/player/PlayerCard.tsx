@@ -990,7 +990,11 @@ function QuickBadges({
   const penaltyTaker = specialists.some((r) => r.kind === 'rigori' && r.rank === 1);
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <LineupBadge status={placement.status} />
+      <LineupBadge
+        status={placement.status}
+        rank={placement.ballotRank}
+        rankOf={placement.ballotSize}
+      />
 
       {/* Il fatto piu' pesante della scheda dopo lo stato di formazione. */}
       {penaltyTaker && (

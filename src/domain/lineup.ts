@@ -37,6 +37,14 @@ export interface LineupPlacement {
    * l'editor dovrebbe segnalare. Lo stato resta comunque deterministico.
    */
   readonly duplicated: boolean;
+  /**
+   * Posizione nel ballottaggio, 1-based: `1` e' il primo nome dello slot,
+   * quello che l'utente considera piu' sicuro di scendere in campo. `null`
+   * quando lo stato non e' `BALLOTTAGGIO`.
+   */
+  readonly ballotRank: number | null;
+  /** Quanti candidati si contendono lo slot del ballottaggio. `null` altrimenti. */
+  readonly ballotSize: number | null;
 }
 
 function statusForSlot(slot: LineupSlot): LineupStatus {
@@ -62,12 +70,18 @@ export function lineupPlacement(
 ): LineupPlacement {
   const lineup = lineups.get(teamCode);
   if (lineup === undefined) {
-    return { status: 'NON_INSERITO', slots: [], duplicated: false };
+    return {
+      status: 'NON_INSERITO',
+      slots: [],
+      duplicated: false,
+      ballotRank: null,
+      ballotSize: null,
+    };
   }
 
   const slots = lineup.slots.filter((slot) => slot.candidates.includes(playerId));
   if (slots.length === 0) {
-    return { status: 'PANCHINA', slots: [], duplicated: false };
+    return { status: 'PANCHINA', slots: [], duplicated: false, ballotRank: null, ballotSize: null };
   }
 
   let status: LineupStatus = 'PANCHINA';
@@ -76,7 +90,38 @@ export function lineupPlacement(
     if (STATUS_STRENGTH[candidate] > STATUS_STRENGTH[status]) status = candidate;
   }
 
-  return { status, slots, duplicated: slots.length > 1 };
+  const ballot = status === 'BALLOTTAGGIO' ? bestBallot(playerId, slots) : null;
+
+  return {
+    status,
+    slots,
+    duplicated: slots.length > 1,
+    ballotRank: ballot?.rank ?? null,
+    ballotSize: ballot?.size ?? null,
+  };
+}
+
+/**
+ * Posizione del giocatore nel ballottaggio piu' favorevole in cui compare.
+ *
+ * `candidates` e' ordinato dall'editor e quell'ordine e' un dato, non un
+ * dettaglio: il primo nome e' quello che l'utente ritiene piu' probabile in
+ * campo. Fra piu' slot contesi vince il rank piu' basso, per la stessa ragione
+ * per cui fra piu' stati vince il piu' forte — conta il posto migliore che il
+ * giocatore occupa, non quello che capita per primo nell'array.
+ */
+function bestBallot(
+  playerId: number,
+  slots: readonly LineupSlot[],
+): { readonly rank: number; readonly size: number } | null {
+  let best: { rank: number; size: number } | null = null;
+  for (const slot of slots) {
+    if (slot.candidates.length < 2) continue;
+    const rank = slot.candidates.indexOf(playerId) + 1;
+    if (rank === 0) continue;
+    if (best === null || rank < best.rank) best = { rank, size: slot.candidates.length };
+  }
+  return best;
 }
 
 /** §4.1 — solo il badge, per i chiamanti che non hanno bisogno del dettaglio. */
