@@ -189,6 +189,7 @@ export function makeUserData(partial: Partial<UserData> = {}): UserData {
     playerNotes: partial.playerNotes ?? [],
     teamNotes: partial.teamNotes ?? [],
     objectives: partial.objectives ?? emptyObjectives(),
+    expectations: partial.expectations ?? [],
     events: partial.events ?? [],
   };
 }

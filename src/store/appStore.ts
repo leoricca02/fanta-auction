@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import type {
   AssignmentEvent,
+  Expectation,
   FantaTeam,
   LeagueConfig,
   Lineup,
@@ -88,6 +89,13 @@ export interface AppState {
   readonly lastBackupAt: number | null;
   readonly pendingImport: PendingImport | null;
   readonly pendingListone: PendingListone | null;
+  /**
+   * §5.5 acceso o spento. Spento, l'applicazione e' esattamente quella di
+   * prima della feature: niente scheda Aspettative, niente sezione nella
+   * scheda giocatore, niente consigliato nel pannello d'asta. Le aspettative
+   * gia' scritte restano su disco e nel backup.
+   */
+  readonly expectationsEnabled: boolean;
   readonly message: { readonly kind: 'ok' | 'error'; readonly text: string } | null;
 
   /** Lega corrente: squadre, crediti, slot, listone. */
@@ -107,9 +115,15 @@ export interface AppState {
   undoLast: () => Promise<void>;
   redoLast: () => Promise<void>;
   undoAllAssignments: () => Promise<void>;
+  /** Accende o spegne §5.5. Non tocca le aspettative gia' inserite. */
+  setExpectationsEnabled: (enabled: boolean) => Promise<void>;
   updateLineup: (teamCode: string, mutate: (lineup: Lineup) => Lineup) => Promise<Lineup>;
   saveTeamNote: (teamCode: string, text: string) => Promise<void>;
   setPlayerNote: (playerId: number, patch: PlayerNotePatch) => Promise<void>;
+  /** Scrive o aggiorna l'aspettativa di un giocatore (§5.5). */
+  setExpectation: (playerId: number, patch: ExpectationPatch) => Promise<void>;
+  /** Toglie l'aspettativa: il giocatore torna senza prezzo dinamico. */
+  clearExpectation: (playerId: number) => Promise<void>;
   setObjectivesText: (text: string) => Promise<void>;
   addObjectiveTarget: (playerId: number, options?: AddTargetOptions) => Promise<void>;
   removeObjectiveTarget: (playerId: number) => Promise<void>;
@@ -124,6 +138,14 @@ export interface AppState {
   resetEverything: () => Promise<void>;
   notify: (kind: 'ok' | 'error', text: string) => void;
   dismiss: () => void;
+}
+
+/** Campi modificabili di un'aspettativa. Assenti = invariati. */
+export type ExpectationPatch = Partial<Omit<Expectation, 'playerId' | 'updatedAt'>>;
+
+/** Aspettativa vuota: tutti i contatori a zero, da riempire. */
+export function emptyExpectation(playerId: number, updatedAt: number): Expectation {
+  return { playerId, matches: 0, goals: 0, assists: 0, yellows: 0, reds: 0, updatedAt };
 }
 
 function readNumberMeta(value: string | number | null): number | null {
@@ -225,6 +247,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   lastBackupAt: null,
   pendingImport: null,
   pendingListone: null,
+  expectationsEnabled: true,
   message: null,
 
   leagueConfig() {
@@ -232,8 +255,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   async init() {
-    const [players, userData, storedTeams, filename, importedAt, count, lastBackupAt] =
-      await Promise.all([
+    const [
+      players,
+      userData,
+      storedTeams,
+      filename,
+      importedAt,
+      count,
+      lastBackupAt,
+      expectations,
+    ] = await Promise.all([
       store.loadPlayers(),
       store.loadUserData(),
       store.loadTeams(),
@@ -241,6 +272,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       store.getMeta('listoneImportedAt'),
       store.getMeta('listoneCount'),
       store.getMeta('lastBackupAt'),
+      store.getMeta('expectationsEnabled'),
     ]);
 
     const name = readStringMeta(filename);
@@ -250,6 +282,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       teams: storedTeams.length > 0 ? storedTeams : makeTeams(),
       userData,
       lastBackupAt: readNumberMeta(lastBackupAt),
+      // Chiave assente = acceso: chi non l'ha mai spento trova la feature al
+      // suo posto, e solo una scelta esplicita la nasconde.
+      expectationsEnabled: readNumberMeta(expectations) !== 0,
       listone:
         name === null
           ? null
@@ -448,6 +483,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
+  setExpectationsEnabled(enabled) {
+    return enqueue(async () => {
+      await store.setMeta('expectationsEnabled', enabled ? 1 : 0);
+      set({
+        expectationsEnabled: enabled,
+        message: {
+          kind: 'ok',
+          text: enabled
+            ? 'Prezzo dinamico riacceso.'
+            : 'Prezzo dinamico spento. Le aspettative restano salvate: riaccendendolo le ritrovi.',
+        },
+      });
+    });
+  },
+
   async undoLast() {
     const target = lastActiveEvent(get().userData.events);
     if (target !== null) await get().undoAssignment(target.id);
@@ -503,6 +553,69 @@ export const useAppStore = create<AppState>((set, get) => ({
         userData: {
           ...current.userData,
           playerNotes: upsert(current.userData.playerNotes, note, (n) => n.playerId === playerId),
+        },
+      }));
+    });
+  },
+
+  /**
+   * Scrive l'aspettativa di un giocatore, creandola se non c'e'.
+   *
+   * I contatori si normalizzano qui: interi, mai negativi. La UI ha campi
+   * numerici e un campo numerico accetta `-3` e `2.5` senza protestare, ma un
+   * gol e mezzo non e' un'aspettativa e finirebbe dritto dentro il tasso di
+   * reparto, spostando il prezzo di ogni altro giocatore.
+   */
+  setExpectation(playerId, patch) {
+    return enqueue(async () => {
+      const current = get().userData.expectations.find((e) => e.playerId === playerId);
+      const base = current ?? emptyExpectation(playerId, 0);
+
+      const clean = (value: number | undefined, fallback: number): number =>
+        value === undefined || !Number.isFinite(value) ? fallback : Math.max(0, Math.round(value));
+
+      const next: Expectation = {
+        playerId,
+        matches: clean(patch.matches, base.matches),
+        goals: clean(patch.goals, base.goals),
+        assists: clean(patch.assists, base.assists),
+        yellows: clean(patch.yellows, base.yellows),
+        reds: clean(patch.reds, base.reds),
+        updatedAt: Date.now(),
+      };
+
+      // Nessuna scrittura se non cambia niente: i campi si salvano a ogni
+      // battuta e senza questo controllo ogni blur riscriverebbe la stessa riga
+      // con un `updatedAt` nuovo, che poi vince i confronti in import.
+      if (
+        current !== undefined &&
+        current.matches === next.matches &&
+        current.goals === next.goals &&
+        current.assists === next.assists &&
+        current.yellows === next.yellows &&
+        current.reds === next.reds
+      ) {
+        return;
+      }
+
+      await store.saveExpectation(next);
+      set((state) => ({
+        userData: {
+          ...state.userData,
+          expectations: upsert(state.userData.expectations, next, (e) => e.playerId === playerId),
+        },
+      }));
+    });
+  },
+
+  clearExpectation(playerId) {
+    return enqueue(async () => {
+      if (!get().userData.expectations.some((e) => e.playerId === playerId)) return;
+      await store.deleteExpectation(playerId);
+      set((state) => ({
+        userData: {
+          ...state.userData,
+          expectations: state.userData.expectations.filter((e) => e.playerId !== playerId),
         },
       }));
     });
@@ -656,6 +769,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         userData: emptyUserData(),
         listone: null,
         lastBackupAt: null,
+        expectationsEnabled: true,
         pendingImport: null,
         pendingListone: null,
         message: { kind: 'ok', text: 'Tutto cancellato. Ricomincia caricando il listone.' },

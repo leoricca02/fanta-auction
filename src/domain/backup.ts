@@ -1,5 +1,6 @@
 import type {
   AssignmentEvent,
+  Expectation,
   LeagueConfig,
   Lineup,
   LineupSlot,
@@ -62,7 +63,12 @@ export interface ImportError {
   readonly detail: string;
 }
 
-export type UserCollection = 'lineups' | 'playerNotes' | 'teamNotes' | 'objectives';
+export type UserCollection =
+  | 'lineups'
+  | 'playerNotes'
+  | 'teamNotes'
+  | 'expectations'
+  | 'objectives';
 
 /** Un record del file scartato perche' lo store ne ha una versione piu' recente. */
 export interface SkippedRecord {
@@ -110,6 +116,7 @@ export interface ImportSummary {
   readonly lineups: ImportCollectionSummary;
   readonly playerNotes: ImportCollectionSummary;
   readonly teamNotes: ImportCollectionSummary;
+  readonly expectations: ImportCollectionSummary;
   readonly events: ImportCollectionSummary;
   /** `true` se il file conteneva gli obiettivi ed erano piu' recenti. */
   readonly objectivesReplaced: boolean;
@@ -144,6 +151,7 @@ export function emptyUserData(): UserData {
     playerNotes: [],
     teamNotes: [],
     objectives: emptyObjectives(),
+    expectations: [],
     events: [],
   };
 }
@@ -167,6 +175,7 @@ export function exportUserData(data: UserData, now: number = Date.now()): UserDa
         targets: data.objectives.targets.map((t) => ({ ...t })),
         updatedAt: data.objectives.updatedAt,
       },
+      expectations: data.expectations.map((e) => ({ ...e })),
       events: data.events.map((e) => ({ ...e })),
     },
   };
@@ -318,6 +327,31 @@ function parsePlayerNote(raw: unknown, path: string): PlayerNote {
     text: readOptionalString(o, 'text', path),
     tag: readTag(o, path),
     archived: readBoolean(o, 'archived', path),
+    updatedAt: readUpdatedAt(o, path),
+  };
+}
+
+/**
+ * Un'aspettativa dal file.
+ *
+ * I contatori sono interi non negativi: mezza presenza o meno tre gol non
+ * sono un'aspettativa, sono un file corrotto, e vale la pena rifiutare
+ * l'import invece di far uscire un prezzo dinamico costruito su spazzatura.
+ */
+function parseExpectation(raw: unknown, path: string): Expectation {
+  const o = readRecord(raw, path);
+  const count = (key: string): number => {
+    const value = readInt(o, key, path);
+    if (value < 0) fail(`${path}.${key}`, 'un intero >= 0', value);
+    return value;
+  };
+  return {
+    playerId: readInt(o, 'playerId', path),
+    matches: count('matches'),
+    goals: count('goals'),
+    assists: count('assists'),
+    yellows: count('yellows'),
+    reds: count('reds'),
     updatedAt: readUpdatedAt(o, path),
   };
 }
@@ -590,6 +624,11 @@ export function importUserData(
       : readArray(payload['teamNotes'], 'data.teamNotes').map((n, i) =>
           parseTeamNote(n, `data.teamNotes[${i}]`),
         );
+    const expectations = payload['expectations'] === undefined
+      ? null
+      : readArray(payload['expectations'], 'data.expectations').map((e, i) =>
+          parseExpectation(e, `data.expectations[${i}]`),
+        );
     const events = payload['events'] === undefined
       ? null
       : readArray(payload['events'], 'data.events').map((e, i) =>
@@ -621,6 +660,13 @@ export function importUserData(
       (n) => n.teamCode,
       (n) => n.updatedAt,
     );
+    const mergedExpectations = mergeByKey(
+      'expectations',
+      current.expectations,
+      expectations,
+      (e) => String(e.playerId),
+      (e) => e.updatedAt,
+    );
     const mergedEvents = mergeEvents(current.events, events);
 
     // Istanza unica, stessa regola: vince il piu' recente, non il file.
@@ -636,6 +682,7 @@ export function importUserData(
       ...mergedLineups.skipped,
       ...mergedPlayerNotes.skipped,
       ...mergedTeamNotes.skipped,
+      ...mergedExpectations.skipped,
     ];
     if (objectives !== null && !objectivesWins) {
       skippedRecords.push({
@@ -654,6 +701,7 @@ export function importUserData(
         lineups: mergedLineups.merged,
         playerNotes: mergedPlayerNotes.merged,
         teamNotes: mergedTeamNotes.merged,
+        expectations: mergedExpectations.merged,
         objectives: objectivesWins && objectives !== null ? objectives : current.objectives,
         events: mergedEvents.merged,
       },
@@ -661,6 +709,7 @@ export function importUserData(
         lineups: mergedLineups.summary,
         playerNotes: mergedPlayerNotes.summary,
         teamNotes: mergedTeamNotes.summary,
+        expectations: mergedExpectations.summary,
         events: mergedEvents.summary,
         objectivesReplaced: objectivesWins,
         skippedRecords,

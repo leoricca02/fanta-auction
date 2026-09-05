@@ -3,6 +3,7 @@ import type { EntityTable } from 'dexie';
 
 import type {
   AssignmentEvent,
+  Expectation,
   FantaTeam,
   Lineup,
   Objectives,
@@ -36,7 +37,16 @@ export type MetaKey =
   | 'listoneFilename'
   | 'listoneImportedAt'
   | 'listoneCount'
-  | 'lastBackupAt';
+  | 'lastBackupAt'
+  /**
+   * Interruttore del prezzo dinamico (§5.5), `1` acceso e `0` spento.
+   *
+   * E' una preferenza, non un dato utente: sta qui e non nel backup, e
+   * spegnerla **non cancella nessuna aspettativa** — nasconde soltanto tutto
+   * cio' che la riguarda. Riaccendendola si ritrova ogni riga dov'era, anche a
+   * meta' asta.
+   */
+  | 'expectationsEnabled';
 
 export interface MetaRow {
   readonly key: MetaKey;
@@ -60,6 +70,7 @@ const db = new Dexie('fanta-auction') as Dexie & {
   players: EntityTable<Player, 'id'>;
   lineups: EntityTable<Lineup, 'teamCode'>;
   playerNotes: EntityTable<PlayerNote, 'playerId'>;
+  expectations: EntityTable<Expectation, 'playerId'>;
   teamNotes: EntityTable<TeamNote, 'teamCode'>;
   objectives: EntityTable<StoredObjectives, 'key'>;
   events: EntityTable<AssignmentEvent, 'id'>;
@@ -104,6 +115,21 @@ db.version(3).stores({
   meta: 'key',
 });
 
+// v4: le aspettative del prezzo dinamico (§5.5). Sono dati utente come le
+// note: entrano nel backup e un re-import del listone non le tocca.
+db.version(4).stores({
+  players: 'id, team, role',
+  lineups: 'teamCode',
+  playerNotes: 'playerId',
+  expectations: 'playerId',
+  teamNotes: 'teamCode',
+  objectives: 'key',
+  events: 'id, ts',
+  teams: 'id',
+  sourceFiles: 'key',
+  meta: 'key',
+});
+
 export { db };
 
 // ---------------------------------------------------------------------------
@@ -115,13 +141,15 @@ export async function loadPlayers(): Promise<Player[]> {
 }
 
 export async function loadUserData(): Promise<UserData> {
-  const [lineups, playerNotes, teamNotes, storedObjectives, events] = await Promise.all([
-    db.lineups.toArray(),
-    db.playerNotes.toArray(),
-    db.teamNotes.toArray(),
-    db.objectives.get(OBJECTIVES_KEY),
-    db.events.toArray(),
-  ]);
+  const [lineups, playerNotes, teamNotes, storedObjectives, expectations, events] =
+    await Promise.all([
+      db.lineups.toArray(),
+      db.playerNotes.toArray(),
+      db.teamNotes.toArray(),
+      db.objectives.get(OBJECTIVES_KEY),
+      db.expectations.toArray(),
+      db.events.toArray(),
+    ]);
 
   const objectives: Objectives =
     storedObjectives === undefined
@@ -137,6 +165,7 @@ export async function loadUserData(): Promise<UserData> {
     playerNotes,
     teamNotes,
     objectives,
+    expectations,
     events: [...events].sort((a, b) => (a.ts !== b.ts ? a.ts - b.ts : a.id.localeCompare(b.id))),
   };
 }
@@ -189,6 +218,23 @@ export async function savePlayerNote(note: PlayerNote): Promise<void> {
   await db.playerNotes.put(note);
 }
 
+export async function saveExpectation(expectation: Expectation): Promise<void> {
+  await db.expectations.put(expectation);
+}
+
+/**
+ * Toglie l'aspettativa di un giocatore.
+ *
+ * E' l'unico hard delete concesso sui dati utente, e ha una ragione: qui il
+ * vuoto **e' un significato**. Una riga a zero direbbe "non fara' niente", che
+ * e' un giudizio; nessuna riga dice "non l'ho valutato", che e' un'altra cosa
+ * e spegne il prezzo dinamico invece di falsarlo. Senza cancellazione non ci
+ * sarebbe modo di tornare indietro da una valutazione inserita per sbaglio.
+ */
+export async function deleteExpectation(playerId: number): Promise<void> {
+  await db.expectations.delete(playerId);
+}
+
 export async function saveTeamNote(note: TeamNote): Promise<void> {
   await db.teamNotes.put(note);
 }
@@ -216,12 +262,24 @@ export async function replacePlayers(players: readonly Player[]): Promise<void> 
 export async function wipeEverything(): Promise<void> {
   await db.transaction(
     'rw',
-    [db.players, db.lineups, db.playerNotes, db.teamNotes, db.objectives, db.events, db.teams, db.sourceFiles, db.meta],
+    [
+      db.players,
+      db.lineups,
+      db.playerNotes,
+      db.expectations,
+      db.teamNotes,
+      db.objectives,
+      db.events,
+      db.teams,
+      db.sourceFiles,
+      db.meta,
+    ],
     async () => {
       await Promise.all([
         db.players.clear(),
         db.lineups.clear(),
         db.playerNotes.clear(),
+        db.expectations.clear(),
         db.teamNotes.clear(),
         db.objectives.clear(),
         db.events.clear(),
@@ -240,11 +298,12 @@ export async function wipeEverything(): Promise<void> {
 export async function replaceUserData(data: UserData): Promise<void> {
   await db.transaction(
     'rw',
-    [db.lineups, db.playerNotes, db.teamNotes, db.objectives, db.events],
+    [db.lineups, db.playerNotes, db.expectations, db.teamNotes, db.objectives, db.events],
     async () => {
       await Promise.all([
         db.lineups.clear(),
         db.playerNotes.clear(),
+        db.expectations.clear(),
         db.teamNotes.clear(),
         db.objectives.clear(),
         db.events.clear(),
@@ -252,6 +311,7 @@ export async function replaceUserData(data: UserData): Promise<void> {
       await Promise.all([
         db.lineups.bulkPut([...data.lineups]),
         db.playerNotes.bulkPut([...data.playerNotes]),
+        db.expectations.bulkPut([...data.expectations]),
         db.teamNotes.bulkPut([...data.teamNotes]),
         db.objectives.put({ ...data.objectives, key: OBJECTIVES_KEY }),
         db.events.bulkPut([...data.events]),

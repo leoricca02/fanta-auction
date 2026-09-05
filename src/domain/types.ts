@@ -86,6 +86,33 @@ export interface PlayerNote {
   readonly updatedAt: number;
 }
 
+/**
+ * Aspettativa di rendimento per la stagione che deve iniziare (§5.5).
+ *
+ * E' quello che **tu** pensi che un giocatore fara': non una previsione
+ * dell'applicazione, non un dato derivato dal listone. Ci si aggancia il
+ * prezzo dinamico, che la mette in rapporto con i prezzi battuti al tavolo.
+ *
+ * Solo giocatori di movimento: l'asta dei portieri si gioca su altro, e una
+ * riga di aspettativa per un portiere non vorrebbe dire niente. Chi non ha
+ * una riga qui non ha prezzo dinamico, ed e' il caso normale — le si compila
+ * per i nomi che si vogliono davvero, non per seicento.
+ *
+ * Sopravvive a un re-import del listone come ogni altro dato utente (§2).
+ */
+export interface Expectation {
+  /** Id Fantacalcio.it, combacia con `Player.id`. */
+  readonly playerId: number;
+  /** Presenze a voto attese. */
+  readonly matches: number;
+  readonly goals: number;
+  readonly assists: number;
+  readonly yellows: number;
+  readonly reds: number;
+  /** Ultima modifica. In import vince il record piu' recente, non il file. */
+  readonly updatedAt: number;
+}
+
 export interface ObjectiveTarget {
   readonly playerId: number;
   /** Ordinamento manuale. */
@@ -151,6 +178,7 @@ export interface UserData {
   readonly playerNotes: readonly PlayerNote[];
   readonly teamNotes: readonly TeamNote[];
   readonly objectives: Objectives;
+  readonly expectations: readonly Expectation[];
   readonly events: readonly AssignmentEvent[];
 }
 

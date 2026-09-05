@@ -29,6 +29,12 @@ riconciliazione, max bid assoluto, export.
 Le colonne `QUOT.` e `FVM/1000` restano come dati grezzi per ordinare e filtrare, senza
 alcun calcolo derivato.
 
+**E il prezzo dinamico di §5.5?** È l'unica cifra in crediti che l'app propone, e non è il
+modello della 1.0 che rientra dalla finestra. Quello derivava una previsione dal listone,
+per tutti, sempre. Questo mette in rapporto due numeri che il listone non conosce: una
+*tua* aspettativa dichiarata a mano, e i prezzi che il *tuo* tavolo sta battendo stasera.
+Se non hai scritto l'aspettativa, non esiste — ed è il caso normale.
+
 ---
 
 ## 1. Scope
@@ -131,6 +137,15 @@ interface Objectives {          // dati utente, istanza unica
   }[];
 }
 
+interface Expectation {         // dati utente, §5.5
+  playerId: number;
+  matches: number;              // presenze a voto attese
+  goals: number;
+  assists: number;
+  yellows: number;
+  reds: number;
+}
+
 interface FantaTeam {
   id: string;
   name: string;
@@ -158,7 +173,8 @@ rose, crediti o slot.
 una pulizia dati del browser azzera senza preavviso. Questo è il rischio numero uno del
 progetto, sopra ogni altra considerazione.
 
-- Export JSON completo di tutti i dati utente (lineups, note, obiettivi, tag, eventi)
+- Export JSON completo di tutti i dati utente (lineups, note, obiettivi, tag,
+  aspettative, eventi)
 - Import dello stesso JSON, con merge non distruttivo
 - **Auto-download del backup all'apertura dell'app** se l'ultimo risale a più di un giorno
 - Il backup non dipende da nessun'altra milestone: va implementato per primo
@@ -208,7 +224,7 @@ d'occhio col tabellone ufficiale.
 
 ---
 
-## 5. Interfaccia — quattro sezioni
+## 5. Interfaccia — cinque sezioni
 
 ### 5.1 Asta Live
 
@@ -281,6 +297,132 @@ Tabella di tutti i giocatori non ancora assegnati.
   range di quotazione
 - Apribile in overlay dall'asta live con `s`, mantenendo i filtri tra un'apertura e l'altra
 
+### 5.5 Aspettative e prezzo dinamico
+
+Risponde a una domanda sola, quella che sotto asta non ci si ricorda di farsi: *se penso
+che Yildiz faccia gli stessi numeri di Kolo Muani, e Kolo Muani è appena andato a 60,
+perché sto scrivendo 90?*
+
+**Solo giocatori di movimento.** L'asta dei portieri si gioca su porte inviolate e
+titolarità del reparto, non su gol e assist: una formula sola per entrambi mentirebbe su
+uno dei due. I portieri restano fuori, ed è una scelta, non una dimenticanza.
+
+#### Il valore
+
+Cinque numeri per giocatore, scritti a mano: presenze, gol, assist, ammonizioni,
+espulsioni attesi nella 2026/27.
+
+```
+V(x) = w[ruolo] × presenze + 3×gol + 1×assist − 0,5×amm − 1×esp
+w = { D: 0,5   C: 0,3   A: 0,2 }
+```
+
+Gol, assist e cartellini sono i bonus/malus del fantacalcio: regolamento, non opinione.
+L'unico numero discutibile è quanto vale una presenza, e vale **per ruolo** — da un
+difensore si compra titolarità, da un attaccante gol.
+
+I tre pesi sono tarati, non scelti a occhio: la simulazione di §5.5.3 li ha misurati
+contro i prezzi veri, e la curva dell'errore è piatta attorno a questi valori (D: 30%
+contro il 29% dell'ottimo; C e A esatti). Sui difensori le presenze contano davvero
+(peso 0 → 42% di errore, peso 0,3 → 29%); sugli attaccanti sono ininfluenti, e da 0 a 2
+l'errore non si muove.
+
+Il tasso si calcola per reparto, quindi la **scala** dei pesi è irrilevante: moltiplicarli
+tutti per due dimezza ogni tasso e non sposta un credito. Conta solo la **forma** — quante
+presenze valgono un gol dentro quel ruolo.
+
+#### Il tasso, e il prezzo
+
+```
+tasso[ruolo] = mediana( prezzo_pagato / V )  sulle aste già battute del reparto
+prezzo(x)    = max(1, round( tasso[ruolo] × V(x) ))
+```
+
+- **Mediana, non media**: una singola asta fuori scala non deve spostare la scala di
+  tutte le altre.
+- **Solo le aste valutate da te**: di un acquisto senza aspettativa non si conosce il
+  denominatore, e inventarlo sposterebbe il tasso di tutti gli altri.
+- **Ogni reparto sta per conto suo, e non si prestano niente.** La simulazione misura
+  0,96 crediti per punto sui difensori e 1,90 sugli attaccanti: prestare il tasso dei D
+  alla fase A dimezzerebbe ogni consiglio, e proprio all'apertura del reparto, quando
+  escono i nomi grossi.
+- Conseguenza accettata: l'asta è sequenziale P → D → C → A, quindi **i primi 3 colpi di
+  ogni fase non hanno prezzo**. È il costo di non mentire sulla scala, e dura tre aste.
+
+`null` non è zero, ed è il caso più frequente. Quattro stati distinti, che la UI deve
+dire a parole perché sono quattro cose da fare diverse: portiere · non valutato ·
+aspettativa che vale zero · reparto con meno di 3 aste.
+
+#### 5.5.1 Dove si compila
+
+- **Sezione Aspettative** — una riga per giocatore, un reparto alla volta, ordine
+  `FVM/1000` decrescente, `Tab` che scorre le cinque caselle. È dove se ne riempiono
+  quaranta la sera prima. Filtri: tutti / da valutare / valutati.
+- **Scheda giocatore** — le stesse cinque caselle, per il ripensamento sul singolo nome,
+  raggiungibile con `?` mentre l'asta corre.
+
+In entrambe, un bottone precompila con le cifre **vere** della 2025/26 (`SEASON_STATS`).
+È un punto di partenza, non un verdetto: da lì in poi il numero è tuo.
+
+Svuotare tutte e cinque le caselle **toglie** l'aspettativa, non la mette a zero. È
+l'unico hard delete sui dati utente, e la ragione è che qui il vuoto significa qualcosa:
+una riga a zero dice "non farà niente", che è un giudizio; nessuna riga dice "non l'ho
+valutato", che spegne il prezzo invece di falsarlo.
+
+#### 5.5.2 Dove si legge
+
+Nel pannello di assegnazione, sopra la casella del prezzo, **solo per i giocatori che hai
+valutato** — su un nome non valutato non c'è niente da dire, e una riga vuota a ogni
+chiamata sarebbe rumore nella zona più densa dello schermo.
+
+Mostra il consigliato, il `V`, il tasso con quante aste lo sostengono, un bottone che lo
+scrive nella casella del prezzo, e — se hai già battuto una cifra più alta — **di quanto
+la stai superando**. Quel `+68%` è la feature: è la domanda di partenza, posta nel momento
+in cui serve.
+
+#### 5.5.2b Si può spegnere
+
+Un interruttore in Impostazioni toglie §5.5 dall'applicazione: sparisce la scheda
+Aspettative, la sezione nella scheda giocatore e il consigliato nel pannello d'asta.
+Acceso di default; la scelta sopravvive a un refresh.
+
+**Non cancella niente.** Le aspettative restano su disco e nel backup, e riaccendendo si
+ritrova ogni riga dov'era, anche a metà asta. Per questo non chiede conferma: non c'è
+niente da perdere, e una conferma su un gesto reversibile insegna solo a cliccare "sì"
+senza leggere.
+
+Esiste perché l'asta è una serata sola e non si ripete: se il numero consigliato
+distraesse invece di aiutare, non ci deve essere modo di restare impantanati. È una
+preferenza, non un dato utente — vive in `meta`, non nel JSON di §3.1.
+
+#### 5.5.3 Quanto ci si può fidare
+
+`src/test/valuation-sim.test.ts` simula un'asta intera per 264 giocatori di movimento.
+Non bara: le aspettative sono le statistiche **vere** 2025/26, i prezzi escono dalla
+colonna `FVM/1000` riscalata sui 9.600 crediti. Due sorgenti indipendenti, nessuna delle
+due prodotta da questa formula. Si stampa con `SIM=1 npx vitest run valuation-sim`.
+
+Cosa dice:
+
+| | |
+| --- | --- |
+| Aspettative perfette | errore **0,0%** — il meccanismo è corretto, l'errore sta altrove |
+| Statistiche dell'anno scorso come aspettative | errore mediano **40%** |
+| Bias sui più costosi | **−33%** — il consiglio resta basso |
+| Bias sui più economici | **+63%** |
+
+**Il collo di bottiglia sono le aspettative, non la formula.** Curvare la proporzione con
+un esponente (`tasso × V^γ`) non migliora l'errore mediano — 39% a γ=1, 43% a γ=2 —
+riduce solo il bias sistematico. Quindi la formula resta lineare: complicarla non paga, e
+questo è misurato, non opinato.
+
+Quel 40% è il tetto pessimistico, e viene in gran parte dal fatto che "l'anno scorso" non
+è "quest'anno": stesse cifre 2025/26 per Malen e Hojlund, prezzi veri 348 e 201. Le
+aspettative scritte a mano sono il rimedio, ed è per quello che le scrive l'utente.
+
+**Da tenere a mente usandolo:** sui nomi più cari il consigliato è sistematicamente basso.
+Si legge come un pavimento, non come un tetto.
+
 ---
 
 ## 6. Export
@@ -310,7 +452,7 @@ Nessun backend, nessuna chiamata di rete a runtime.
 
 ```
 /src
-  /domain      lineupStatus, reducer, svincolati, maxBid — TS puro, testato
+  /domain      lineupStatus, reducer, svincolati, maxBid, valuation — TS puro, testato
   /store       Zustand + Dexie
   /parse       parser difensivo del listone + diff di re-import
   /features
@@ -318,6 +460,7 @@ Nessun backend, nessuna chiamata di rete a runtime.
     /teams     editor formazioni, note squadra
     /goals     obiettivi
     /free      svincolati
+    /expectations  aspettative in blocco, §5.5
   /export      xlsx, json, pdf
 ```
 
@@ -333,6 +476,7 @@ Nessun backend, nessuna chiamata di rete a runtime.
 | M3 | Asta live — command bar, badge inline, scheda, overlay | Assegnazione in <5 s, undo, crash recovery |
 | M4 | Svincolati + Obiettivi | Filtri e ordinamenti, overlay da `s` e `o` |
 | M5 | Export xlsx nativo + report | File reimportabile in Lega Fantacalcio |
+| M6 | **Aspettative + prezzo dinamico §5.5** | Simulazione su listone e statistiche reali verde; consigliato visibile nel pannello di assegnazione |
 
 **M2 va prima di M3.** L'inserimento delle 20 formazioni è giorni di lavoro manuale, non
 di codice: prima esiste l'editor, prima si può cominciare. La command bar senza formazioni
@@ -349,3 +493,5 @@ inserite non mostra i badge, che sono la ragione per cui esiste.
 | Desync dal tabellone ufficiale | Riga di riconciliazione §4.4, inserimento retroattivo, undo su tutto |
 | Schema del listone cambia | Parser difensivo con validazione esplicita |
 | Scope creep | §1 fuori scope. Non negoziabile prima di M5 |
+| **Il prezzo dinamico riletto come una previsione** | È un rapporto fra la tua aspettativa e i prezzi battuti: senza aspettativa non esiste, e la UI dichiara sempre tasso e quante aste lo sostengono. Sui nomi cari resta basso per costruzione (§5.5.3): pavimento, non tetto |
+| Aspettative compilate a metà | Il valore `V` è visibile in tabella mentre si compila, e svuotare le caselle toglie la riga invece di lasciarla a zero |

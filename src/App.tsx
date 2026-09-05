@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   CalendarDays,
   Check,
+  Coins,
   Gavel,
   Loader2,
   Settings,
@@ -18,6 +19,7 @@ import { LivePage } from './features/live/LivePage';
 import { TeamsPage } from './features/teams/TeamsPage';
 import { FreeAgentsPanel } from './features/free/FreeAgentsPanel';
 import { GridPage } from './features/grid/GridPage';
+import { ExpectationsPage } from './features/expectations/ExpectationsPage';
 import { GoalsPanel } from './features/goals/GoalsPanel';
 import { SettingsPanel } from './features/settings/SettingsPanel';
 import { ImportConfirm } from './features/settings/ImportConfirm';
@@ -25,7 +27,7 @@ import { ListoneConfirm } from './features/settings/ListoneConfirm';
 import { EASE, Skeleton, SkeletonTable } from './ui/primitives';
 import { cn } from './ui/cn';
 
-type Tab = 'live' | 'teams' | 'free' | 'griglia' | 'goals' | 'settings';
+type Tab = 'live' | 'teams' | 'free' | 'griglia' | 'expectations' | 'goals' | 'settings';
 
 interface TabDef {
   readonly id: Tab;
@@ -38,6 +40,7 @@ const TABS: readonly TabDef[] = [
   { id: 'teams', label: 'Squadre', Icon: Shield },
   { id: 'free', label: 'Svincolati', Icon: Users },
   { id: 'griglia', label: 'Griglia', Icon: CalendarDays },
+  { id: 'expectations', label: 'Aspettative', Icon: Coins },
   { id: 'goals', label: 'Obiettivi', Icon: Target },
   { id: 'settings', label: 'Impostazioni', Icon: Settings },
 ];
@@ -50,7 +53,17 @@ export function App(): JSX.Element {
   const dismiss = useAppStore((s) => s.dismiss);
   const listone = useAppStore((s) => s.listone);
 
+  const expectationsEnabled = useAppStore((s) => s.expectationsEnabled);
+
   const [tab, setTab] = useState<Tab>('teams');
+
+  // Spegnere §5.5 mentre si e' dentro la sua scheda lascerebbe a schermo una
+  // sezione che non esiste piu' nella barra.
+  useEffect(() => {
+    if (!expectationsEnabled && tab === 'expectations') setTab('live');
+  }, [expectationsEnabled, tab]);
+
+  const tabs = TABS.filter((t) => t.id !== 'expectations' || expectationsEnabled);
 
   useEffect(() => {
     void init();
@@ -104,7 +117,7 @@ export function App(): JSX.Element {
         </div>
 
         <nav className="flex gap-0.5">
-          {TABS.map(({ id, label, Icon }) => {
+          {tabs.map(({ id, label, Icon }) => {
             const active = tab === id;
             return (
               <button
@@ -169,6 +182,7 @@ export function App(): JSX.Element {
         {tab === 'teams' && <TeamsPage />}
         {tab === 'free' && <FreeAgentsPanel embedded />}
         {tab === 'griglia' && <GridPage />}
+        {tab === 'expectations' && expectationsEnabled && <ExpectationsPage />}
         {tab === 'goals' && <GoalsPanel embedded />}
         {tab === 'settings' && <SettingsPanel />}
       </main>

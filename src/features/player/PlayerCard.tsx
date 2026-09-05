@@ -49,6 +49,7 @@ import { Markdown } from '../goals/Markdown';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
 import { CloseButton, EASE, InfoPopover, RoleBadge, SectionTitle } from '../../ui/primitives';
+import { ExpectationSection } from './ExpectationSection';
 import { LineupBadge } from './LineupBadge';
 import { TierBadge } from './TierBadge';
 
@@ -63,9 +64,13 @@ import { TierBadge } from './TierBadge';
  *
  * **Le cifre della griglia sono tutte grezze** — QUOT., FVM, under, fascia
  * della guida, e le statistiche della scorsa stagione, che sono misurate una
- * per una. Non c'e' nessun "prezzo massimo consigliato" e non ci sara':
- * il modello di prezzo della 1.0 e' morto con la 1.0 (PRD §2), e una cifra
- * inventata accanto a quattro misurate sarebbe la piu' pericolosa delle cinque.
+ * per una. Nessuna di esse produce un prezzo: il modello della 1.0, che
+ * derivava una previsione dal listone, e' morto con la 1.0 (PRD §2).
+ *
+ * L'unico numero in crediti della scheda e' il prezzo dinamico di §5.5, e non
+ * e' quel modello che rientra dalla finestra: non viene dal listone, viene da
+ * un'aspettativa che hai scritto tu messa in rapporto con i prezzi battuti
+ * stasera a questo tavolo. Se non hai scritto l'aspettativa, non c'e'.
  */
 
 const TAG_STYLE: Readonly<Record<Tag, string>> = {
@@ -271,6 +276,8 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
       />
 
       <SeasonSection player={player} stats={stats} />
+
+      <ExpectationSection player={player} />
 
       <section className="flex flex-col gap-1.5">
         <SectionTitle icon={<Star size={12} />}>Tag</SectionTitle>

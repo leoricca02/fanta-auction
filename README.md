@@ -6,7 +6,7 @@
 Non il tabellone della lega — quello che ti dice, nei cinque secondi della chiamata,
 se quel giocatore è titolare e se puoi ancora permettertelo.
 
-[![test](https://img.shields.io/badge/test-627%20passed-2ea043)](#collaudo)
+[![test](https://img.shields.io/badge/test-704%20passed-2ea043)](#collaudo)
 [![domain](https://img.shields.io/badge/dominio-100%25%20branch-2ea043)](#i-tre-vincoli)
 [![stack](https://img.shields.io/badge/React%2018-TypeScript%20strict-3178c6)](#stack)
 [![offline](https://img.shields.io/badge/local--first-nessun%20backend-8957e5)](#privacy-e-dati)
@@ -58,7 +58,7 @@ Le sigle sono di tre lettere e sono quello che digiterai all'asta: mettile vere,
 
 ---
 
-## Le quattro sezioni
+## Le sezioni
 
 ### 🔨 Squadre — l'editor delle formazioni
 
@@ -157,7 +157,10 @@ prezzo e ti resta solo da cliccare la squadra quando sai chi ha vinto. Se hai fr
 
 ### 📊 L'asta in numeri — `t`
 
-Tutto misurato, niente stimato. Nessun prezzo previsto: quello è morto con la 1.0 e non torna.
+Tutto misurato, niente stimato. Nessun prezzo **previsto**: il modello della 1.0, che derivava
+una cifra dal listone per tutti, è morto con la 1.0 e non torna. L'unico numero in crediti che
+l'app propone è il [prezzo dinamico](#-aspettative-e-prezzo-dinamico), e nasce da tutt'altro:
+una tua stima scritta a mano, messa in rapporto con quello che il tavolo sta pagando stasera.
 
 | | Risponde a |
 | --- | --- |
@@ -423,6 +426,89 @@ andato, e a chi.
 
 ---
 
+### 💰 Aspettative e prezzo dinamico
+
+Risponde a una domanda sola, quella che sotto asta non ci si ricorda di farsi:
+
+> *Se penso che Yildiz faccia gli stessi numeri di Kolo Muani, e Kolo Muani è appena andato
+> a 60, perché sto scrivendo 90?*
+
+Scrivi per ogni giocatore che ti interessa quanto pensi che faccia quest'anno — presenze, gol,
+assist, ammonizioni, espulsioni — e durante l'asta accanto al suo nome compare un **prezzo
+consigliato che si muove a ogni martellata**.
+
+```
+V(x)         = w[ruolo] × presenze + 3×gol + 1×assist − 0,5×amm − 1×esp
+tasso[ruolo] = mediana( prezzo_pagato ÷ V )  sulle aste già battute del reparto
+prezzo(x)    = tasso[ruolo] × V(x)
+```
+
+Nessuno dei due lati è una previsione dell'app: `V` è la **tua** stima dichiarata, il tasso è
+quello che il **tuo** tavolo sta pagando stasera. Se non hai scritto l'aspettativa, il prezzo non
+esiste — ed è il caso normale.
+
+**Il peso delle presenze cambia per reparto** (`D 0,5 · C 0,3 · A 0,2`): da un difensore compri
+titolarità, da un attaccante gol. Non è una preferenza, è misurato — sui difensori peso 0 dà il
+42% di errore e peso 0,3 il 29%, sugli attaccanti da 0 a 2 l'errore non si muove.
+
+Si compila in due posti: la sezione **Aspettative** — una riga per giocatore, `Tab` che scorre le
+cinque caselle, `FVM` decrescente — per riempirne quaranta la sera prima, e la scheda giocatore
+per il ripensamento sul singolo nome. In entrambe un bottone precompila con le cifre **vere**
+della scorsa stagione; da lì in poi il numero è tuo. Svuotare tutte le caselle **toglie** la
+riga invece di metterla a zero: "non farà niente" è un giudizio, "non l'ho valutato" è un'altra
+cosa e spegne il prezzo invece di falsarlo.
+
+> [!NOTE]
+> **Ogni reparto sta per conto suo, e non si prestano niente.** La simulazione misura 0,96
+> crediti per punto sui difensori e 1,90 sugli attaccanti: prestare il tasso dei D alla fase A
+> dimezzerebbe ogni consiglio, e proprio all'apertura del reparto, quando escono i nomi grossi.
+> Il prezzo di conseguenza. I primi **tre colpi di ogni fase non hanno consigliato**, e la
+> schermata lo dice a parole invece di mostrare un trattino.
+
+#### Quanto ci si può fidare
+
+`src/test/valuation-sim.test.ts` simula un'asta intera su 264 giocatori di movimento, e non bara:
+le aspettative sono le statistiche **vere** 2025/26, i prezzi escono dalla colonna `FVM/1000`
+riscalata sui 9.600 crediti. Due sorgenti indipendenti, nessuna prodotta da questa formula.
+
+```bash
+SIM=1 npx vitest run valuation-sim
+```
+
+| Scenario | Errore mediano |
+| --- | --- |
+| Aspettative perfette | **0,0%** — il meccanismo è corretto, l'errore sta altrove |
+| Statistiche dell'anno scorso come aspettative | **40%** |
+
+**Il collo di bottiglia sono le aspettative, non la formula.** Curvarla con un esponente
+(`tasso × V^γ`) non migliora niente: 39% a γ=1, 43% a γ=2. Riduce solo il bias sistematico, e
+quindi la formula resta lineare — complicarla non paga, e questo è misurato invece che opinato.
+
+Quel 40% è il tetto pessimistico, e viene in gran parte dal fatto che *l'anno scorso* non è
+*quest'anno*: stesse cifre 2025/26 per Malen e Hojlund, prezzi veri 348 e 201. Le aspettative
+scritte a mano sono il rimedio, ed è per quello che le scrivi tu.
+
+> [!WARNING]
+> **Sui nomi più cari il consigliato è sistematicamente basso** — bias −33% sul terzo più
+> costoso, +63% sul terzo più economico. È per costruzione: la proporzione pura non cattura il
+> fatto che il mercato paga i top più che proporzionalmente. Leggilo come un pavimento, non come
+> un tetto.
+
+#### Si può spegnere
+
+Un interruttore in **Impostazioni → Prezzo dinamico** toglie tutto: sparisce la sezione
+Aspettative, la sezione nella scheda giocatore e il consigliato nel pannello d'asta. L'app torna
+esattamente com'era prima della feature.
+
+**Non cancella niente.** Le aspettative restano su disco e nel backup, e riaccendendo si ritrova
+ogni riga dov'era, anche a metà asta. Per questo non chiede conferma: non c'è niente da perdere,
+e una conferma su un gesto reversibile insegna solo a cliccare "sì" senza leggere.
+
+Esiste perché l'asta è una serata sola e non si ripete: se il numero distraesse invece di
+aiutare, non ci deve essere modo di restare impantanati.
+
+---
+
 ### ✅ Sei pronto? — la checklist pre-asta
 
 In cima alle **Impostazioni**, sei pallini e una riga. Il lavoro di questo progetto non si perde
@@ -442,7 +528,7 @@ runtime, nessun account. Il giorno dell'asta l'app funziona anche senza connessi
 
 > [!WARNING]
 > **Il backup è il rischio numero uno del progetto.** Una pulizia dati del browser azzera
-> tutto senza preavviso: venti formazioni sono giorni di lavoro.
+> tutto senza preavviso: venti formazioni sono giorni di lavoro, e le aspettative una serata.
 > Scarica un `.json` da **Impostazioni → Backup** ogni volta che finisci di lavorare.
 
 All'apertura l'app ne scarica uno da sola se l'ultimo risale a più di un giorno — ma è una
@@ -497,7 +583,7 @@ src/
 ├── parse/       parser difensivo del listone .xlsx
 ├── data/        fasce SosFanta, statistiche e calendario Fantacalcio.it, generate da scripts/
 ├── store/       Zustand + Dexie
-├── features/    live · teams · free · grid · goals · player · settings
+├── features/    live · teams · free · grid · expectations · goals · player · settings
 └── export/      xlsx nativo · report · pdf
 ```
 
@@ -537,7 +623,7 @@ volte, ed è il motivo per cui lo store ha i suoi test.
 ## Collaudo
 
 ```bash
-npm test              # 658 test
+npm test              # 704 test
 npm run test:cov      # con copertura; /src/domain ha soglia 100%
 npm run build
 ```

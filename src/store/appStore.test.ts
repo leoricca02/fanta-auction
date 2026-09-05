@@ -43,6 +43,7 @@ async function resetAll(): Promise<void> {
     lastBackupAt: null,
     pendingImport: null,
     pendingListone: null,
+    expectationsEnabled: true,
     message: null,
   });
 }
@@ -367,6 +368,94 @@ describe('re-import del listone', () => {
     await store().undoAllAssignments();
     await store().importListone(listoneFile());
     expect(store().pendingListone).not.toBeNull();
+  });
+});
+
+describe('aspettative e prezzo dinamico (§5.5)', () => {
+  async function withListone(): Promise<void> {
+    await store().init();
+    await store().importListone(listoneFile());
+  }
+
+  it("scrive un'aspettativa e la ritrova dopo un refresh", async () => {
+    await withListone();
+    const player = findPlayer(store().players, 'Dimarco');
+
+    await store().setExpectation(player.id, {
+      matches: 32,
+      goals: 4,
+      assists: 6,
+      yellows: 5,
+      reds: 0,
+    });
+    await reload();
+
+    const saved = store().userData.expectations.find((e) => e.playerId === player.id);
+    expect(saved).toMatchObject({ matches: 32, goals: 4, assists: 6, yellows: 5, reds: 0 });
+  });
+
+  it('normalizza a interi non negativi', async () => {
+    // La UI ha campi numerici, e un campo numerico accetta -3 e 2,5 senza
+    // protestare. Mezzo gol finirebbe dritto nel tasso di reparto.
+    await withListone();
+    const player = findPlayer(store().players, 'Dimarco');
+
+    await store().setExpectation(player.id, { matches: 2.6, goals: -3, assists: 1 });
+
+    const saved = store().userData.expectations.find((e) => e.playerId === player.id);
+    expect(saved).toMatchObject({ matches: 3, goals: 0, assists: 1 });
+  });
+
+  it('non riscrive quando la patch non cambia niente', async () => {
+    await withListone();
+    const player = findPlayer(store().players, 'Dimarco');
+
+    await store().setExpectation(player.id, { matches: 30 });
+    const first = store().userData.expectations.find((e) => e.playerId === player.id);
+
+    await store().setExpectation(player.id, { matches: 30 });
+    const second = store().userData.expectations.find((e) => e.playerId === player.id);
+
+    // Stesso oggetto: senza il controllo, ogni blur riscriverebbe la riga con
+    // un `updatedAt` nuovo, che poi vince i confronti in import.
+    expect(second).toBe(first);
+  });
+
+  it('clearExpectation toglie la riga', async () => {
+    await withListone();
+    const player = findPlayer(store().players, 'Dimarco');
+
+    await store().setExpectation(player.id, { matches: 30 });
+    await store().clearExpectation(player.id);
+    await reload();
+
+    expect(store().userData.expectations).toHaveLength(0);
+  });
+
+  it('spegnere la feature non cancella nessuna aspettativa', async () => {
+    // E' la promessa fatta in Impostazioni: e' un interruttore, non una
+    // rimozione. Se questo test cade, quella schermata sta mentendo.
+    await withListone();
+    const player = findPlayer(store().players, 'Dimarco');
+    await store().setExpectation(player.id, { matches: 32, goals: 4 });
+
+    await store().setExpectationsEnabled(false);
+    expect(store().expectationsEnabled).toBe(false);
+    expect(store().userData.expectations).toHaveLength(1);
+
+    await reload();
+    expect(store().expectationsEnabled).toBe(false);
+    expect(store().userData.expectations).toHaveLength(1);
+
+    await store().setExpectationsEnabled(true);
+    await reload();
+    expect(store().expectationsEnabled).toBe(true);
+    expect(store().userData.expectations[0]).toMatchObject({ matches: 32, goals: 4 });
+  });
+
+  it("parte acceso su un'app appena installata", async () => {
+    await store().init();
+    expect(store().expectationsEnabled).toBe(true);
   });
 });
 

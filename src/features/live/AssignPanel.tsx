@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Coins, Minus, Plus, Quote, TriangleAlert, Users } from 'lucide-react';
+import { Coins, Minus, Plus, Quote, TriangleAlert, Users, Wand2 } from 'lucide-react';
 
 import type { FantaTeam, Player } from '../../domain/types';
 import { PHASE_ORDER } from '../../domain/types';
@@ -9,6 +9,13 @@ import { teamState } from '../../domain/reducer';
 import type { TeamBidStatus } from '../../domain/metrics';
 import { bidStatusForAll, rivalsAbove } from '../../domain/metrics';
 import { lineupPlacement, makeLineupIndex } from '../../domain/lineup';
+import {
+  MIN_SAMPLE,
+  dynamicPrice,
+  isMovementRole,
+  makeExpectationIndex,
+  marketRates,
+} from '../../domain/valuation';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
@@ -189,6 +196,8 @@ export function AssignPanel({
         </section>
       )}
 
+      <DynamicPriceHint player={player} state={state} price={price} onUse={onPriceChange} />
+
       {/* Il prezzo: la cifra piu' grande del pannello, in mono tabellare. */}
       <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5">
         <label className="flex items-center gap-2">
@@ -290,6 +299,85 @@ export function AssignPanel({
         {theme.label}
       </span>
     </aside>
+  );
+}
+
+/**
+ * Il prezzo dinamico (§5.5) sopra la casella del prezzo.
+ *
+ * E' il posto in cui serve: mentre il rilancio sale si guarda qui, non nella
+ * scheda. Compare **solo se hai valutato quel giocatore** — su un nome che non
+ * hai valutato non c'e' niente da dire, e una riga vuota su ogni chiamata
+ * sarebbe rumore in mezzo alla cosa piu' densa dello schermo.
+ *
+ * Quando hai gia' battuto una cifra, mostra anche di quanto la stai
+ * superando. E' la domanda da cui e' nata la feature: se penso che questo
+ * faccia i numeri di uno pagato 60, perche' sto scrivendo 90?
+ */
+function DynamicPriceHint({
+  player,
+  state,
+  price,
+  onUse,
+}: {
+  readonly player: Player;
+  readonly state: LeagueState;
+  readonly price: number | null;
+  readonly onUse: (price: number) => void;
+}): JSX.Element | null {
+  const userData = useAppStore((s) => s.userData);
+  const enabled = useAppStore((s) => s.expectationsEnabled);
+  const expectations = useMemo(
+    () => makeExpectationIndex(userData.expectations),
+    [userData.expectations],
+  );
+  const rates = useMemo(() => marketRates(state, expectations), [state, expectations]);
+
+  if (!enabled || !isMovementRole(player.role)) return null;
+  if (!expectations.has(player.id)) return null;
+
+  const quote = dynamicPrice(player, expectations, rates);
+
+  if (quote === null) {
+    const { sample } = rates[player.role];
+    return (
+      <p className="rounded-lg border border-dashed border-white/[0.08] px-2.5 py-1.5 text-[11px] leading-snug text-zinc-500">
+        Valutato, ma il reparto {player.role} ha {sample} su {MIN_SAMPLE} aste valutate: il
+        prezzo consigliato arriva al terzo colpo.
+      </p>
+    );
+  }
+
+  const over = price !== null && price > quote.price ? price / quote.price - 1 : null;
+
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.06] px-2.5 py-1.5">
+      <span className="shrink-0 whitespace-nowrap text-[10px] uppercase tracking-wider text-zinc-500">
+        consigliato
+      </span>
+      <span className="num text-xl font-bold leading-none text-emerald-300">{quote.price}</span>
+
+      {over !== null && (
+        <span className="num rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-medium text-amber-300">
+          +{Math.round(over * 100)}%
+        </span>
+      )}
+
+      <span className="num ml-auto text-right text-[10px] leading-tight text-zinc-600">
+        V {quote.value.toFixed(1)} · tasso {quote.rate.toFixed(2)}
+        <br />
+        su {quote.sample} aste {player.role}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => onUse(quote.price)}
+        title="Scrivi il consigliato nella casella del prezzo"
+        className="focus-ring shrink-0 rounded-md border border-emerald-500/30 p-1 text-emerald-300/80 transition-colors hover:bg-emerald-500/15 hover:text-emerald-200"
+      >
+        <Wand2 size={12} />
+      </button>
+    </div>
   );
 }
 

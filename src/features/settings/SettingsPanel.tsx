@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { reduce } from '../../domain/reducer';
 import { useAppStore } from '../../store/appStore';
+import { cn } from '../../ui/cn';
 import { storageDurability, type StorageDurability } from '../../store/persist';
 import { LeagueSetup } from './LeagueSetup';
 import { ReadinessCheck } from './ReadinessCheck';
@@ -154,6 +155,8 @@ export function SettingsPanel(): JSX.Element {
             <ResetAuction />
           </section>
 
+          <ExpectationsSwitch />
+
           <DangerZone />
         </div>
 
@@ -240,6 +243,84 @@ function ResetAuction(): JSX.Element | null {
  * archivia. Sta in fondo, dietro una conferma in due passaggi, e col bottone
  * del backup accanto: chi arriva qui dovrebbe avere una copia prima di premere.
  */
+/**
+ * Interruttore del prezzo dinamico (§5.5).
+ *
+ * L'asta e' una serata sola e non si ripete: se il numero consigliato
+ * distraesse invece di aiutare, non ci deve essere modo di restare
+ * impantanati. Spento, l'applicazione e' identica a prima della feature —
+ * niente scheda Aspettative, niente sezione nella scheda giocatore, niente
+ * consigliato nel pannello d'asta.
+ *
+ * **Non cancella niente.** E' un interruttore, non una rimozione: le
+ * aspettative restano su disco e nel backup, e si riaccende a meta' asta
+ * ritrovando ogni riga dov'era. Per questo non chiede conferma — non c'e'
+ * niente da perdere, e una conferma su un gesto reversibile insegna solo a
+ * cliccare "si" senza leggere.
+ */
+function ExpectationsSwitch(): JSX.Element {
+  const enabled = useAppStore((s) => s.expectationsEnabled);
+  const setEnabled = useAppStore((s) => s.setExpectationsEnabled);
+  const count = useAppStore((s) => s.userData.expectations.length);
+
+  return (
+    <section className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-4">
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-300">
+            Prezzo dinamico
+          </h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            Le aspettative per giocatore e il prezzo consigliato che ne esce durante l’asta.
+            Spento, l’applicazione torna esattamente com’era prima: sparisce la scheda
+            Aspettative, la sezione nella scheda giocatore e il consigliato nel pannello
+            d’asta.
+          </p>
+          <p className="mt-2 text-sm text-zinc-500">
+            {count === 0 ? (
+              <>Nessuna aspettativa inserita finora.</>
+            ) : (
+              <>
+                <strong className="text-zinc-300">{count}</strong>{' '}
+                {count === 1 ? 'aspettativa inserita' : 'aspettative inserite'}.{' '}
+                <span className="text-zinc-400">
+                  Spegnere non ne cancella nessuna: restano salvate e nel backup, e
+                  riaccendendo le ritrovi dov’erano.
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          aria-label="Prezzo dinamico"
+          onClick={() => void setEnabled(!enabled)}
+          className={cn(
+            'focus-ring relative mt-0.5 h-6 w-11 shrink-0 rounded-full border transition-colors duration-150',
+            enabled
+              ? 'border-emerald-500/50 bg-emerald-500/30'
+              : 'border-white/10 bg-white/[0.06]',
+          )}
+        >
+          <span
+            className={cn(
+              'absolute top-0.5 h-4 w-4 rounded-full transition-all duration-150',
+              enabled ? 'left-[1.5rem] bg-emerald-300' : 'left-0.5 bg-zinc-500',
+            )}
+          />
+        </button>
+      </div>
+
+      <p className="mt-2 text-xs text-zinc-600">
+        {enabled ? 'Acceso' : 'Spento'} — si cambia idea quando si vuole, anche a metà asta.
+      </p>
+    </section>
+  );
+}
+
 function DangerZone(): JSX.Element {
   const userData = useAppStore((s) => s.userData);
   const listone = useAppStore((s) => s.listone);

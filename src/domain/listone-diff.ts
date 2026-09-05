@@ -91,7 +91,7 @@ export function diffListone(
 // ---------------------------------------------------------------------------
 
 /** Perche' la sparizione di un giocatore ti riguarda. */
-export type DataReason = 'nota' | 'tag' | 'obiettivo' | 'formazione';
+export type DataReason = 'nota' | 'tag' | 'obiettivo' | 'formazione' | 'aspettativa';
 
 export interface AffectedPlayer {
   readonly player: Player;
@@ -124,6 +124,7 @@ function reasonsFor(playerId: number, data: UserData): DataReason[] {
   if (data.lineups.some((l) => l.slots.some((s) => s.candidates.includes(playerId)))) {
     reasons.push('formazione');
   }
+  if (data.expectations.some((e) => e.playerId === playerId)) reasons.push('aspettativa');
   return reasons;
 }
 

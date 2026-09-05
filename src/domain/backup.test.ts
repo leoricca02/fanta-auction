@@ -79,6 +79,10 @@ function populated(): UserData {
       makeTeamNote('Inter', 'gioca a tre dietro', NOW),
       makeTeamNote('Milan', '', NOW),
     ],
+    expectations: [
+      { playerId: 2, matches: 34, goals: 4, assists: 6, yellows: 7, reds: 0, updatedAt: NOW },
+      { playerId: 3, matches: 28, goals: 1, assists: 1, yellows: 5, reds: 1, updatedAt: NOW },
+    ],
     objectives: makeObjectives(
       'prendo un portiere titolare e due punte',
       [
@@ -121,10 +125,11 @@ describe('§3.1 — export', () => {
     expect(backup.exportedAt).toBe(NOW);
   });
 
-  it('contiene tutte e cinque le collezioni di dati utente', () => {
+  it('contiene tutte e sei le collezioni di dati utente', () => {
     const backup = exportUserData(populated(), NOW);
     expect(Object.keys(backup.data).sort()).toEqual([
       'events',
+      'expectations',
       'lineups',
       'objectives',
       'playerNotes',
@@ -133,6 +138,7 @@ describe('§3.1 — export', () => {
     expect(backup.data.lineups).toHaveLength(2);
     expect(backup.data.playerNotes).toHaveLength(3);
     expect(backup.data.teamNotes).toHaveLength(2);
+    expect(backup.data.expectations).toHaveLength(2);
     expect(backup.data.events).toHaveLength(2);
     expect(backup.data.objectives.targets).toHaveLength(2);
   });
@@ -535,6 +541,70 @@ describe('§3.1 — risoluzione per updatedAt', () => {
 // ---------------------------------------------------------------------------
 // Correzione 1 — dry-run del reducer prima di applicare
 // ---------------------------------------------------------------------------
+
+describe('§5.5 — le aspettative nel backup', () => {
+  const rows = [
+    { playerId: 2, matches: 34, goals: 4, assists: 6, yellows: 7, reds: 0, updatedAt: NOW },
+    { playerId: 3, matches: 28, goals: 1, assists: 1, yellows: 5, reds: 1, updatedAt: NOW },
+  ];
+
+  it('sopravvivono a un giro completo di export e import', () => {
+    const json = serializeUserData(makeUserData({ expectations: rows }), NOW);
+    const result = importUserData(emptyUserData(), json, CONFIG);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.expectations).toEqual(rows);
+    expect(result.summary.expectations.added).toBe(2);
+  });
+
+  it('a parita di giocatore vince la riga piu recente, non il file', () => {
+    // Il caso vero: hai rivisto Yildiz stamattina e poi importi il backup di
+    // ieri sera. La revisione di stamattina deve restare.
+    const current = makeUserData({
+      expectations: [{ ...(rows[0] as (typeof rows)[number]), goals: 12, updatedAt: NOW + 1000 }],
+    });
+    const file = serializeUserData(makeUserData({ expectations: rows }), NOW);
+    const result = importUserData(current, file, CONFIG);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.expectations[0]?.goals).toBe(12);
+    expect(result.summary.expectations.skipped).toBe(1);
+    expect(result.summary.skippedRecords).toContainEqual({
+      collection: 'expectations',
+      key: '2',
+      currentUpdatedAt: NOW + 1000,
+      incomingUpdatedAt: NOW,
+    });
+  });
+
+  it('una collezione assente lascia intatte le aspettative gia inserite', () => {
+    // Un backup scritto prima che la feature esistesse non deve cancellarle.
+    const current = makeUserData({ expectations: rows });
+    const result = importUserData(current, envelope({ lineups: [] }), CONFIG);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.expectations).toEqual(rows);
+    expect(result.summary.expectations.untouched).toBe(true);
+  });
+
+  it('rifiuta contatori negativi o con la virgola', () => {
+    // Mezzo gol nel file diventerebbe mezzo gol nel tasso di reparto, e da li
+    // nel prezzo consigliato di ogni altro giocatore.
+    for (const bad of [{ goals: -1 }, { matches: 2.5 }]) {
+      const result = importUserData(
+        emptyUserData(),
+        envelope({ expectations: [{ ...rows[0], ...bad }] }),
+        CONFIG,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) continue;
+      expect(result.error.reason).toBe('INVALID_PAYLOAD');
+    }
+  });
+});
 
 describe('§3.1 — dry-run dei conflitti prima di applicare', () => {
   it('un import pulito non segnala conflitti', () => {
