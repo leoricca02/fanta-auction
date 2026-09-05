@@ -5,6 +5,7 @@ import {
   History,
   IdCard,
   Redo2,
+  RotateCcw,
   Target,
   TriangleAlert,
   Undo2,
@@ -189,6 +190,7 @@ export function LivePage(): JSX.Element {
               <Kbd>Ctrl Z</Kbd> annulla
               <Kbd>Ctrl ⇧ Z</Kbd> ripristina
             </span>
+            <ResetAuctionButton active={state.appliedEventIds.length} />
           </nav>
 
           <RecentEvents />
@@ -242,6 +244,78 @@ function OverlayButton({
       {label}
       <Kbd>{hint}</Kbd>
     </button>
+  );
+}
+
+/**
+ * Azzera l'asta senza uscire dall'asta.
+ *
+ * Serve alle prove a vuoto: si batte mezza fase per prendere la mano, e poi
+ * si vuole ripartire puliti senza andare a cercare il bottone in Impostazioni.
+ *
+ * **Non e' una cancellazione.** Chiama lo stesso `undoAllAssignments` di §2:
+ * gli eventi restano nel log marcati `undone`, e "Ultime assegnazioni" li
+ * ripristina uno per uno. E' l'unico modo perche' un click di troppo sotto
+ * asta non costi la serata.
+ *
+ * Sparisce quando non c'e' niente da azzerare, e chiede conferma quando c'e':
+ * sta in mezzo ai bottoni degli overlay, e un colpo solo non deve svuotare il
+ * tabellone.
+ */
+function ResetAuctionButton({ active }: { readonly active: number }): JSX.Element | null {
+  const undoAllAssignments = useAppStore((s) => s.undoAllAssignments);
+  const [arming, setArming] = useState(false);
+
+  // Un'assegnazione annullata mentre la conferma e' aperta la lascerebbe
+  // aperta su un tabellone gia' vuoto.
+  useEffect(() => {
+    if (active === 0) setArming(false);
+  }, [active]);
+
+  if (active === 0) return null;
+
+  if (!arming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setArming(true)}
+        title={`Annulla le ${active} assegnazioni registrate finora`}
+        className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/[0.06] px-2.5 py-1.5 text-xs text-amber-200/90 transition-all duration-100 hover:border-amber-500/50 hover:bg-amber-500/[0.12] hover:text-amber-100 active:scale-[0.98]"
+      >
+        <RotateCcw size={13} />
+        Azzera asta
+        <span className="num text-amber-200/50">{active}</span>
+      </button>
+    );
+  }
+
+  // `basis-full` porta la conferma su una riga tutta sua, allineata a destra
+  // sotto il bottone che l'ha aperta. Senza, il testo manda a capo la riga dei
+  // bottoni e la conferma ricompare all'estremita' opposta dello schermo,
+  // lontano dal punto in cui hai appena cliccato.
+  return (
+    <span className="flex basis-full items-center justify-end gap-1.5 text-xs text-amber-100">
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/[0.1] px-2.5 py-1.5">
+      Annullare {active} assegnazioni? Restano ripristinabili.
+      <button
+        type="button"
+        onClick={() => {
+          void undoAllAssignments();
+          setArming(false);
+        }}
+        className="focus-ring rounded-md bg-amber-600 px-2 py-0.5 text-xs font-medium text-white transition-colors hover:bg-amber-500"
+      >
+        Sì, azzera
+      </button>
+      <button
+        type="button"
+        onClick={() => setArming(false)}
+        className="focus-ring rounded-md border border-white/15 px-2 py-0.5 text-xs text-zinc-300 transition-colors hover:bg-white/[0.06]"
+      >
+        No
+      </button>
+      </span>
+    </span>
   );
 }
 
