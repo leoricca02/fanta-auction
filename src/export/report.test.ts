@@ -30,7 +30,7 @@ describe('§6.3 — righe delle rose', () => {
       sigla: 'LEO',
       ruolo: 'A',
       club: 'Inter',
-      quot: 33,
+      quot: 35,
       prezzo: 140,
     });
   });

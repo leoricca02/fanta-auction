@@ -248,7 +248,7 @@ describe('computeLeagueMetrics', () => {
 
   it('mette insieme svincolati, tetti e riconciliazione', () => {
     const m = computeLeagueMetrics(initialLeagueState(config), config);
-    expect(m.freeAgents.total).toBe(531);
+    expect(m.freeAgents.total).toBe(532);
     expect(m.freeAgents.slotsFree).toBe(300);
     expect(m.ceilings).toHaveLength(12);
     expect(m.reconciliation.totalCredits).toBe(9600);

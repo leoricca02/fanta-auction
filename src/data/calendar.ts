@@ -12,7 +12,7 @@ export const CALENDAR_SOURCE_URL = 'https://www.fantacalcio.it/serie-a/calendari
 export const CALENDAR_SEASON = '2026/27';
 
 /** Data di scarico: dice quante giornate risultano gia' giocate. */
-export const CALENDAR_UPDATED_AT = '2026-09-05';
+export const CALENDAR_UPDATED_AT = '2026-09-08';
 
 /** I venti club, con i nomi del listone. */
 export const CALENDAR_TEAMS: readonly string[] = [
@@ -63,13 +63,13 @@ export const FIXTURES: readonly Fixture[] = [
   { matchday: 3, home: 'Genoa', away: 'Como', date: '2026-09-04', played: true },
   { matchday: 3, home: 'Fiorentina', away: 'Torino', date: '2026-09-05', played: true },
   { matchday: 3, home: 'Inter', away: 'Napoli', date: '2026-09-05', played: true },
-  { matchday: 3, home: 'Roma', away: 'Atalanta', date: '2026-09-05', played: false },
-  { matchday: 3, home: 'Frosinone', away: 'Venezia', date: '2026-09-06', played: false },
-  { matchday: 3, home: 'Parma', away: 'Monza', date: '2026-09-06', played: false },
-  { matchday: 3, home: 'Bologna', away: 'Sassuolo', date: '2026-09-06', played: false },
-  { matchday: 3, home: 'Juventus', away: 'Milan', date: '2026-09-06', played: false },
-  { matchday: 3, home: 'Cagliari', away: 'Lecce', date: '2026-09-07', played: false },
-  { matchday: 3, home: 'Udinese', away: 'Lazio', date: '2026-09-07', played: false },
+  { matchday: 3, home: 'Roma', away: 'Atalanta', date: '2026-09-05', played: true },
+  { matchday: 3, home: 'Frosinone', away: 'Venezia', date: '2026-09-06', played: true },
+  { matchday: 3, home: 'Parma', away: 'Monza', date: '2026-09-06', played: true },
+  { matchday: 3, home: 'Bologna', away: 'Sassuolo', date: '2026-09-06', played: true },
+  { matchday: 3, home: 'Juventus', away: 'Milan', date: '2026-09-06', played: true },
+  { matchday: 3, home: 'Cagliari', away: 'Lecce', date: '2026-09-07', played: true },
+  { matchday: 3, home: 'Udinese', away: 'Lazio', date: '2026-09-07', played: true },
   { matchday: 4, home: 'Venezia', away: 'Fiorentina', date: '2026-09-11', played: false },
   { matchday: 4, home: 'Genoa', away: 'Frosinone', date: '2026-09-12', played: false },
   { matchday: 4, home: 'Lazio', away: 'Milan', date: '2026-09-12', played: false },
@@ -131,12 +131,12 @@ export const FIXTURES: readonly Fixture[] = [
   { matchday: 9, home: 'Frosinone', away: 'Lecce', date: '2026-10-29', played: false },
   { matchday: 9, home: 'Fiorentina', away: 'Atalanta', date: '2026-10-29', played: false },
   { matchday: 10, home: 'Bologna', away: 'Monza', date: '2026-10-31', played: false },
+  { matchday: 10, home: 'Udinese', away: 'Roma', date: '2026-10-31', played: false },
   { matchday: 10, home: 'Milan', away: 'Inter', date: '2026-10-31', played: false },
   { matchday: 10, home: 'Como', away: 'Venezia', date: '2026-11-01', played: false },
   { matchday: 10, home: 'Frosinone', away: 'Torino', date: '2026-11-01', played: false },
   { matchday: 10, home: 'Lazio', away: 'Cagliari', date: '2026-11-01', played: false },
   { matchday: 10, home: 'Lecce', away: 'Genoa', date: '2026-11-01', played: false },
-  { matchday: 10, home: 'Udinese', away: 'Roma', date: '2026-11-01', played: false },
   { matchday: 10, home: 'Juventus', away: 'Napoli', date: '2026-11-01', played: false },
   { matchday: 10, home: 'Sassuolo', away: 'Fiorentina', date: '2026-11-02', played: false },
   { matchday: 10, home: 'Atalanta', away: 'Parma', date: '2026-11-02', played: false },

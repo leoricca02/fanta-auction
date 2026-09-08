@@ -28,6 +28,8 @@ Le statistiche della scorsa stagione **non si toccano**: il perché è al §4.
 - [§6 — Verifiche finali prima dell'asta](#6--verifiche-finali-prima-dellasta)
 - [§7 — Rollback](#7--rollback)
 - [Appendice A — Stato del progetto al 2026-08-25](#appendice-a--stato-del-progetto-al-2026-08-25)
+- [Appendice E — Passata del 5 settembre 2026](#appendice-e--passata-del-5-settembre-2026-campionato-iniziato)
+- [Appendice F — Passata dell'8 settembre 2026](#appendice-f--passata-dell8-settembre-2026-ultima-prima-dellasta)
 - [Appendice B — Decisioni da prendere, non da indovinare](#appendice-b--decisioni-da-prendere-non-da-indovinare)
 - [Appendice C — Passata del 1º settembre 2026](#appendice-c--passata-del-1º-settembre-2026-mercato-chiuso-fonti-non-ancora-definitive)
 - [Appendice D — Passata del 4 settembre 2026](#appendice-d--passata-del-4-settembre-2026-fonti-aggiornate)
@@ -125,7 +127,7 @@ npm test    # adesso serve a qualcosa: guarda cosa cade
 ### 2.1 I numeri fissi da riallineare
 
 Cadranno quasi certamente questi. I valori in tabella sono quelli della revisione del
-2026-09-04 (592 righe totali, 533 id in lista; 587 e 538 il 1º settembre, 537 e 516 ad agosto):
+2026-09-04 (592 righe totali, 533 id in lista; l'ultima revisione, quella dell'8 settembre, sta a 594 e 532 — Appendice F):
 
 | File | Riga | Asserzione oggi |
 | --- | --- | --- |
@@ -582,6 +584,48 @@ settembre in poi, non solo i `played` della 3ª.
 l'API risponde 403 a `curl` e il dump si riprende dal browser (vedi il README). Sono comunque
 cifre 2025/26, cioè una stagione chiusa: non c'è niente da riscaricare finché non si vuole
 passare alla stagione in corso.
+
+---
+
+## Appendice F — Passata dell'8 settembre 2026 (ultima prima dell'asta)
+
+Asta fissata per il **10 settembre 2026**: questa è l'ultima rigenerazione prevista. Gli URL
+degli script non sono cambiati nemmeno stavolta — i cinque link mandati dall'utente sono gli
+stessi quattro di sempre più il *kit asta*, con `?refresh_ce` in coda a spurgare la cache di
+SosFanta.
+
+**Il listone era di nuovo diverso**, come ogni giornata: **594 righe**, **532 id in lista**
+(P 64, **D 190**, C 192, A 86), **62 fuori lista**. Un difensore in più rispetto al 5 settembre,
+e le quotazioni si muovono a campionato in corso: Lautaro è passato da QUOT. 33 a 35 e da FVM
+289 a 312, il che fa cadere anche i due test che lo usano come campione
+(`listone.test.ts` e `report.test.ts`) oltre ai soliti conteggi. Numeri di aggancio:
+**490 su 491** nomi delle fasce, **362 su 532** con statistiche 2025/26, **240 su 241** nomi di
+specialisti in 60 blocchi con tutte e 20 le squadre a posto, **58 indisponibili** tutti
+agganciati, **712 test** verdi.
+
+**Due fonti su quattro non si erano mosse.** `specialists.ts` ha cambiato solo la data di
+scarico — la pagina di rigoristi e piazzati è identica al 5 settembre — e le statistiche
+2025/26 restano ferme per costruzione (§4). Si sono mosse le fasce (86 righe: Dodò in
+`FASCIA ALTA` fra i difensori, Skorupski scalato da alta a media fra i portieri, e 491 nomi
+invece di 492) e soprattutto gli indisponibili.
+
+**Gli infortunati sono passati da 41 a 57**, ed è comparso il primo **squalificato** della
+stagione (Gaetano, Atalanta): a campionato fermo quelle due sezioni erano vuote tutte e venti,
+adesso no. È il dato che invecchia più in fretta di tutti, e a due giorni dall'asta è anche
+quello che vale di più.
+
+**Una riga di script cambiata, per un refuso della fonte.** Su Piotrowski (Udinese) SosFanta ha
+scritto *"in dubbio per la. 6a"*, con un punto di troppo, e `readMatchday()` non riconosceva
+più la giornata: l'infortunio finiva nel dataset con `matchday: null`, cioè col chip muto e
+nessun test rosso — esattamente il guasto silenzioso che il *sensore* di §3-bis è tarato per
+non prendere quando è uno solo. La regex adesso tollera il punto
+(`/per la\.? (\d{1,2})[ªa]/i`) e i 57 infortunati hanno tutti la giornata; l'unica voce
+senza è lo squalificato, che giustamente non ne ha una.
+
+**Il calendario ha chiuso la 3ª giornata**: le sette partite lasciate `played: false` la volta
+scorsa sono ora giocate (30 su 380), e una sola data si è spostata, Udinese-Roma dal 1º
+novembre al 31 ottobre. Nessun `data-match-status` sconosciuto: il codice `1` imparato il
+5 settembre è bastato.
 
 ---
 

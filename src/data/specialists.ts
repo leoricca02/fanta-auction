@@ -18,7 +18,7 @@ export const SPECIALISTS_SOURCE_URLS = [
 ] as const;
 
 /** Data di scarico delle pagine, mostrata all'utente. */
-export const SPECIALISTS_UPDATED_AT = '2026-09-05';
+export const SPECIALISTS_UPDATED_AT = '2026-09-08';
 
 export const SPECIALIST_BLOCKS: readonly SpecialistBlock[] = [
   { team: 'Atalanta', kind: 'rigori', names: ['Kessiè', 'Scamacca', 'Samardzic', 'Ederson D.S.', 'De Ketelaere', 'Krstovic'] },
