@@ -165,10 +165,11 @@ sostituisci i nomi con due arrivi veri dell'estate, oppure ricava il campione da
 
 ### 2.3 Il listone finto per provare il re-import
 
-`data/listone-prova-reimport.xlsx` è un listone modificato ad arte (giocatori tolti, squadre
-cambiate) per provare il flusso di §1 senza aspettare settembre. **Nessun test lo usa**: è
-materiale manuale. Dopo il mercato è vecchio; o lo rigeneri partendo dal listone nuovo, o lo
-lasci lì com'è sapendo che serve solo a esercitare la UI.
+C'era `data/listone-prova-reimport.xlsx`, un listone modificato ad arte (giocatori tolti,
+squadre cambiate) per provare il flusso di §1 senza aspettare settembre. Nessun test lo usava:
+era materiale manuale, ed è stato **tolto dal repo l'8 settembre 2026**, a mercato chiuso e
+flusso ormai esercitato sul serio quattro volte. Se dovesse riservire, si rifa' da una copia
+del listone vero togliendo qualche riga e cambiando due `Sq.`.
 
 ---
 

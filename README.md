@@ -614,9 +614,6 @@ perdono qualcuno, quanti slot restano vuoti.
 - Per sbloccarlo c'è *Annulla tutte le assegnazioni*, che resta un soft delete: gli eventi
   restano nel log e si ripristinano uno per uno
 
-`data/listone-prova-reimport.xlsx` è un listone modificato ad arte per provare il flusso senza
-aspettare settembre.
-
 ---
 
 ## Architettura
