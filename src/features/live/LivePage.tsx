@@ -373,21 +373,31 @@ function ReconciliationBar({
         )}
       </span>
 
-      <span className="flex min-w-[9rem] items-center gap-2">
+      {/*
+        I crediti del tavolo sono la sola cifra della barra che cambia una
+        decisione mentre si batte: quanto e' gia' uscito dice se il prezzo che
+        stai per fare e' caro o e' il mercato. Sta un grado sopra tutto il
+        resto — corpo piu' grande, semibold, allineato alla base del
+        denominatore — perche' a colpo d'occhio si legga quella e non le altre.
+      */}
+      <span className="flex min-w-[10rem] items-baseline gap-2">
         <MicroLabel>crediti</MicroLabel>
-        <span className="num text-zinc-100">{creditsSpent}</span>
-        <span className="num text-zinc-600">/ {totalCredits}</span>
+        <span className="num text-base font-semibold leading-none text-zinc-100">
+          {creditsSpent}
+        </span>
+        <span className="num text-[11px] leading-none text-zinc-600">/ {totalCredits}</span>
         <Meter
           value={totalCredits === 0 ? 0 : creditsSpent / totalCredits}
-          className="w-16"
+          className="w-16 self-center"
           fill="bg-emerald-500"
         />
       </span>
 
-      <span className="flex min-w-[9rem] items-center gap-2">
+      {/* Gli slot sono contorno: si riempiono da soli, non si contrattano. */}
+      <span className="flex min-w-[8rem] items-center gap-2">
         <MicroLabel>slot</MicroLabel>
-        <span className="num text-zinc-100">{slotsFilled}</span>
-        <span className="num text-zinc-600">/ {totalSlots}</span>
+        <span className="num text-[11px] text-zinc-300">{slotsFilled}</span>
+        <span className="num text-[11px] text-zinc-600">/ {totalSlots}</span>
         <Meter
           value={totalSlots === 0 ? 0 : slotsFilled / totalSlots}
           className="w-16"
