@@ -77,6 +77,37 @@ export function Panel({
   );
 }
 
+/**
+ * Etichetta di un dato: `crediti`, `slot`, `liberi`, `max bid`.
+ *
+ * E' la sorella minore di `SectionTitle` — stessa maiuscoletto spaziato, un
+ * grado piu' piccola — e serve a togliere di mezzo un'ambiguita' che c'era da
+ * sempre: la stessa etichetta era maiuscoletta sopra una sezione e minuscola
+ * dentro una barra, cosi' due cose con lo stesso ruolo si leggevano come due
+ * cose diverse.
+ *
+ * Sta sempre accanto a una cifra in `.num`, e il contrasto e' voluto: la
+ * parola arretra, il numero resta l'unica cosa che si legge da lontano.
+ */
+export function MicroLabel({
+  children,
+  className,
+}: {
+  readonly children: ReactNode;
+  readonly className?: string;
+}): JSX.Element {
+  return (
+    <span
+      className={cn(
+        'text-[10px] font-medium uppercase tracking-wider text-zinc-500',
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 export function SectionTitle({
   children,
   icon,

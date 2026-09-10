@@ -22,7 +22,7 @@ import { userTeam } from '../../domain/config';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../ui/cn';
 import { roleTheme } from '../../ui/roles';
-import { EASE, EmptyState, Kbd, Meter, SectionTitle, SlideOver } from '../../ui/primitives';
+import { EASE, EmptyState, Kbd, Meter, MicroLabel, SectionTitle, SlideOver } from '../../ui/primitives';
 import { PlayerCard } from '../player/PlayerCard';
 import { FreeAgentsPanel } from '../free/FreeAgentsPanel';
 import { GoalsPanel } from '../goals/GoalsPanel';
@@ -358,7 +358,7 @@ function ReconciliationBar({
       )}
     >
       <span className="flex items-center gap-1.5">
-        <span className="text-zinc-500">Fase</span>
+        <MicroLabel>fase</MicroLabel>
         {phase === null ? (
           <span className="font-semibold text-zinc-100">conclusa</span>
         ) : (
@@ -374,7 +374,7 @@ function ReconciliationBar({
       </span>
 
       <span className="flex min-w-[9rem] items-center gap-2">
-        <span className="text-zinc-500">crediti</span>
+        <MicroLabel>crediti</MicroLabel>
         <span className="num text-zinc-100">{creditsSpent}</span>
         <span className="num text-zinc-600">/ {totalCredits}</span>
         <Meter
@@ -385,7 +385,7 @@ function ReconciliationBar({
       </span>
 
       <span className="flex min-w-[9rem] items-center gap-2">
-        <span className="text-zinc-500">slot</span>
+        <MicroLabel>slot</MicroLabel>
         <span className="num text-zinc-100">{slotsFilled}</span>
         <span className="num text-zinc-600">/ {totalSlots}</span>
         <Meter
@@ -396,7 +396,7 @@ function ReconciliationBar({
       </span>
 
       <span className="flex items-center gap-2">
-        <span className="text-zinc-500">liberi</span>
+        <MicroLabel>liberi</MicroLabel>
         {PHASE_ORDER.map((role) => (
           <span
             key={role}
@@ -464,7 +464,7 @@ function MyRoster({
           >
             {t.credits}
           </span>
-          <span className="text-xs text-zinc-500">crediti</span>
+          <MicroLabel>crediti</MicroLabel>
         </div>
         <div className="num mt-1 flex items-center gap-2 text-[11px] text-zinc-500">
           <span>{t.slotsFree} slot liberi</span>
