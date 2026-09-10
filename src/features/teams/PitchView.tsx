@@ -89,7 +89,7 @@ export function PitchView({
   }, [lineup]);
 
   return (
-    <div className="relative h-full min-h-[24rem] w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-[#0D1F17] to-[#091410]">
+    <div className="relative h-full min-h-[24rem] w-full overflow-hidden rounded-xl border border-hair bg-gradient-to-b from-[#0D1F17] to-[#091410]">
       <PitchLines />
 
       {/* `flex-col-reverse`: la prima riga del modulo e' la porta, e va in fondo. */}
@@ -117,7 +117,7 @@ export function PitchView({
 /**
  * Le righe del campo: cerchio di centrocampo, aree, linea mediana.
  *
- * Sono geometria pura in `border-white/10` — a quell'opacita' si vedono ma non
+ * Sono geometria pura in `border-hair` — a quell'opacita' si vedono ma non
  * competono con i nodi, che sono l'unica cosa da leggere. `pointer-events-none`
  * perche' stanno sopra il fondo e sotto i giocatori, e non devono intercettare
  * il clic destinato a uno slot.
@@ -126,16 +126,16 @@ function PitchLines(): JSX.Element {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
       {/* Perimetro, rientrato: il campo non tocca il bordo della card. */}
-      <div className="absolute inset-2 rounded-sm border border-white/10" />
+      <div className="absolute inset-2 rounded-sm border border-hair" />
       {/* Linea di meta' campo e cerchio. */}
-      <div className="absolute inset-x-2 top-1/2 border-t border-white/10" />
-      <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
+      <div className="absolute inset-x-2 top-1/2 border-t border-hair" />
+      <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-hair" />
       <div className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20" />
       {/* Area di rigore in basso, dalla parte del portiere. */}
-      <div className="absolute bottom-2 left-1/2 h-16 w-40 -translate-x-1/2 border-x border-t border-white/10" />
-      <div className="absolute bottom-2 left-1/2 h-7 w-20 -translate-x-1/2 border-x border-t border-white/10" />
+      <div className="absolute bottom-2 left-1/2 h-16 w-40 -translate-x-1/2 border-x border-t border-hair" />
+      <div className="absolute bottom-2 left-1/2 h-7 w-20 -translate-x-1/2 border-x border-t border-hair" />
       {/* Area avversaria: piu' corta, e' fuori dall'inquadratura utile. */}
-      <div className="absolute left-1/2 top-2 h-10 w-40 -translate-x-1/2 border-x border-b border-white/10" />
+      <div className="absolute left-1/2 top-2 h-10 w-40 -translate-x-1/2 border-x border-b border-hair" />
     </div>
   );
 }
@@ -209,7 +209,7 @@ function PitchNode({
           'focus-ring relative flex h-11 w-11 items-center justify-center rounded-full border text-[10px] font-semibold transition-all duration-150',
           player === undefined
             ? 'border-dashed border-slate-600 bg-slate-800/30 text-slate-500 hover:border-slate-400 hover:text-slate-300'
-            : 'border-white/15 bg-elevated/90 text-zinc-100 hover:border-white/35',
+            : 'border-edge bg-elevated/90 text-zinc-100 hover:border-white/35',
           contested && 'border-amber-500/50',
           clashing && 'ring-1 ring-rose-500',
           active && 'border-emerald-500/70 shadow-glow-emerald',

@@ -211,7 +211,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       */}
       <div
         className={cn(
-          'group flex items-center gap-2.5 rounded-xl border border-white/10 bg-elevated/90 px-3 py-2.5 backdrop-blur-md transition-all duration-150',
+          'group flex items-center gap-2.5 rounded-xl border border-hair bg-elevated/90 px-3 py-2.5 backdrop-blur-md transition-all duration-150',
           'focus-within:border-indigo-500/70 focus-within:ring-2 focus-within:ring-indigo-500/20',
           ready && 'focus-within:shadow-glow-emerald',
         )}
@@ -300,7 +300,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         </p>
       )}
 
-      <ul className="flex flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-surface/50">
+      <ul className="flex flex-col overflow-hidden rounded-xl border border-seam bg-surface/50">
         {hits.map((hit, i) => {
           const note = noteByPlayer.get(hit.player.id) ?? null;
           const firstLine = note?.text.split('\n')[0] ?? '';
@@ -314,7 +314,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
                 onClick={() => setIndex(i)}
                 className={cn(
                   'relative flex w-full flex-col gap-0.5 px-2.5 py-1.5 text-left transition-colors',
-                  active ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]',
+                  active ? 'bg-scrim' : 'hover:bg-film',
                 )}
               >
                 {active && (
@@ -467,8 +467,8 @@ const CHIP_TONE = {
   emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
   sky: 'border-sky-500/30 bg-sky-500/10 text-sky-300',
   amber: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
-  plain: 'border-white/10 bg-white/[0.04] text-zinc-200',
-  muted: 'border-dashed border-white/10 bg-transparent text-zinc-600',
+  plain: 'border-hair bg-film text-zinc-200',
+  muted: 'border-dashed border-hair bg-transparent text-zinc-600',
 } as const;
 
 function PreviewChip({

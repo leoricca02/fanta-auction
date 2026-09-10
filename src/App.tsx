@@ -88,7 +88,7 @@ export function App(): JSX.Element {
     */
     return (
       <div className="flex h-full flex-col bg-canvas text-zinc-200">
-        <div className="flex shrink-0 items-center gap-4 border-b border-white/[0.08] px-4 py-2">
+        <div className="flex shrink-0 items-center gap-4 border-b border-hair px-4 py-2">
           <Skeleton className="h-6 w-6 rounded-md" />
           <Skeleton className="h-4 w-28" />
           <div className="ml-2 flex gap-2">
@@ -108,7 +108,7 @@ export function App(): JSX.Element {
 
   return (
     <div className="flex h-full flex-col bg-canvas text-zinc-200">
-      <header className="sticky top-0 z-20 flex shrink-0 items-center gap-4 border-b border-white/[0.08] bg-canvas/70 px-4 py-2 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 flex shrink-0 items-center gap-4 border-b border-hair bg-canvas/70 px-4 py-2 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-400 shadow-glow-emerald">
             <Gavel size={13} />
@@ -133,7 +133,7 @@ export function App(): JSX.Element {
                 {active && (
                   <motion.span
                     layoutId="tab-pill"
-                    className="absolute inset-0 rounded-lg border border-white/[0.08] bg-white/[0.06]"
+                    className="absolute inset-0 rounded-lg border border-hair bg-scrim"
                     transition={{ duration: 0.25, ease: EASE }}
                   />
                 )}

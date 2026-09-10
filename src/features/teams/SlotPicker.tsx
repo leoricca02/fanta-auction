@@ -144,7 +144,7 @@ export function SlotPicker({
 
   return (
     <div
-      className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-white/[0.1] bg-elevated/85 shadow-pop backdrop-blur-xl"
+      className="flex w-80 shrink-0 flex-col overflow-hidden rounded-xl border border-hair bg-elevated/85 shadow-pop backdrop-blur-xl"
       onKeyDown={handleKey}
     >
       {/*
@@ -154,7 +154,7 @@ export function SlotPicker({
         quale slot si sta riempiendo, e undici Invii finiscono nel posto
         sbagliato senza che niente lo segnali.
       */}
-      <div className="flex flex-col gap-2 border-b border-white/[0.08] p-2">
+      <div className="flex flex-col gap-2 border-b border-hair p-2">
         <div className="flex items-center gap-1.5">
           <span className="num rounded-md border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-300">
             {label}
@@ -190,7 +190,7 @@ export function SlotPicker({
             'shrink-0 rounded-lg border px-2 py-1 text-[11px] transition-colors',
             showAll
               ? 'border-amber-500/40 bg-amber-500/15 text-amber-200'
-              : 'border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:text-zinc-200',
+              : 'border-hair bg-film text-zinc-400 hover:text-zinc-200',
           )}
         >
           tutta la rosa
@@ -202,7 +202,7 @@ export function SlotPicker({
         {visible.map((player, i) => (
           <Fragment key={player.id}>
             {i === inRole.length && (
-              <li className="border-t border-white/[0.08] px-2 pb-0.5 pt-2 text-[11px] uppercase tracking-wider text-amber-500/90">
+              <li className="border-t border-hair px-2 pb-0.5 pt-2 text-[11px] uppercase tracking-wider text-amber-500/90">
                 Fuori ruolo — {label} non e' il loro ruolo di listino
               </li>
             )}
@@ -217,7 +217,7 @@ export function SlotPicker({
                   'relative flex w-full items-baseline gap-2 py-1 pl-2 pr-2 text-left text-sm transition-colors duration-150',
                   i === index
                     ? 'bg-emerald-500/[0.12] text-zinc-50'
-                    : 'hover:bg-white/[0.03]',
+                    : 'hover:bg-film',
                 )}
               >
                 {i === index && (
@@ -281,13 +281,13 @@ export function SlotPicker({
           </li>
         )}
         {outOfRole.length === 0 && !showAll && (
-          <li className="border-t border-white/[0.08] px-2 py-1.5 text-[11px] text-zinc-600">
+          <li className="border-t border-hair px-2 py-1.5 text-[11px] text-zinc-600">
             Cerca un nome, o premi <Kbd>Tab</Kbd>, per schierare qui chiunque altro della rosa.
           </li>
         )}
       </ul>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-white/[0.08] px-2 py-1.5 text-[11px] text-zinc-500">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-hair px-2 py-1.5 text-[11px] text-zinc-500">
         <span className="flex items-center gap-1">
           <Kbd>Invio</Kbd> assegna e passa oltre
         </span>

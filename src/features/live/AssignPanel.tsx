@@ -79,7 +79,7 @@ export function AssignPanel({
   const lineups = useMemo(() => makeLineupIndex(userData.lineups), [userData.lineups]);
 
   const shell =
-    'flex w-96 shrink-0 flex-col gap-3 overflow-y-auto border-l border-white/[0.08] bg-panel/70 p-3 backdrop-blur-xl';
+    'flex w-96 shrink-0 flex-col gap-3 overflow-y-auto border-l border-hair bg-panel/70 p-3 backdrop-blur-xl';
 
   if (player === null) {
     return (
@@ -166,7 +166,7 @@ export function AssignPanel({
       </div>
 
       {note !== null && note.text.trim() !== '' && (
-        <p className="flex gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.03] px-2.5 py-2 text-xs italic leading-snug text-zinc-300">
+        <p className="flex gap-1.5 rounded-lg border border-seam bg-film px-2.5 py-2 text-xs italic leading-snug text-zinc-300">
           <Quote size={11} className="mt-0.5 shrink-0 text-zinc-600" />
           {note.text}
         </p>
@@ -203,7 +203,7 @@ export function AssignPanel({
       <DynamicPriceHint player={player} state={state} price={price} onUse={onPriceChange} />
 
       {/* Il prezzo: la cifra piu' grande del pannello, in mono tabellare. */}
-      <section className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5">
+      <section className="rounded-xl border border-hair bg-veil p-2.5">
         <label className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-[11px] uppercase tracking-wider text-zinc-500">
             <Coins size={12} />
@@ -224,7 +224,7 @@ export function AssignPanel({
               }}
               placeholder="—"
               className={cn(
-                'num no-spin h-11 w-24 rounded-lg border border-white/10 bg-elevated/80 text-center text-2xl font-bold tracking-tight text-white outline-none transition-all duration-150',
+                'num no-spin h-11 w-24 rounded-lg border border-hair bg-elevated/80 text-center text-2xl font-bold tracking-tight text-white outline-none transition-all duration-150',
                 'focus:border-emerald-500/50 focus:shadow-glow-emerald',
               )}
             />
@@ -344,7 +344,7 @@ function DynamicPriceHint({
 
   if (quote === null) {
     return (
-      <p className="rounded-lg border border-dashed border-white/[0.08] px-2.5 py-1.5 text-[11px] leading-snug text-zinc-500">
+      <p className="rounded-lg border border-dashed border-hair px-2.5 py-1.5 text-[11px] leading-snug text-zinc-500">
         Valutato, ma nel reparto {player.role} non è ancora stata battuta nessuna asta di un
         giocatore che hai valutato: il prezzo consigliato esce da lì.
       </p>
@@ -361,7 +361,7 @@ function DynamicPriceHint({
   */
   if (quote.provisional) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.02] px-2.5 py-1.5">
+      <div className="flex items-center gap-2 rounded-lg border border-dashed border-rim bg-veil px-2.5 py-1.5">
         <span className="shrink-0 whitespace-nowrap text-[10px] uppercase tracking-wider text-zinc-600">
           provvisorio
         </span>
@@ -425,9 +425,9 @@ function StepButton({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10',
-        'bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-zinc-400',
-        'transition-all duration-150 hover:border-white/25 hover:text-zinc-100 hover:shadow-[0_0_12px_-4px_rgb(16_185_129_/_0.5)]',
+        'focus-ring inline-flex h-8 w-8 items-center justify-center rounded-lg border border-hair',
+        'bg-gradient-to-b from-scrim to-veil text-zinc-400',
+        'transition-all duration-150 hover:border-edge hover:text-zinc-100 hover:shadow-[0_0_12px_-4px_rgb(16_185_129_/_0.5)]',
         'active:scale-95',
       )}
     >
@@ -452,7 +452,7 @@ function QuickRaise({
       onClick={onClick}
       aria-label={`Aggiungi ${step} crediti`}
       className={cn(
-        'num focus-ring rounded-md border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02]',
+        'num focus-ring rounded-md border border-hair bg-gradient-to-b from-scrim to-veil',
         'px-2 py-0.5 text-[11px] font-semibold text-zinc-400',
         'transition-all duration-150 hover:border-emerald-500/40 hover:text-emerald-300',
         'active:scale-95',
@@ -538,10 +538,10 @@ function TeamGrid({
                 // deve rispondere sotto il dito, non solo cambiare colore.
                 clickable && 'active:scale-[0.98]',
                 blocked
-                  ? 'border-white/[0.04] bg-transparent text-zinc-700 opacity-60'
+                  ? 'border-seam bg-transparent text-zinc-700 opacity-60'
                   : team.isUser
                     ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100 hover:border-emerald-500/60 hover:bg-emerald-500/15'
-                    : 'border-white/[0.08] bg-white/[0.02] text-zinc-200 hover:border-emerald-500/40 hover:bg-white/[0.06]',
+                    : 'border-hair bg-veil text-zinc-200 hover:border-emerald-500/40 hover:bg-scrim',
                 clickable ? 'cursor-pointer' : 'cursor-default',
               )}
             >
@@ -612,7 +612,7 @@ function BudgetBar({
 
   return (
     <span
-      className="mt-1 flex h-1 w-full overflow-hidden rounded-full bg-white/[0.07]"
+      className="mt-1 flex h-1 w-full overflow-hidden rounded-full bg-scrim"
       title={`${t.credits} di ${budget} crediti (${Math.round(share * 100)}%)`}
     >
       <span
@@ -647,7 +647,7 @@ export function RoleSlots({
             key={r}
             title={`${r}: ${filled}/${total}`}
             className={cn(
-              'h-1 flex-1 overflow-hidden rounded-full bg-white/[0.07]',
+              'h-1 flex-1 overflow-hidden rounded-full bg-scrim',
               highlight === r && 'ring-1 ring-white/20',
             )}
           >

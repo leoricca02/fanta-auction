@@ -217,7 +217,7 @@ export function LineupEditor({
           Compila dal primo slot vuoto
         </button>
 
-        <div className="ml-auto flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
+        <div className="ml-auto flex items-center gap-0.5 rounded-lg border border-hair bg-film p-0.5">
           <ViewTab active={view === 'lista'} onClick={() => setView('lista')} icon={<LayoutGrid size={12} />}>
             lista
           </ViewTab>
@@ -334,8 +334,8 @@ function ViewTab({
       className={cn(
         'focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors duration-150',
         active
-          ? 'bg-white/[0.08] text-zinc-100'
-          : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300',
+          ? 'bg-scrim text-zinc-100'
+          : 'text-zinc-500 hover:bg-film hover:text-zinc-300',
       )}
     >
       {icon}
@@ -418,7 +418,7 @@ function SlotRow({
                 // accennato, come una pianta architettonica dove il muro c'e'
                 // gia' ma non e' ancora costruito.
                 'border-dashed border-slate-700 bg-slate-800/30 text-slate-500 hover:border-slate-500'
-              : 'border-white/10 bg-white/[0.03] text-zinc-100 hover:border-white/20',
+              : 'border-hair bg-film text-zinc-100 hover:border-edge',
           'focus:border-emerald-500/60 focus:outline-none',
         )}
       >

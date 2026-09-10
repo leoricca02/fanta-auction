@@ -49,7 +49,7 @@ export function TeamsPage(): JSX.Element {
       <div className="p-8 text-sm text-zinc-400">
         Nessun listone caricato. Vai in <strong className="text-zinc-200">Impostazioni</strong> e
         carica{' '}
-        <code className="rounded bg-white/[0.06] px-1 text-zinc-200">
+        <code className="rounded bg-scrim px-1 text-zinc-200">
           lista_calciatori_classic.xlsx
         </code>
         .
@@ -61,8 +61,8 @@ export function TeamsPage(): JSX.Element {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <nav className="flex w-56 shrink-0 flex-col border-r border-white/[0.08] bg-white/[0.01]">
-        <div className="flex items-center gap-2 border-b border-white/[0.08] px-3 py-2">
+      <nav className="flex w-56 shrink-0 flex-col border-r border-hair bg-veil">
+        <div className="flex items-center gap-2 border-b border-hair px-3 py-2">
           <span className="num text-xs text-zinc-300">
             {done}/{teamCodes.length}
           </span>
@@ -84,14 +84,14 @@ export function TeamsPage(): JSX.Element {
                   onClick={() => setSelected(completion.teamCode)}
                   className={cn(
                     'focus-ring relative flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors duration-150',
-                    active ? 'text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.03]',
+                    active ? 'text-zinc-100' : 'text-zinc-400 hover:bg-film',
                   )}
                 >
                   {active && (
                     <motion.span
                       layoutId="club-pill"
                       transition={{ duration: 0.2, ease: EASE }}
-                      className="absolute inset-0 rounded-lg border border-white/10 bg-white/[0.06]"
+                      className="absolute inset-0 rounded-lg border border-hair bg-scrim"
                     />
                   )}
                   <Crest code={completion.teamCode} active={active} complete={complete} />
@@ -167,8 +167,8 @@ function Crest({
         complete
           ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
           : active
-            ? 'border-white/20 bg-white/[0.08] text-zinc-200'
-            : 'border-white/10 bg-white/[0.03] text-zinc-500',
+            ? 'border-edge bg-scrim text-zinc-200'
+            : 'border-hair bg-film text-zinc-500',
       )}
     >
       {code.slice(0, 2)}

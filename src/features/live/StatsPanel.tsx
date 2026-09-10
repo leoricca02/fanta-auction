@@ -129,11 +129,11 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
     <div
       className={cn(
         'flex flex-col gap-4 overflow-y-auto bg-panel/80 p-4 backdrop-blur-xl',
-        embedded ? 'min-h-0 flex-1' : 'h-full w-[68rem] max-w-full border-l border-white/[0.08]',
+        embedded ? 'min-h-0 flex-1' : 'h-full w-[68rem] max-w-full border-l border-hair',
       )}
     >
       <header className="flex items-center gap-3">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-zinc-300">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-scrim text-zinc-300">
           <BarChart3 size={15} />
         </span>
         <h2 className="text-base font-semibold tracking-tight text-zinc-100">
@@ -197,7 +197,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 2 — dove vanno i crediti, reparto per reparto. */}
-          <section className="rounded-xl border border-white/10 bg-surface/50 p-3">
+          <section className="rounded-xl border border-hair bg-surface/50 p-3">
             <SectionTitle className="mb-2">Dove vanno i crediti</SectionTitle>
             <ul className="flex flex-col gap-1.5">
               {stats.byRole.map((role) => (
@@ -207,7 +207,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
                     {role.filled}/{role.totalSlots}
                   </span>
                   <span
-                    className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-white/[0.07]"
+                    className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-scrim"
                     title={`${credits(role.spent)} crediti — ${pct(role.shareOfSpend)} della spesa di lega`}
                   >
                     <span
@@ -230,7 +230,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 3 — il dato che nessun altro al tavolo ha. */}
-          <section className="rounded-xl border border-white/10 bg-surface/50 p-3">
+          <section className="rounded-xl border border-hair bg-surface/50 p-3">
             <SectionTitle className="mb-1">Che roba e&apos; uscita finora</SectionTitle>
             <p className="mb-2 text-xs text-zinc-400">
               <strong className="text-emerald-400">{pct(mix.starterShare)}</strong> dei giocatori
@@ -277,8 +277,8 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           </section>
 
           {/* 5 — chi mi puo' ancora battere. */}
-          <section className="overflow-hidden rounded-xl border border-white/10 bg-surface/50">
-            <SectionTitle className="border-b border-white/[0.08] px-3 py-2">
+          <section className="overflow-hidden rounded-xl border border-hair bg-surface/50">
+            <SectionTitle className="border-b border-hair px-3 py-2">
               Squadra per squadra — clicca una colonna per ordinare
             </SectionTitle>
             <div className="overflow-x-auto">
@@ -360,13 +360,13 @@ function Tile({ label, value, hint, tone, bar, title }: TileProps): JSX.Element 
         : 'bg-rose-500';
   return (
     <div
-      className="rounded-xl border border-white/10 bg-surface/50 p-3 transition-colors duration-150 hover:border-white/20"
+      className="rounded-xl border border-hair bg-surface/50 p-3 transition-colors duration-150 hover:border-edge"
       title={title}
     >
       <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
       <div className="num mt-0.5 text-2xl font-semibold tracking-tight text-white">{value}</div>
       {bar !== undefined && (
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.07]">
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-scrim">
           <div
             className={cn('h-full rounded-full transition-[width] duration-300', fill)}
             style={{ width: `${Math.min(bar * 100, 100)}%` }}
@@ -388,7 +388,7 @@ interface DealListProps {
 
 function DealList({ title, hint, deals, nameById, render }: DealListProps): JSX.Element {
   return (
-    <div className="rounded-xl border border-white/10 bg-surface/50 p-3">
+    <div className="rounded-xl border border-hair bg-surface/50 p-3">
       <SectionTitle>{title}</SectionTitle>
       {hint !== undefined && <p className="mb-1 text-[10px] text-zinc-600">{hint}</p>}
       <ol className="mt-1 flex flex-col gap-1">
@@ -457,7 +457,7 @@ function TeamRow({ team, label, mine }: TeamRowProps): JSX.Element {
   return (
     <tr
       className={cn(
-        'border-t border-white/[0.06] transition-colors hover:bg-white/[0.03]',
+        'border-t border-seam transition-colors hover:bg-film',
         mine && 'bg-emerald-500/[0.07]',
       )}
     >

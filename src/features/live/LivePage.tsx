@@ -146,7 +146,7 @@ export function LivePage(): JSX.Element {
 
       <div className="flex min-h-0 flex-1">
         {me !== null && (
-          <section className="flex min-h-0 w-72 shrink-0 flex-col gap-3 overflow-y-auto border-r border-white/[0.08] bg-white/[0.01] p-3">
+          <section className="flex min-h-0 w-72 shrink-0 flex-col gap-3 overflow-y-auto border-r border-hair bg-veil p-3">
             <SectionTitle icon={<Wallet size={12} />}>La tua rosa</SectionTitle>
             <MyRoster teamId={me.id} state={state} players={playerIndex} />
           </section>
@@ -238,7 +238,7 @@ function OverlayButton({
     <button
       type="button"
       onClick={onClick}
-      className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-2.5 py-1.5 text-xs text-zinc-300 transition-all duration-100 hover:border-white/25 hover:bg-white/[0.06] hover:text-zinc-100 active:scale-[0.98]"
+      className="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-hair bg-veil px-2.5 py-1.5 text-xs text-zinc-300 transition-all duration-100 hover:border-edge hover:bg-scrim hover:text-zinc-100 active:scale-[0.98]"
     >
       <span className="text-zinc-500">{icon}</span>
       {label}
@@ -320,7 +320,7 @@ function ResetAuctionButton({
       <button
         type="button"
         onClick={() => setArming(false)}
-        className="focus-ring rounded-md border border-white/15 px-2 py-0.5 text-xs text-zinc-300 transition-colors hover:bg-white/[0.06]"
+        className="focus-ring rounded-md border border-edge px-2 py-0.5 text-xs text-zinc-300 transition-colors hover:bg-scrim"
       >
         No
       </button>
@@ -353,7 +353,7 @@ function ReconciliationBar({
       className={cn(
         'flex shrink-0 flex-wrap items-center gap-x-5 gap-y-1.5 border-b px-3 py-2 text-xs',
         consistent
-          ? 'border-white/[0.08] bg-white/[0.01] text-zinc-400'
+          ? 'border-hair bg-veil text-zinc-400'
           : 'animate-flash-err border-rose-500/30 bg-rose-500/10 text-rose-200',
       )}
     >
@@ -452,7 +452,7 @@ function MyRoster({
           'rounded-xl border p-3 transition-colors',
           tight
             ? 'border-amber-500/30 bg-amber-500/[0.07]'
-            : 'border-white/[0.08] bg-white/[0.02]',
+            : 'border-hair bg-veil',
         )}
       >
         <div className="flex items-baseline gap-1.5">
@@ -510,7 +510,7 @@ function MyRoster({
                 .map((entry) => (
                   <li
                     key={entry.playerId}
-                    className="flex justify-between gap-2 rounded px-1 py-0.5 text-sm transition-colors hover:bg-white/[0.03]"
+                    className="flex justify-between gap-2 rounded px-1 py-0.5 text-sm transition-colors hover:bg-film"
                   >
                     <span className="min-w-0 truncate text-zinc-200">
                       {players.get(entry.playerId)?.name ?? `#${entry.playerId}`}
@@ -576,7 +576,7 @@ function RecentEvents(): JSX.Element {
   return (
     <div className="flex flex-col gap-1">
       <SectionTitle icon={<History size={12} />}>Ultime assegnazioni</SectionTitle>
-      <ul className="flex flex-col overflow-hidden rounded-lg border border-white/[0.06]">
+      <ul className="flex flex-col overflow-hidden rounded-lg border border-seam">
         <AnimatePresence initial={false}>
           {recent.map((event) => (
             <motion.li
@@ -587,7 +587,7 @@ function RecentEvents(): JSX.Element {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18, ease: EASE }}
               className={cn(
-                'relative flex items-center gap-2 px-2 py-1 text-xs transition-all duration-200 hover:bg-white/[0.03]',
+                'relative flex items-center gap-2 px-2 py-1 text-xs transition-all duration-200 hover:bg-film',
                 event.undone ? 'text-zinc-600 line-through opacity-60' : 'text-zinc-300',
                 event.id === flashId &&
                   'animate-pulse bg-emerald-500/10 ring-2 ring-inset ring-emerald-500/50',
@@ -606,7 +606,7 @@ function RecentEvents(): JSX.Element {
                   void (event.undone ? redoAssignment(event.id) : undoAssignment(event.id))
                 }
                 title={event.undone ? 'Ripristina' : 'Annulla'}
-                className="focus-ring inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-zinc-500 no-underline transition-all duration-150 hover:bg-white/[0.06] hover:text-zinc-200 active:scale-[0.98]"
+                className="focus-ring inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-zinc-500 no-underline transition-all duration-150 hover:bg-scrim hover:text-zinc-200 active:scale-[0.98]"
               >
                 {event.undone ? <Redo2 size={11} /> : <Undo2 size={11} />}
                 {event.undone ? 'ripristina' : 'annulla'}

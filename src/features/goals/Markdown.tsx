@@ -76,7 +76,7 @@ function InlineView({ content }: { readonly content: readonly Inline[] }): JSX.E
             );
           case 'code':
             return (
-              <code key={i} className="rounded bg-white/[0.06] px-1 text-[0.9em] text-emerald-300">
+              <code key={i} className="rounded bg-scrim px-1 text-[0.9em] text-emerald-300">
                 {piece.text}
               </code>
             );

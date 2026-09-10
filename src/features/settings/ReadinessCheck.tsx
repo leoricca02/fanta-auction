@@ -24,7 +24,7 @@ const DOT: Readonly<Record<CheckLevel, string>> = {
 };
 
 const RING: Readonly<Record<CheckLevel, string>> = {
-  ok: 'border-white/[0.08]',
+  ok: 'border-hair',
   warn: 'border-amber-900/70',
   todo: 'border-rose-900/70',
 };
@@ -57,7 +57,7 @@ export function ReadinessCheck(): JSX.Element {
   return (
     <section
       className={`rounded-lg border p-4 ${
-        readiness.ready ? 'border-white/[0.08]' : 'border-amber-800/60 bg-amber-950/10'
+        readiness.ready ? 'border-hair' : 'border-amber-800/60 bg-amber-950/10'
       }`}
     >
       <button
@@ -108,7 +108,7 @@ export function ReadinessCheck(): JSX.Element {
 
 function CheckRow({ check }: { readonly check: Check }): JSX.Element {
   return (
-    <li className={`rounded-lg border bg-white/[0.02] px-3 py-2 ${RING[check.level]}`}>
+    <li className={`rounded-lg border bg-veil px-3 py-2 ${RING[check.level]}`}>
       <div className="flex items-baseline gap-2">
         <span className={`h-2 w-2 shrink-0 translate-y-[-1px] rounded-full ${DOT[check.level]}`} />
         <span className="text-xs font-medium text-zinc-200">{check.label}</span>

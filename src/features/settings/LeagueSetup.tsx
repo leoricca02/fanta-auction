@@ -46,7 +46,7 @@ export function LeagueSetup(): JSX.Element {
   );
 
   return (
-    <section className="rounded-lg border border-white/[0.08] p-4">
+    <section className="rounded-lg border border-hair p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
         Partecipanti
       </h2>
@@ -56,7 +56,7 @@ export function LeagueSetup(): JSX.Element {
       </p>
 
       {eventsCount > 0 && (
-        <p className="mt-2 rounded-lg border border-white/[0.12] px-2 py-1 text-xs text-zinc-400">
+        <p className="mt-2 rounded-lg border border-rim px-2 py-1 text-xs text-zinc-400">
           Ci sono già {eventsCount} assegnazioni registrate. Rinominare una squadra o cambiarne la
           sigla non le tocca: restano agganciate alla <em>riga</em> di questo elenco, non al nome.
           Non riordinare le righe.

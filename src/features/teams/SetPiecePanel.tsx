@@ -54,7 +54,7 @@ export function SetPiecePanel({
   if (rows.length === 0) return null;
 
   return (
-    <section className="mt-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+    <section className="mt-2 rounded-lg border border-hair bg-veil px-3 py-2">
       <div className="flex items-baseline gap-2">
         <SectionTitle icon={<Crosshair size={12} />}>Piazzati</SectionTitle>
         <span className="ml-auto text-[10px] text-zinc-600">
@@ -86,7 +86,7 @@ export function SetPiecePanel({
                         type="button"
                         onClick={() => onOpenCard(picked.id)}
                         className={cn(
-                          'rounded px-0.5 transition-colors hover:bg-white/[0.06]',
+                          'rounded px-0.5 transition-colors hover:bg-scrim',
                           slot.rank === 1
                             ? 'font-semibold text-emerald-300'
                             : 'text-zinc-300 hover:text-zinc-100',

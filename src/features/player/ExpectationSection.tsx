@@ -137,7 +137,7 @@ export function ExpectationSection({ player }: { readonly player: Player }): JSX
                 type="button"
                 onClick={seedFromLastSeason}
                 title={`Riempi con le cifre vere del ${STATS_SEASON}`}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
+                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-500 transition-colors hover:bg-scrim hover:text-zinc-300"
               >
                 <Wand2 size={11} />
                 {STATS_SEASON}
@@ -245,7 +245,7 @@ function PriceRow({
 }): JSX.Element {
   if (value === null || value <= 0) {
     return (
-      <p className="rounded-lg border border-dashed border-white/[0.08] px-2.5 py-2 text-[11px] leading-snug text-zinc-600">
+      <p className="rounded-lg border border-dashed border-hair px-2.5 py-2 text-[11px] leading-snug text-zinc-600">
         {value === null
           ? 'Riempi i cinque numeri per avere un prezzo consigliato.'
           : 'Questa aspettativa vale zero: nessun prezzo da consigliare.'}
@@ -255,7 +255,7 @@ function PriceRow({
 
   if (price === null || rate === null) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-2">
+      <div className="flex items-center gap-2 rounded-lg border border-hair bg-veil px-2.5 py-2">
         <ValueChip value={value} />
         <p className="text-[11px] leading-snug text-zinc-500">
           {`Nessuna asta valutata nel reparto ${role}: il prezzo compare appena viene battuto un giocatore che hai valutato.`}
@@ -266,7 +266,7 @@ function PriceRow({
 
   if (provisional) {
     return (
-      <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.02] px-2.5 py-2">
+      <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-rim bg-veil px-2.5 py-2">
         <ValueChip value={value} />
         <span className="num text-xl font-semibold leading-none text-zinc-300">{price}</span>
         <p className="text-[11px] leading-snug text-zinc-500">
@@ -301,7 +301,7 @@ function ValueChip({ value }: { readonly value: number }): JSX.Element {
     <span
       title="Valore della tua aspettativa"
       className={cn(
-        'num shrink-0 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5',
+        'num shrink-0 rounded-md border border-hair bg-film px-1.5 py-0.5',
         'text-xs text-zinc-300',
       )}
     >

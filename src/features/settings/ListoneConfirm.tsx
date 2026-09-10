@@ -112,7 +112,7 @@ export function ListoneConfirm(): JSX.Element | null {
           <button
             type="button"
             onClick={cancelListoneImport}
-            className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/[0.06]"
+            className="rounded-lg border border-rim px-3 py-1.5 text-sm text-zinc-300 hover:bg-scrim"
           >
             Annulla
           </button>
@@ -160,7 +160,7 @@ function Section({
   return (
     <section
       className={`mt-4 rounded-lg border p-3 ${
-        tone === 'warn' ? 'border-amber-800 bg-amber-950/25' : 'border-white/[0.08]'
+        tone === 'warn' ? 'border-amber-800 bg-amber-950/25' : 'border-hair'
       }`}
     >
       <h3

@@ -124,8 +124,8 @@ export function Kpi({
     <div
       title={title}
       className={cn(
-        'rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2',
-        'transition-colors duration-150 hover:border-white/20 hover:bg-white/[0.04]',
+        'rounded-lg border border-hair bg-veil px-3 py-2',
+        'transition-colors duration-150 hover:border-edge hover:bg-film',
         className,
       )}
     >
@@ -151,7 +151,7 @@ export function Meter({
 }): JSX.Element {
   const pct = Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0)) * 100;
   return (
-    <div className={cn('h-1 w-full overflow-hidden rounded-full bg-white/[0.07]', className)}>
+    <div className={cn('h-1 w-full overflow-hidden rounded-full bg-scrim', className)}>
       <motion.div
         className={cn('h-full rounded-full', fill)}
         initial={false}
@@ -182,7 +182,7 @@ export function IconButton({
       title={label}
       className={cn(
         'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-500',
-        'transition-colors duration-150 hover:bg-white/[0.06] hover:text-zinc-200',
+        'transition-colors duration-150 hover:bg-scrim hover:text-zinc-200',
         'focus-ring',
         className,
       )}
@@ -199,7 +199,7 @@ export function CloseButton({ onClose }: { readonly onClose: () => void }): JSX.
       type="button"
       onClick={onClose}
       aria-label="Chiudi"
-      className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors duration-150 hover:bg-white/[0.06] hover:text-zinc-200"
+      className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors duration-150 hover:bg-scrim hover:text-zinc-200"
     >
       <X size={14} />
       <Kbd>Esc</Kbd>
@@ -236,7 +236,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-white/[0.08] px-4 py-8 text-center',
+        'flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-hair px-4 py-8 text-center',
         className,
       )}
     >
@@ -262,7 +262,7 @@ export function EmptyState({
  * cosa vera fa esattamente il danno che dovrebbe evitare.
  */
 export function Skeleton({ className }: { readonly className?: string }): JSX.Element {
-  return <span className={cn('block animate-pulse rounded bg-white/[0.06]', className)} />;
+  return <span className={cn('block animate-pulse rounded bg-scrim', className)} />;
 }
 
 /**
@@ -485,7 +485,7 @@ export function InfoPopover({
             style={{ width: POPOVER_WIDTH }}
             className={cn(
               'absolute top-full z-40 mt-1 block max-h-64 overflow-y-auto rounded-lg',
-              'border border-white/10 bg-elevated/95 p-2.5 text-left shadow-pop backdrop-blur-xl',
+              'border border-hair bg-elevated/95 p-2.5 text-left shadow-pop backdrop-blur-xl',
               alignRight ? 'right-0' : 'left-0',
               panelClassName,
             )}

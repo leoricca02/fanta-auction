@@ -63,7 +63,7 @@ export function SettingsPanel(): JSX.Element {
               <button
                 type="button"
                 onClick={() => backupInput.current?.click()}
-                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                className="rounded-lg border border-rim px-3 py-1.5 text-sm text-zinc-200 hover:bg-scrim"
               >
                 Importa backup…
               </button>
@@ -81,7 +81,7 @@ export function SettingsPanel(): JSX.Element {
             </div>
           </section>
 
-          <section className="rounded-lg border border-white/[0.08] p-4">
+          <section className="rounded-lg border border-hair p-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
               Export
             </h2>
@@ -102,21 +102,21 @@ export function SettingsPanel(): JSX.Element {
               <button
                 type="button"
                 onClick={() => void exportReportXlsx()}
-                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                className="rounded-lg border border-rim px-3 py-1.5 text-sm text-zinc-200 hover:bg-scrim"
               >
                 .xlsx report
               </button>
               <button
                 type="button"
                 onClick={() => void exportPdf()}
-                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                className="rounded-lg border border-rim px-3 py-1.5 text-sm text-zinc-200 hover:bg-scrim"
               >
                 .pdf rose
               </button>
             </div>
           </section>
 
-          <section className="rounded-lg border border-white/[0.08] p-4">
+          <section className="rounded-lg border border-hair p-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
               Listone
             </h2>
@@ -135,7 +135,7 @@ export function SettingsPanel(): JSX.Element {
               <button
                 type="button"
                 onClick={() => listoneInput.current?.click()}
-                className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                className="rounded-lg border border-rim px-3 py-1.5 text-sm text-zinc-200 hover:bg-scrim"
               >
                 Carica .xlsx…
               </button>
@@ -209,7 +209,7 @@ function ResetAuction(): JSX.Element | null {
           <button
             type="button"
             onClick={() => setArming(false)}
-            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-zinc-300 hover:bg-white/[0.06]"
+            className="rounded-lg border border-rim px-3 py-1 text-xs text-zinc-300 hover:bg-scrim"
           >
             No
           </button>
@@ -226,7 +226,7 @@ function ResetAuction(): JSX.Element | null {
           <button
             type="button"
             onClick={() => void downloadBackup()}
-            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-zinc-300 hover:bg-white/[0.06]"
+            className="rounded-lg border border-rim px-3 py-1 text-xs text-zinc-300 hover:bg-scrim"
           >
             Scarica prima un backup
           </button>
@@ -264,7 +264,7 @@ function ExpectationsSwitch(): JSX.Element {
   const count = useAppStore((s) => s.userData.expectations.length);
 
   return (
-    <section className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-4">
+    <section className="rounded-lg border border-hair bg-veil p-4">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-300">
@@ -302,7 +302,7 @@ function ExpectationsSwitch(): JSX.Element {
             'focus-ring relative mt-0.5 h-6 w-11 shrink-0 rounded-full border transition-colors duration-150',
             enabled
               ? 'border-emerald-500/50 bg-emerald-500/30'
-              : 'border-white/10 bg-white/[0.06]',
+              : 'border-hair bg-scrim',
           )}
         >
           <span
@@ -379,7 +379,7 @@ function DangerZone(): JSX.Element {
               <button
                 type="button"
                 onClick={() => setArming(false)}
-                className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs text-zinc-300 hover:bg-white/[0.06]"
+                className="rounded-lg border border-rim px-3 py-1 text-xs text-zinc-300 hover:bg-scrim"
               >
                 No
               </button>

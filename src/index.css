@@ -97,7 +97,7 @@ textarea {
    * rappresenta un tasto vero che si preme davvero.
    */
   .kbd {
-    @apply inline-flex min-w-[1.25rem] items-center justify-center rounded border border-white/10 bg-elevated
+    @apply inline-flex min-w-[1.25rem] items-center justify-center rounded border border-hair bg-elevated
       px-1.5 py-0.5 font-mono text-[10px] font-medium leading-none text-zinc-400;
     box-shadow:
       inset 0 1px 0 0 rgb(255 255 255 / 0.06),
@@ -121,7 +121,7 @@ textarea {
 
   /* Vetro delle card e dei pannelli: e' il bordo a staccarli, non l'ombra. */
   .glass {
-    @apply border border-white/10 bg-panel/80 backdrop-blur-xl;
+    @apply border border-hair bg-panel/80 backdrop-blur-xl;
   }
 
   /**
@@ -133,9 +133,9 @@ textarea {
    * campo prende la quota del pannello che lo ospita invece di litigarci.
    */
   .field {
-    @apply rounded-lg border border-white/10 bg-white/[0.03] text-zinc-100 outline-none;
+    @apply rounded-lg border border-hair bg-film text-zinc-100 outline-none;
     @apply transition-colors duration-150 placeholder:text-zinc-600;
-    @apply hover:border-white/20 focus:border-emerald-500/50 focus:bg-elevated/60;
+    @apply hover:border-edge focus:border-emerald-500/50 focus:bg-elevated/60;
   }
 }
 

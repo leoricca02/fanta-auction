@@ -243,7 +243,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
       <div
         className={cn(
           'flex min-w-0 flex-col gap-2.5 bg-panel/80 p-3 backdrop-blur-xl',
-          embedded ? 'min-h-0 flex-1' : 'h-full w-[46rem] border-l border-white/[0.08]',
+          embedded ? 'min-h-0 flex-1' : 'h-full w-[46rem] border-l border-hair',
         )}
       >
         <header className="flex items-center gap-2">
@@ -272,7 +272,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
           prima informazione della schermata, e sapere di stare guardando i
           portieri senza leggere la lettera vale piu' dell'uniformita'.
         */}
-        <div className="flex w-fit gap-0.5 rounded-lg border border-white/10 bg-canvas p-1">
+        <div className="flex w-fit gap-0.5 rounded-lg border border-hair bg-canvas p-1">
           {PHASE_ORDER.map((role) => {
             const theme = roleTheme(role);
             const active = filters.role === role;
@@ -287,7 +287,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                   'focus-ring rounded-md px-3.5 py-1 text-sm font-semibold transition-all duration-150',
                   active
                     ? cn(theme.chip, theme.glow)
-                    : 'text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-300',
+                    : 'text-zinc-500 hover:bg-film hover:text-zinc-300',
                 )}
               >
                 {role}
@@ -385,7 +385,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
               'inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 transition-colors',
               filters.showTaken
                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                : 'border-white/[0.08] bg-white/[0.02] text-zinc-500 hover:text-zinc-300',
+                : 'border-hair bg-veil text-zinc-500 hover:text-zinc-300',
             )}
           >
             {filters.showTaken ? <Eye size={12} /> : <EyeOff size={12} />}
@@ -393,9 +393,9 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-white/[0.06]">
+        <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-seam">
           <table className="w-full text-xs">
-            <thead className="sticky top-0 z-10 border-b border-white/10 bg-panel/95 text-zinc-500 backdrop-blur-md">
+            <thead className="sticky top-0 z-10 border-b border-hair bg-panel/95 text-zinc-500 backdrop-blur-md">
               <tr>
                 {COLUMNS.map(({ key, label, numeric, direction, width }) => {
                   const active = filters.sort === key;
@@ -449,7 +449,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
               zebratura invece lavora sotto la soglia della coscienza: non si
               vede, ma il dito segue la riga giusta.
             */}
-            <tbody className="divide-y divide-white/[0.05]">
+            <tbody className="divide-y divide-seam">
               {rows.map((p) => {
                 const note = notes.get(p.id);
                 const owner = state.assignmentByPlayerId[p.id];
@@ -466,7 +466,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                     }
                     className={cn(
                       'group cursor-pointer transition-colors duration-100',
-                      'even:bg-white/[0.015] hover:bg-indigo-500/[0.06]',
+                      'even:bg-veil hover:bg-indigo-500/[0.06]',
                       taken && 'text-zinc-500 opacity-[0.35]',
                     )}
                   >
@@ -482,7 +482,7 @@ export function FreeAgentsPanel({ onClose, embedded = false }: FreeAgentsPanelPr
                       {/* Il club e' contesto, non contenuto: pastiglia piccola
                           e attenuata, cosi' la colonna dei nomi resta l'unica
                           che l'occhio legge scorrendo. */}
-                      <span className="inline-block max-w-[7rem] truncate rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[11px] font-normal text-slate-400">
+                      <span className="inline-block max-w-[7rem] truncate rounded border border-hair bg-film px-1.5 py-0.5 text-[11px] font-normal text-slate-400">
                         {p.team}
                       </span>
                     </td>

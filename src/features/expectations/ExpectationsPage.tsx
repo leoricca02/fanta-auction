@@ -117,7 +117,7 @@ export function ExpectationsPage(): JSX.Element {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-white/[0.08] bg-white/[0.01] px-3 py-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hair bg-veil px-3 py-2">
         <div className="flex items-center gap-1">
           {MOVEMENT_ROLES.map((r) => {
             const theme = roleTheme(r);
@@ -133,7 +133,7 @@ export function ExpectationsPage(): JSX.Element {
                   'focus-ring inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-all',
                   role === r
                     ? theme.chip
-                    : 'border-white/[0.08] bg-white/[0.02] text-zinc-400 hover:border-white/20 hover:text-zinc-200',
+                    : 'border-hair bg-veil text-zinc-400 hover:border-edge hover:text-zinc-200',
                 )}
               >
                 {theme.label}
@@ -163,8 +163,8 @@ export function ExpectationsPage(): JSX.Element {
               className={cn(
                 'focus-ring rounded-md px-2 py-1 transition-colors',
                 filter === f
-                  ? 'bg-white/[0.08] text-zinc-100'
-                  : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300',
+                  ? 'bg-scrim text-zinc-100'
+                  : 'text-zinc-500 hover:bg-film hover:text-zinc-300',
               )}
             >
               {f === 'da-valutare' ? 'da valutare' : f}
@@ -272,7 +272,7 @@ export function ExpectationsPage(): JSX.Element {
           <button
             type="button"
             onClick={() => setShowAll(true)}
-            className="focus-ring mt-2 w-full max-w-[56rem] rounded-lg border border-white/[0.08] py-1.5 text-xs text-zinc-400 transition-colors hover:border-white/20 hover:text-zinc-200"
+            className="focus-ring mt-2 w-full max-w-[56rem] rounded-lg border border-hair py-1.5 text-xs text-zinc-400 transition-colors hover:border-edge hover:text-zinc-200"
           >
             Mostra tutti gli altri {filtered.length - shown.length}
           </button>
@@ -341,7 +341,7 @@ function Row({
   }
 
   return (
-    <tr className={cn('group transition-colors hover:bg-white/[0.03]', taken && 'opacity-45')}>
+    <tr className={cn('group transition-colors hover:bg-film', taken && 'opacity-45')}>
       <td className="max-w-0 truncate py-0.5 pl-1 pr-2">
         <span className={cn('text-zinc-200', taken && 'line-through')}>{player.name}</span>
       </td>
@@ -397,7 +397,7 @@ function Row({
               type="button"
               onClick={seed}
               title={`Riempi con le cifre vere del ${STATS_SEASON}`}
-              className="focus-ring rounded p-1 text-zinc-600 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
+              className="focus-ring rounded p-1 text-zinc-600 transition-colors hover:bg-scrim hover:text-zinc-200"
             >
               <Wand2 size={12} />
             </button>

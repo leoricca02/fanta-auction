@@ -224,7 +224,7 @@ export function GridPage(): JSX.Element {
                   'rounded-lg px-3 py-1 text-sm font-semibold transition-all',
                   active
                     ? cn(theme.chip, theme.glow)
-                    : 'border border-white/[0.08] bg-white/[0.02] text-zinc-500 hover:text-zinc-300',
+                    : 'border border-hair bg-veil text-zinc-500 hover:text-zinc-300',
                 )}
               >
                 {MODE_LABEL[mode]}
@@ -311,7 +311,7 @@ export function GridPage(): JSX.Element {
           onClear={() => update({ selected: [] })}
         />
       ) : (
-        <p className="rounded-xl border border-dashed border-white/[0.08] px-3 py-2 text-xs text-zinc-500">
+        <p className="rounded-xl border border-dashed border-hair px-3 py-2 text-xs text-zinc-500">
           Clicca una squadra nella griglia per costruire un abbinamento: fino a {MAX_TEAMS}, e ogni
           giornata conta la partita piu&apos; comoda fra quelle scelte.
         </p>
@@ -328,8 +328,8 @@ export function GridPage(): JSX.Element {
               type="button"
               onClick={() => update({ selected: s.teams })}
               className={cn(
-                'flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1.5',
-                'text-xs transition-colors hover:border-white/20 hover:bg-white/[0.05]',
+                'flex items-center gap-2 rounded-lg border border-hair bg-veil px-2.5 py-1.5',
+                'text-xs transition-colors hover:border-edge hover:bg-film',
                 sameTeams(s.teams, selected) && 'border-emerald-500/40 bg-emerald-500/10',
               )}
             >
@@ -345,7 +345,7 @@ export function GridPage(): JSX.Element {
         </div>
       </section>
 
-      <div className="min-h-0 overflow-x-auto rounded-xl border border-white/[0.08]">
+      <div className="min-h-0 overflow-x-auto rounded-xl border border-hair">
         <table className="w-full border-separate border-spacing-0 text-xs">
           <thead>
             <tr>
@@ -385,15 +385,15 @@ export function GridPage(): JSX.Element {
               const picked = selected.includes(row.team);
               const key = keyPlayers(players, row.team, prefs.mode, 2);
               return (
-                <tr key={row.team} className={cn(picked && 'bg-white/[0.04]')}>
+                <tr key={row.team} className={cn(picked && 'bg-film')}>
                   <th scope="row" className="sticky left-0 z-10 bg-canvas p-0 text-left font-normal">
                     <button
                       type="button"
                       onClick={() => toggleTeam(row.team)}
                       aria-pressed={picked}
                       className={cn(
-                        'flex w-44 items-center gap-2 border-b border-white/[0.04] px-2 py-1 text-left transition-colors',
-                        picked ? 'bg-emerald-500/10' : 'hover:bg-white/[0.05]',
+                        'flex w-44 items-center gap-2 border-b border-seam px-2 py-1 text-left transition-colors',
+                        picked ? 'bg-emerald-500/10' : 'hover:bg-film',
                       )}
                     >
                       <span
@@ -401,7 +401,7 @@ export function GridPage(): JSX.Element {
                           'num w-9 shrink-0 rounded px-1 py-0.5 text-center text-[11px] font-semibold',
                           picked
                             ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-white/[0.06] text-zinc-300',
+                            : 'bg-scrim text-zinc-300',
                         )}
                       >
                         {abbrs.get(row.team)}
@@ -414,7 +414,7 @@ export function GridPage(): JSX.Element {
                       </span>
                     </button>
                   </th>
-                  <td className="num border-b border-white/[0.04] px-1 text-center font-semibold text-zinc-300">
+                  <td className="num border-b border-seam px-1 text-center font-semibold text-zinc-300">
                     <span className={cn(row.inCombo && 'text-emerald-300')}>{row.result.score}</span>
                     {combo !== null && !row.inCombo && (
                       <span
@@ -436,7 +436,7 @@ export function GridPage(): JSX.Element {
                       dimmed={selected.length > 0 && !picked}
                     />
                   ))}
-                  <td className="border-b border-white/[0.04]" />
+                  <td className="border-b border-seam" />
                 </tr>
               );
             })}
@@ -472,7 +472,7 @@ function Preset({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-2 py-1 text-zinc-400 transition-colors hover:border-white/20 hover:text-zinc-200"
+      className="rounded-lg border border-hair bg-veil px-2 py-1 text-zinc-400 transition-colors hover:border-edge hover:text-zinc-200"
     >
       {label}
     </button>
@@ -500,8 +500,8 @@ function Legend({ mode }: { readonly mode: GridMode }): JSX.Element {
           ))}
         </div>
         <p>
-          <span className="num rounded bg-white/[0.06] px-1 text-zinc-200">INT</span> maiuscolo e&apos;
-          in casa, <span className="num rounded bg-white/[0.06] px-1 text-zinc-200">int</span>{' '}
+          <span className="num rounded bg-scrim px-1 text-zinc-200">INT</span> maiuscolo e&apos;
+          in casa, <span className="num rounded bg-scrim px-1 text-zinc-200">int</span>{' '}
           minuscolo e&apos; fuori.
         </p>
         <p>
@@ -536,7 +536,7 @@ function GridCell({
   const abbr = abbrs.get(cell.opponent) ?? cell.opponent;
   const style = LEVEL_STYLE[cell.level];
   return (
-    <td className="border-b border-white/[0.04] p-[1px]">
+    <td className="border-b border-seam p-[1px]">
       <span
         title={`Giornata ${cell.matchday} · ${cell.opponent} ${cell.home ? 'in casa' : 'fuori'} · ${cell.level}${cell.played ? ' · giocata' : ''}`}
         className={cn(

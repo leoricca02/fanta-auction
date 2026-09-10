@@ -29,7 +29,7 @@ const STYLE: Readonly<Record<LineupStatus, string>> = {
     'bg-gradient-to-br from-emerald-400/20 to-emerald-600/10 text-emerald-300 border border-emerald-400/40',
   BALLOTTAGGIO:
     'bg-gradient-to-br from-amber-400/20 to-amber-600/10 text-amber-300 border border-amber-400/40',
-  PANCHINA: 'bg-gradient-to-br from-white/[0.07] to-white/[0.03] text-zinc-400 border border-white/10',
+  PANCHINA: 'bg-gradient-to-br from-scrim to-film text-zinc-400 border border-hair',
   NON_INSERITO: 'bg-transparent text-zinc-600 border border-dashed border-zinc-700',
 };
 

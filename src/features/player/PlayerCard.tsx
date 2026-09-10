@@ -187,7 +187,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
       initial={{ opacity: 0, x: 12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.2, ease: EASE }}
-      className="relative flex h-full w-[28rem] shrink-0 flex-col gap-4 overflow-y-auto border-l border-white/[0.08] bg-panel/80 p-4 backdrop-blur-xl"
+      className="relative flex h-full w-[28rem] shrink-0 flex-col gap-4 overflow-y-auto border-l border-hair bg-panel/80 p-4 backdrop-blur-xl"
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -229,7 +229,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
             {player.name}
           </h3>
           <p className="mt-1 flex items-center gap-1.5 text-xs">
-            <span className="rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-medium uppercase tracking-wide text-zinc-400">
+            <span className="rounded border border-hair bg-film px-1.5 py-0.5 font-medium uppercase tracking-wide text-zinc-400">
               {player.team}
             </span>
             <span className={cn('font-medium', theme.text)}>{theme.label}</span>
@@ -294,7 +294,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
                   'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-all',
                   on
                     ? TAG_STYLE[tag]
-                    : 'border-white/[0.08] bg-white/[0.02] text-zinc-400 hover:border-white/20 hover:text-zinc-200',
+                    : 'border-hair bg-veil text-zinc-400 hover:border-edge hover:text-zinc-200',
                 )}
               >
                 <Icon size={12} />
@@ -316,7 +316,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
                   flush();
                   setEditingNote((v) => !v);
                 }}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-300"
+                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-500 transition-colors hover:bg-scrim hover:text-zinc-300"
               >
                 {editingNote ? <Eye size={11} /> : <Pencil size={11} />}
                 {editingNote ? 'anteprima' : 'modifica'}
@@ -344,7 +344,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
               window.setTimeout(() => noteRef.current?.focus(), 0);
             }}
             title="Clicca per modificare"
-            className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-left transition-colors hover:border-white/20"
+            className="rounded-lg border border-hair bg-film px-2.5 py-2 text-left transition-colors hover:border-edge"
           >
             <Markdown text={draft} className="text-[13px] leading-snug" />
           </button>
@@ -389,11 +389,11 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
           Formazione {player.team}
         </SectionTitle>
         {lineup === null ? (
-          <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-4 text-center text-xs text-zinc-600">
+          <p className="rounded-lg border border-dashed border-hair px-3 py-4 text-center text-xs text-zinc-600">
             Non ancora compilata.
           </p>
         ) : (
-          <ol className="flex flex-col gap-px overflow-hidden rounded-lg border border-white/[0.06]">
+          <ol className="flex flex-col gap-px overflow-hidden rounded-lg border border-seam">
             {lineup.slots.map((slot) => {
               const mine = activeSlots.has(slot.slotId);
               return (
@@ -403,7 +403,7 @@ export function PlayerCard({ player, onClose }: PlayerCardProps): JSX.Element {
                     'flex items-baseline gap-2 px-2 py-1 text-xs transition-colors',
                     mine
                       ? 'bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/25'
-                      : 'hover:bg-white/[0.03]',
+                      : 'hover:bg-film',
                   )}
                 >
                   <span className="w-9 shrink-0 font-medium uppercase tracking-wide text-zinc-600">
@@ -514,7 +514,7 @@ function SpecialistSection({
               className={cn(
                 first
                   ? 'border-emerald-500/40 text-emerald-300'
-                  : 'border-white/[0.08] text-zinc-400',
+                  : 'border-hair text-zinc-400',
               )}
             >
               {KIND_SHORT[role.kind]}
@@ -552,7 +552,7 @@ function RankPip({ rank, first }: { readonly rank: number; readonly first: boole
         'num inline-flex h-4 min-w-[1rem] items-center justify-center rounded px-1 text-[10px] font-bold leading-none',
         first
           ? 'bg-emerald-500/25 text-emerald-200'
-          : 'bg-white/[0.06] text-zinc-400 ring-1 ring-inset ring-white/10',
+          : 'bg-scrim text-zinc-400 ring-1 ring-inset ring-white/10',
       )}
     >
       {rank}°
@@ -668,7 +668,7 @@ function SourceLine({
   readonly source?: string;
 }): JSX.Element {
   return (
-    <p className="mt-2 border-t border-white/[0.08] pt-1.5 text-[10px] text-zinc-600">
+    <p className="mt-2 border-t border-hair pt-1.5 text-[10px] text-zinc-600">
       {source} SosFanta, {date}
     </p>
   );
@@ -732,11 +732,11 @@ function SeasonSection({
       </SectionTitle>
 
       {stats === null ? (
-        <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-3 text-center text-xs text-zinc-500">
+        <p className="rounded-lg border border-dashed border-hair px-3 py-3 text-center text-xs text-zinc-500">
           In Serie A nel {STATS_SEASON} non ha giocato: nessuno storico su cui basarsi.
         </p>
       ) : stats.played === 0 ? (
-        <p className="rounded-lg border border-dashed border-white/[0.08] px-3 py-3 text-center text-xs text-zinc-500">
+        <p className="rounded-lg border border-dashed border-hair px-3 py-3 text-center text-xs text-zinc-500">
           A referto con {stats.team} nel {STATS_SEASON}, ma senza mai prendere un voto.
         </p>
       ) : (
@@ -868,7 +868,7 @@ function HighlightColumn({
       {items.map((h) => (
         <div
           key={h.metric.key}
-          className="rounded-md border border-white/10 bg-surface/50 px-2 py-1"
+          className="rounded-md border border-hair bg-surface/50 px-2 py-1"
         >
           <div className="flex items-baseline justify-between gap-1.5">
             <span className="truncate text-[11px] text-zinc-300">{h.metric.label}</span>
@@ -879,7 +879,7 @@ function HighlightColumn({
           <div className="text-[10px] text-zinc-500">
             {rankLabel(h, stats.role)} <span className="num">su {h.pool}</span>
           </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-scrim">
             <div
               className={cn('h-full rounded-full', bar)}
               // La barra e' la posizione, non il valore: piena = primo del ruolo.
@@ -901,7 +901,7 @@ function MicroStat({
   readonly value: React.ReactNode;
 }): JSX.Element {
   return (
-    <div className="flex items-baseline justify-between gap-2 rounded-md border border-white/10 bg-surface/50 px-2 py-1">
+    <div className="flex items-baseline justify-between gap-2 rounded-md border border-hair bg-surface/50 px-2 py-1">
       <span className="truncate text-[11px] text-zinc-500">{label}</span>
       <span className="num shrink-0 text-xs font-medium text-zinc-200">{value}</span>
     </div>
@@ -933,7 +933,7 @@ function Stat({
   readonly barFill?: string;
 }): JSX.Element {
   return (
-    <div className="rounded-lg border border-white/10 bg-surface/50 px-3 py-2 transition-colors duration-150 hover:border-white/20">
+    <div className="rounded-lg border border-hair bg-surface/50 px-3 py-2 transition-colors duration-150 hover:border-edge">
       <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
       <div
         className={cn(
@@ -946,7 +946,7 @@ function Stat({
       </div>
       {percentile !== undefined && (
         <div
-          className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.07]"
+          className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-scrim"
           title={`Posizione nel ruolo: ${Math.round(percentile * 100)}° percentile`}
         >
           <div
@@ -1073,7 +1073,7 @@ function Chip({
     <span
       title={title}
       className={cn(
-        'inline-flex items-center gap-1 rounded-md border bg-white/[0.03] px-1.5 py-0.5 text-[11px] font-medium leading-none',
+        'inline-flex items-center gap-1 rounded-md border bg-film px-1.5 py-0.5 text-[11px] font-medium leading-none',
         className,
       )}
     >

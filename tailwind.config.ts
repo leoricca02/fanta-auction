@@ -59,6 +59,37 @@ export default {
         surface: 'rgb(22 32 46 / <alpha-value>)',
         /** Cio' che galleggia: popover, picker, campi a fuoco. */
         elevated: 'rgb(28 38 54 / <alpha-value>)',
+
+        /**
+         * I veli di bianco: sette nomi al posto di dodici alfa a mano.
+         *
+         * Le quote qui sopra dicono *quanto in alto* sta una superficie; questi
+         * dicono *quanto forte* e' il filo che la chiude e il velo che la
+         * riempie. Erano scritti a occhio ovunque — `white/[0.08]` cinquanta
+         * volte, `white/10` altre quaranta, piu' 0.01, 0.015, 0.03, 0.04, 0.05,
+         * 0.07, 0.12, 0.15, 0.25 — e nessuno sapeva piu' quale fosse quella
+         * giusta, cosi' ogni componente nuovo ne inventava una in piu'.
+         *
+         * Tre fili e tre veli, piu' il bordo sotto il puntatore. L'alfa non e'
+         * un parametro: se una superficie ha bisogno di una quota che non c'e',
+         * il posto dove aggiungerla e' questo.
+         */
+
+        /** Filo tenue: divisori interni, tabelle, separatori di riga. */
+        seam: 'rgb(255 255 255 / 0.05)',
+        /** Filo standard: e' cio' che stacca un pannello, al posto dell'ombra. */
+        hair: 'rgb(255 255 255 / 0.08)',
+        /** Filo marcato: elemento scelto, riga attiva, campo compilato. */
+        rim: 'rgb(255 255 255 / 0.12)',
+        /** Il filo sotto il puntatore, l'unico che si accende all'hover. */
+        edge: 'rgb(255 255 255 / 0.2)',
+
+        /** Velo appena percettibile: fondo di una sezione dentro un pannello. */
+        veil: 'rgb(255 255 255 / 0.02)',
+        /** Velo di lavoro: campi, celle, superfici annidate. */
+        film: 'rgb(255 255 255 / 0.04)',
+        /** Velo pieno: chip, bottoni, la superficie in hover. */
+        scrim: 'rgb(255 255 255 / 0.06)',
       },
       boxShadow: {
         'glow-amber': '0 0 0 1px rgb(245 158 11 / 0.25), 0 0 18px -6px rgb(245 158 11 / 0.55)',

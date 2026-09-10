@@ -71,7 +71,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
   return (
     <div
       className={`flex min-h-0 flex-col gap-3 overflow-y-auto bg-panel/80 p-4 backdrop-blur-xl ${
-        embedded ? 'flex-1' : 'h-full w-[36rem] border-l border-white/[0.08]'
+        embedded ? 'flex-1' : 'h-full w-[36rem] border-l border-hair'
       }`}
     >
       <header className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
               if (editing) flush();
               setEditing(!editing);
             }}
-            className="rounded px-1.5 py-0.5 text-[11px] text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-300"
+            className="rounded px-1.5 py-0.5 text-[11px] text-zinc-500 hover:bg-scrim hover:text-zinc-300"
           >
             {editing ? 'anteprima' : 'modifica'}
           </button>
@@ -156,7 +156,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
             }
           />
         ) : (
-          <ol className="divide-y divide-white/[0.05]">
+          <ol className="divide-y divide-seam">
             {/* Stessa densita' della tabella svincolati: divisori appena
                 percettibili invece di bordi pieni, e la riga sotto il puntatore
                 che si accende invece di uno sfondo fisso per tutte. */}
@@ -167,7 +167,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
               return (
                 <li
                   key={target.playerId}
-                  className="group flex items-center gap-2 rounded px-1 py-1 text-sm transition-colors duration-100 even:bg-white/[0.015] hover:bg-indigo-500/[0.06]"
+                  className="group flex items-center gap-2 rounded px-1 py-1 text-sm transition-colors duration-100 even:bg-veil hover:bg-indigo-500/[0.06]"
                 >
                   <span className="w-5 shrink-0 text-right text-xs num text-zinc-600">
                     {i + 1}
@@ -175,7 +175,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
                   <span className="min-w-0 flex-1 truncate font-medium text-zinc-100">
                     {player?.name ?? `#${target.playerId}`}
                     {player !== undefined && (
-                      <span className="ml-2 rounded border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[11px] font-normal text-slate-400">
+                      <span className="ml-2 rounded border border-hair bg-film px-1.5 py-0.5 text-[11px] font-normal text-slate-400">
                         {player.team}
                       </span>
                     )}
@@ -207,7 +207,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
                           note: target.note,
                         })
                       }
-                      className="focus-ring rounded px-1 text-xs text-zinc-400 transition-colors duration-150 hover:bg-white/[0.08] hover:text-zinc-100"
+                      className="focus-ring rounded px-1 text-xs text-zinc-400 transition-colors duration-150 hover:bg-scrim hover:text-zinc-100"
                     >
                       ↑
                     </button>
@@ -220,7 +220,7 @@ export function GoalsPanel({ onClose, embedded = false }: GoalsPanelProps): JSX.
                           note: target.note,
                         })
                       }
-                      className="focus-ring rounded px-1 text-xs text-zinc-400 transition-colors duration-150 hover:bg-white/[0.08] hover:text-zinc-100"
+                      className="focus-ring rounded px-1 text-xs text-zinc-400 transition-colors duration-150 hover:bg-scrim hover:text-zinc-100"
                     >
                       ↓
                     </button>

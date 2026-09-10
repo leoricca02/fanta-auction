@@ -66,7 +66,7 @@ export function ImportConfirm(): JSX.Element | null {
         </table>
 
         {summary.skippedRecords.length > 0 && (
-          <div className="mt-4 rounded-lg border border-white/[0.08] p-3">
+          <div className="mt-4 rounded-lg border border-hair p-3">
             <p className="text-xs font-medium text-amber-400">
               {summary.skippedRecords.length} record del file sono piu' vecchi di quelli che hai
               gia': restano i tuoi.
@@ -113,7 +113,7 @@ export function ImportConfirm(): JSX.Element | null {
           <button
             type="button"
             onClick={cancelImport}
-            className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/[0.06]"
+            className="rounded-lg border border-rim px-3 py-1.5 text-sm text-zinc-300 hover:bg-scrim"
           >
             Annulla
           </button>
