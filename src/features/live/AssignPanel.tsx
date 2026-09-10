@@ -533,7 +533,7 @@ function TeamGrid({
                     : undefined
               }
               className={cn(
-                'w-full rounded-lg border px-2 py-1.5 text-left transition-all duration-100',
+                'focus-ring w-full rounded-lg border px-2 py-1.5 text-left transition-all duration-100',
                 // Chiudere l'acquisto e' l'azione piu' pesante della schermata:
                 // deve rispondere sotto il dito, non solo cambiare colore.
                 clickable && 'active:scale-[0.98]',

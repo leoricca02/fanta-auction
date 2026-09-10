@@ -435,7 +435,7 @@ function SortableTh({
         onClick={() => onSort(sortKey)}
         title={title}
         className={cn(
-          'inline-flex w-full items-center gap-0.5 px-2 py-1.5 transition-colors',
+          'focus-ring inline-flex w-full items-center gap-0.5 px-2 py-1.5 transition-colors duration-150',
           left ? 'text-left' : 'flex-row-reverse text-right',
           active ? 'text-zinc-100' : 'hover:text-zinc-300',
         )}

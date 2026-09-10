@@ -313,7 +313,12 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
                 onMouseEnter={() => setIndex(i)}
                 onClick={() => setIndex(i)}
                 className={cn(
-                  'relative flex w-full flex-col gap-0.5 px-2.5 py-1.5 text-left transition-colors',
+                  // Niente `active:scale` qui: una riga larga quanto la lista
+                  // che si rimpicciolisce sotto il dito sembra un difetto, non
+                  // una risposta. Il feedback di pressione e' la quota che
+                  // sale di un gradino e torna giu'.
+                  'relative flex w-full flex-col gap-0.5 px-2.5 py-1.5 text-left',
+                  'transition-colors duration-150 active:bg-rim',
                   active ? 'bg-scrim' : 'hover:bg-film',
                 )}
               >
