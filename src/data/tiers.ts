@@ -9,7 +9,7 @@ import type { TierBlock } from '../domain/tiers';
 export const TIERS_SOURCE_URL = 'https://www.sosfanta.com/guida-asta-fantacalcio/guida-asta-fantacalcio-2026-2027-tutti-consigli-fasce-chi-prendere';
 
 /** Data di scarico della guida, mostrata all'utente per capire quanto e' vecchia. */
-export const TIERS_UPDATED_AT = '2026-09-08';
+export const TIERS_UPDATED_AT = '2026-09-10';
 
 export const TIER_BLOCKS: readonly TierBlock[] = [
   {

@@ -10,7 +10,7 @@ import type { UnavailableNote } from '../domain/injuries';
 export const INJURIES_SOURCE_URL = 'https://www.sosfanta.com/indisponibili-e-squalificati/tabella-indisponibili-seriea-fantacalcio-asta-infortunati-tempi-recupero-squalificati-diffidati/';
 
 /** Data di scarico della tabella: un infortunio invecchia in fretta. */
-export const INJURIES_UPDATED_AT = '2026-09-08';
+export const INJURIES_UPDATED_AT = '2026-09-10';
 
 export const INJURY_NOTES: readonly UnavailableNote[] = [
   {
@@ -51,16 +51,16 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
   {
     team: 'Cagliari',
     kind: 'infortunato',
-    name: 'Felici',
-    text: 'Infortunio da valutare in queste ore, in dubbio almeno per la 5a.',
-    matchday: 5,
+    name: 'Idrissi R.',
+    text: 'Intervento chirurgico di ricostruzione del legamento crociato anteriore del ginocchio sinistro, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
     team: 'Cagliari',
     kind: 'infortunato',
-    name: 'Idrissi R.',
-    text: 'Intervento chirurgico di ricostruzione del legamento crociato anteriore del ginocchio sinistro, in dubbio per la 6a.',
-    matchday: 6,
+    name: 'Felici',
+    text: 'Rottura del legamento crociato anteriore, in dubbio per 29a.',
+    matchday: 29,
   },
   {
     team: 'Como',
@@ -102,6 +102,13 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     kind: 'infortunato',
     name: 'Cabal',
     text: 'Lesione di basso grado del muscolo semimembranoso della coscia sinistra, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Juventus',
+    kind: 'infortunato',
+    name: 'Cambiaso',
+    text: 'Distorsione alla caviglia, in dubbio per la 6a.',
     matchday: 6,
   },
   {
@@ -175,24 +182,10 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     matchday: 4,
   },
   {
-    team: 'Milan',
-    kind: 'infortunato',
-    name: 'Gabbia',
-    text: 'Infortunio alla caviglia, in dubbio per la 4a.',
-    matchday: 4,
-  },
-  {
     team: 'Monza',
     kind: 'infortunato',
     name: 'Ciurria',
     text: 'Problema fisico, in dubbio per la 4a.',
-    matchday: 4,
-  },
-  {
-    team: 'Monza',
-    kind: 'infortunato',
-    name: 'Cutrone',
-    text: 'Fastidio muscolare, in dubbio per la 4a.',
     matchday: 4,
   },
   {
@@ -212,15 +205,15 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
   {
     team: 'Monza',
     kind: 'infortunato',
-    name: 'Ziolkowski',
-    text: 'Problema alla fascia plantare, in dubbio per la 6a.',
-    matchday: 6,
+    name: 'Pessina',
+    text: 'Operato per lussazione della rotula del ginocchio destro, in dubbio per la 9a.',
+    matchday: 9,
   },
   {
     team: 'Monza',
     kind: 'infortunato',
-    name: 'Pessina',
-    text: 'Operato per lussazione della rotula del ginocchio destro, in dubbio per la 9a.',
+    name: 'Ziolkowski',
+    text: 'Problema alla fascia plantare, in dubbio per la 9a.',
     matchday: 9,
   },
   {
@@ -254,6 +247,20 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
   {
     team: 'Napoli',
     kind: 'infortunato',
+    name: 'Meret',
+    text: 'Infortunio agli adduttori ancora da valutare, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Napoli',
+    kind: 'infortunato',
+    name: 'Santos A.',
+    text: 'Infortunio muscolare ancora da valutare, in dubbio per la 6a.',
+    matchday: 6,
+  },
+  {
+    team: 'Napoli',
+    kind: 'infortunato',
     name: 'Buongiorno',
     text: 'Intervento chirurgico di riparazione della radice del menisco mediale del ginocchio destro, in dubbio per la 12a.',
     matchday: 12,
@@ -262,7 +269,7 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     team: 'Parma',
     kind: 'infortunato',
     name: 'Bernabè',
-    text: 'Problema fisico da valutare, in dubbio per la 4a.',
+    text: 'Problema muscolare, in dubbio per la 4a.',
     matchday: 4,
   },
   {
@@ -318,7 +325,7 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     team: 'Sassuolo',
     kind: 'infortunato',
     name: 'Volpato',
-    text: 'Sospetto stiramento da valutare con esami, in dubbio per la 6a.',
+    text: 'Lesione di grado moderato al flessore della gamba destra, in dubbio per la 6a.',
     matchday: 6,
   },
   {
@@ -346,7 +353,7 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     team: 'Udinese',
     kind: 'infortunato',
     name: 'Arizala',
-    text: 'Lesione al bicipite femorale. In dubbio per la 5a',
+    text: 'Lesione al bicipite femorale, in dubbio per la 5a',
     matchday: 5,
   },
   {
@@ -367,7 +374,7 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     team: 'Udinese',
     kind: 'infortunato',
     name: 'Piotrowski',
-    text: 'Lieve aritmia cardiaca benigna ed è necessario un intervento di ablazione cardiaca, in dubbio per la. 6a.',
+    text: 'Lieve aritmia cardiaca benigna ed è necessario un intervento di ablazione cardiaca, in dubbio per la 6a.',
     matchday: 6,
   },
   {
@@ -388,22 +395,22 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     team: 'Venezia',
     kind: 'infortunato',
     name: 'Basic',
-    text: 'Affaticamento alla fascia plantare. In dubbio per la 4a.',
-    matchday: 4,
+    text: 'Affaticamento alla fascia plantare, in dubbio per la 5a.',
+    matchday: 5,
   },
   {
     team: 'Venezia',
     kind: 'infortunato',
-    name: 'Franjic',
-    text: 'Sospetta dislocazione della clavicola da valutare, in dubbio per la 4a.',
-    matchday: 4,
+    name: 'Mazzocchi',
+    text: 'Ritardo di condizione, in dubbio per la 5a.',
+    matchday: 5,
   },
   {
     team: 'Venezia',
     kind: 'infortunato',
     name: 'Bella-Kotchap',
-    text: 'Infortunio muscolare da valutare, in dubbio per la 5a.',
-    matchday: 5,
+    text: 'Piccolo risentimento mio-fasciale dell’adduttore della coscia destra, in dubbio per la 6a.',
+    matchday: 6,
   },
   {
     team: 'Venezia',
@@ -418,5 +425,12 @@ export const INJURY_NOTES: readonly UnavailableNote[] = [
     name: 'Sverko',
     text: 'Infortunio alle anche, in dubbio per la 7a.',
     matchday: 7,
+  },
+  {
+    team: 'Venezia',
+    kind: 'infortunato',
+    name: 'Franjic',
+    text: 'Intervento chirurgico per una lussazione acromion-claveare, in dubbio per la 15a.',
+    matchday: 15,
   },
 ];

@@ -178,10 +178,12 @@ function splitByTeam(paragraphs, clubs, url) {
  *
  * Il punto dopo `la` e' un refuso della fonte, non una forma: l'8 settembre 2026
  * su Piotrowski c'era scritto `in dubbio per la. 6a`, e quel solo carattere gli
- * toglieva la giornata di rientro senza far fallire niente.
+ * toglieva la giornata di rientro senza far fallire niente. Il 10 settembre e'
+ * toccato a Felici, con `in dubbio per 29a` senza `la`: stesso guasto muto, per
+ * questo adesso l'articolo e' opzionale quanto il punto.
  */
 function readMatchday(text) {
-  const m = /\bper la\.? (\d{1,2})[ªa]\b/i.exec(text);
+  const m = /\bper (?:la\.? )?(\d{1,2})[ªa]\b/i.exec(text);
   return m === null ? null : Number(m[1]);
 }
 

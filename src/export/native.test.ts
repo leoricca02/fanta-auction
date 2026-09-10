@@ -66,10 +66,10 @@ describe('§6.1 — export nativo reimportabile', () => {
     expect(nonAssegnati.every((r) => r['Costo'] === null)).toBe(true);
   });
 
-  it('conserva tutte le 594 righe, fuori lista compresi', () => {
+  it('conserva tutte le 595 righe, fuori lista compresi', () => {
     // Il parser ne scarta 59, ma il file per la lega deve restare integro.
     const result = buildNativeXlsx(readListoneBytes(), assignmentsFromState(state, config));
-    expect(readBack(result.bytes)).toHaveLength(594);
+    expect(readBack(result.bytes)).toHaveLength(595);
   });
 
   it('conserva tutte le colonne originali, anche quelle che l app ignora', () => {
@@ -86,7 +86,7 @@ describe('§6.1 — export nativo reimportabile', () => {
     const result = buildNativeXlsx(readListoneBytes(), assignmentsFromState(state, config));
     const reparsed = parseListone(result.bytes);
     expect(reparsed.players).toHaveLength(532);
-    expect(reparsed.excludedCount).toBe(62);
+    expect(reparsed.excludedCount).toBe(63);
   });
 
   it('senza assegnazioni non tocca niente', () => {

@@ -58,16 +58,16 @@ describe('normalizeName', () => {
 describe('parseListone — file reale', () => {
   const result = parseListone(readListoneBytes());
 
-  it('carica 532 giocatori escludendo i 62 fuori lista', () => {
-    expect(result.totalRows).toBe(594);
-    expect(result.excludedCount).toBe(62);
+  it('carica 532 giocatori escludendo i 63 fuori lista', () => {
+    expect(result.totalRows).toBe(595);
+    expect(result.excludedCount).toBe(63);
     expect(result.players).toHaveLength(532);
   });
 
   it('rispetta la distribuzione per ruolo di §2.1', () => {
     const byRole = { P: 0, D: 0, C: 0, A: 0 };
     for (const p of result.players) byRole[p.role] += 1;
-    expect(byRole).toEqual({ P: 64, D: 190, C: 192, A: 86 });
+    expect(byRole).toEqual({ P: 63, D: 190, C: 193, A: 86 });
   });
 
   it('usa "#" come id primario e non produce duplicati', () => {

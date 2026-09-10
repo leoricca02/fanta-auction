@@ -12,7 +12,7 @@ export const CALENDAR_SOURCE_URL = 'https://www.fantacalcio.it/serie-a/calendari
 export const CALENDAR_SEASON = '2026/27';
 
 /** Data di scarico: dice quante giornate risultano gia' giocate. */
-export const CALENDAR_UPDATED_AT = '2026-09-08';
+export const CALENDAR_UPDATED_AT = '2026-09-10';
 
 /** I venti club, con i nomi del listone. */
 export const CALENDAR_TEAMS: readonly string[] = [

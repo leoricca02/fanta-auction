@@ -30,6 +30,7 @@ Le statistiche della scorsa stagione **non si toccano**: il perché è al §4.
 - [Appendice A — Stato del progetto al 2026-08-25](#appendice-a--stato-del-progetto-al-2026-08-25)
 - [Appendice E — Passata del 5 settembre 2026](#appendice-e--passata-del-5-settembre-2026-campionato-iniziato)
 - [Appendice F — Passata dell'8 settembre 2026](#appendice-f--passata-dell8-settembre-2026-ultima-prima-dellasta)
+- [Appendice G — Passata del 10 settembre 2026](#appendice-g--passata-del-10-settembre-2026-il-giorno-dellasta)
 - [Appendice B — Decisioni da prendere, non da indovinare](#appendice-b--decisioni-da-prendere-non-da-indovinare)
 - [Appendice C — Passata del 1º settembre 2026](#appendice-c--passata-del-1º-settembre-2026-mercato-chiuso-fonti-non-ancora-definitive)
 - [Appendice D — Passata del 4 settembre 2026](#appendice-d--passata-del-4-settembre-2026-fonti-aggiornate)
@@ -627,6 +628,46 @@ senza è lo squalificato, che giustamente non ne ha una.
 scorsa sono ora giocate (30 su 380), e una sola data si è spostata, Udinese-Roma dal 1º
 novembre al 31 ottobre. Nessun `data-match-status` sconosciuto: il codice `1` imparato il
 5 settembre è bastato.
+
+---
+
+## Appendice G — Passata del 10 settembre 2026 (il giorno dell'asta)
+
+L'8 settembre doveva essere l'ultima; questa lo è davvero, fatta il giorno stesso dell'asta.
+I link mandati sono di nuovo i cinque soliti — i quattro delle fonti più il *kit asta*, con
+`?refresh_ce` — e nessun URL degli script è cambiato. Il listone era già aggiornato in
+`data/` dall'utente, quindi si è partiti direttamente dagli script.
+
+**Il listone si è mosso ancora**: **595 righe**, **532 id in lista** (**P 63**, D 190,
+**C 193**, A 86), **63 fuori lista**. Rispetto all'8 settembre un portiere in meno e un
+centrocampista in più, con il totale in lista fermo a 532. Le quotazioni invece stavolta non si
+sono mosse: i due test che usano Lautaro come campione (`listone.test.ts`, `report.test.ts`)
+sono rimasti verdi, e sono caduti solo i sei conteggi di §2.1 — le tre asserzioni in
+`listone.test.ts` (62, 63, 70), le due in `native.test.ts` (72, 89) e le due in
+`free-agents.test.ts` (`countByRole` e il `63` che dopo un'assegnazione diventa **62**).
+
+**Tre fonti su quattro erano identiche all'8 settembre.** `tiers.ts`, `specialists.ts` e
+`calendar.ts` hanno cambiato **solo la data di scarico**: le fasce restano 65 blocchi e 491
+nomi (490 agganciati), gli specialisti 60 blocchi e 241 nomi (240 agganciati, tutte e venti le
+squadre con il primo rigorista), il calendario 380 partite di cui 30 giocate — la 4ª giornata
+non si è ancora giocata, di mezzo c'è la sosta. Le statistiche 2025/26 restano ferme per
+costruzione (§4): 362 su 532.
+
+**Gli indisponibili sono l'unica cosa che è cambiata davvero**, come sempre: da 58 voci a
+**60** (59 infortunati + Gaetano, ancora l'unico squalificato). Fuori Gabbia e Cutrone, dentro
+Cambiaso, Meret e Santos A., più qualche prognosi riscritta.
+
+**Di nuovo un refuso della fonte, di nuovo muto.** Su Felici (Cagliari) SosFanta ha scritto
+*"in dubbio per 29a"* **senza l'articolo**, e `readMatchday()` — che l'8 settembre era stato
+insegnato a tollerare il punto di troppo — pretendeva ancora `per la`. Risultato: una rottura
+del crociato, cioè la voce che pesa di più di tutte, finita nel dataset con `matchday: null` e
+nessun test rosso. La regex adesso ha l'articolo opzionale quanto il punto
+(`/\bper (?:la\.? )?(\d{1,2})[ªa]\b/i`) e l'unica voce senza giornata è lo squalificato, che
+giustamente non ne ha una. Due passate di fila con lo stesso guasto: la forma della frase in
+quella tabella **non è stabile**, e il controllo da fare a ogni giro è `grep "matchday: null"`
+su `src/data/injuries.ts`.
+
+Chiusura: **712 test verdi**, `tsc -b --noEmit` pulito, `npm run build` completato.
 
 ---
 

@@ -223,7 +223,7 @@ describe('§4.3 — svincolati, inizio asta sul listone reale', () => {
 
   it('sono tutti e 532, ripartiti come §2', () => {
     expect(free.total).toBe(532);
-    expect(free.countByRole).toEqual({ P: 64, D: 190, C: 192, A: 86 });
+    expect(free.countByRole).toEqual({ P: 63, D: 190, C: 193, A: 86 });
   });
 
   it('gli slot liberi in lega sono 300, ripartiti per ruolo', () => {
@@ -276,7 +276,7 @@ describe('§4.3 — conteggio degli obiettivi', () => {
     );
     const after = computeFreeAgents(state, config, notes);
     expect(after.targetCountByRole.P).toBe(0);
-    expect(after.countByRole.P).toBe(63);
+    expect(after.countByRole.P).toBe(62);
     expect(after.total).toBe(531);
   });
 });
