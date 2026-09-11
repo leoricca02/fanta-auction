@@ -145,8 +145,14 @@ export function LivePage(): JSX.Element {
       />
 
       <div className="flex min-h-0 flex-1">
+        {/*
+          La colonna non scorre piu' tutta insieme: scorre solo la lista dei
+          reparti, dentro `MyRoster`. Crediti residui e max bid sono la cifra
+          che si guarda mentre si rilancia, e scrollavano via appena si andava
+          a cercare un nome in fondo agli attaccanti.
+        */}
         {me !== null && (
-          <section className="flex min-h-0 w-72 shrink-0 flex-col gap-3 overflow-y-auto border-r border-hair bg-veil p-3">
+          <section className="flex min-h-0 w-72 shrink-0 flex-col gap-3 overflow-hidden border-r border-hair bg-veil p-3">
             <SectionTitle icon={<Wallet size={12} />}>La tua rosa</SectionTitle>
             <MyRoster teamId={me.id} state={state} players={playerIndex} />
           </section>
@@ -456,10 +462,10 @@ function MyRoster({
   const tight = t.slotsFree > 0 && cushion <= t.slotsFree;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div
         className={cn(
-          'rounded-xl border p-3 transition-colors',
+          'shrink-0 rounded-xl border p-3 transition-colors',
           tight
             ? 'border-amber-500/30 bg-amber-500/[0.07]'
             : 'border-hair bg-veil',
@@ -490,49 +496,56 @@ function MyRoster({
         )}
       </div>
 
-      {PHASE_ORDER.map((role) => {
-        const filled = t.slotsFilledByRole[role];
-        const total = filled + t.slotsFreeByRole[role];
-        const theme = roleTheme(role);
-        return (
-          <div key={role}>
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  'inline-flex h-4 w-4 items-center justify-center rounded text-[10px] font-bold',
-                  theme.chip,
-                )}
-              >
-                {role}
-              </span>
-              <span className="num text-[11px] text-zinc-500">
-                {filled}/{total}
-              </span>
-              <Meter
-                value={total === 0 ? 0 : filled / total}
-                fill={theme.bar}
-                className="ml-auto w-16"
-              />
+      {/*
+        I quattro reparti scorrono qui dentro. A rosa piena sono venticinque
+        righe piu' quattro intestazioni: senza un contenitore suo, la lista
+        spingeva fuori dalla colonna il riquadro dei crediti qui sopra.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+        {PHASE_ORDER.map((role) => {
+          const filled = t.slotsFilledByRole[role];
+          const total = filled + t.slotsFreeByRole[role];
+          const theme = roleTheme(role);
+          return (
+            <div key={role}>
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    'inline-flex h-4 w-4 items-center justify-center rounded text-[10px] font-bold',
+                    theme.chip,
+                  )}
+                >
+                  {role}
+                </span>
+                <span className="num text-[11px] text-zinc-500">
+                  {filled}/{total}
+                </span>
+                <Meter
+                  value={total === 0 ? 0 : filled / total}
+                  fill={theme.bar}
+                  className="ml-auto w-16"
+                />
+              </div>
+              <ul className="mt-1 flex flex-col">
+                {t.roster
+                  .filter((entry) => entry.role === role)
+                  .map((entry) => (
+                    <li
+                      key={entry.playerId}
+                      className="flex justify-between gap-2 rounded px-1 py-0.5 text-sm transition-colors hover:bg-film"
+                    >
+                      <span className="min-w-0 truncate text-zinc-200">
+                        {players.get(entry.playerId)?.name ?? `#${entry.playerId}`}
+                      </span>
+                      <span className="num shrink-0 text-zinc-500">{entry.price}</span>
+                    </li>
+                  ))}
+                {filled === 0 && <li className="px-1 text-sm text-zinc-700">—</li>}
+              </ul>
             </div>
-            <ul className="mt-1 flex flex-col">
-              {t.roster
-                .filter((entry) => entry.role === role)
-                .map((entry) => (
-                  <li
-                    key={entry.playerId}
-                    className="flex justify-between gap-2 rounded px-1 py-0.5 text-sm transition-colors hover:bg-film"
-                  >
-                    <span className="min-w-0 truncate text-zinc-200">
-                      {players.get(entry.playerId)?.name ?? `#${entry.playerId}`}
-                    </span>
-                    <span className="num shrink-0 text-zinc-500">{entry.price}</span>
-                  </li>
-                ))}
-              {filled === 0 && <li className="px-1 text-sm text-zinc-700">—</li>}
-            </ul>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -545,7 +558,15 @@ function RecentEvents(): JSX.Element {
   const redoAssignment = useAppStore((s) => s.redoAssignment);
 
   const byId = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
-  const recent = [...events].slice(-8).reverse();
+  /*
+    Il log completo, dal piu' recente al primo colpo.
+
+    Prima si fermava agli ultimi otto: sotto asta la nona riga serviva per
+    ricordare a che prezzo era andato un nome, e non c'era modo di tornarci.
+    La lista adesso scorre — vedi sotto — e tenere tutto qui e' anche l'unico
+    modo di annullare un colpo vecchio senza cercarlo altrove.
+  */
+  const recent = [...events].reverse();
 
   /*
     L'ultimo colpo battuto si accende per un istante.
@@ -586,7 +607,14 @@ function RecentEvents(): JSX.Element {
   return (
     <div className="flex flex-col gap-1">
       <SectionTitle icon={<History size={12} />}>Ultime assegnazioni</SectionTitle>
-      <ul className="flex flex-col overflow-hidden rounded-lg border border-seam">
+      {/*
+        Altezza fissa da otto righe, poi scorre: la lista non deve crescere
+        fino a spingere fuori schermo la barra dei comandi, che e' l'unica cosa
+        che sotto asta deve restare sempre dov'e'. `overflow-y-auto` taglia
+        anche gli angoli arrotondati, quindi l'`overflow-hidden` di prima non
+        serve piu'.
+      */}
+      <ul className="flex max-h-56 flex-col overflow-y-auto rounded-lg border border-seam">
         <AnimatePresence initial={false}>
           {recent.map((event) => (
             <motion.li

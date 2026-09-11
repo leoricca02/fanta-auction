@@ -199,7 +199,12 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
           {/* 2 — dove vanno i crediti, reparto per reparto. */}
           <section className="rounded-xl border border-hair bg-surface/50 p-3">
             <SectionTitle className="mb-2">Dove vanno i crediti</SectionTitle>
-            <ul className="flex flex-col gap-1.5">
+            {/*
+              Ogni sezione tiene la sua altezza e scorre da sola: cosi' le
+              cinque intestazioni restano tutte a schermo e si arriva alla
+              tabella delle squadre senza scorrere mezzo overlay.
+            */}
+            <ul className="flex max-h-40 flex-col gap-1.5 overflow-y-auto">
               {stats.byRole.map((role) => (
                 <li key={role.role} className="flex items-center gap-2 text-xs">
                   <RoleBadge role={role.role} size="xs" />
@@ -248,7 +253,7 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
                 ),
               )}
             </div>
-            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-400">
+            <ul className="mt-2 flex max-h-24 flex-wrap gap-x-4 gap-y-1 overflow-y-auto text-[11px] text-zinc-400">
               {STATUS_ORDER.map((status) => (
                 <li key={status} className="flex items-center gap-1.5">
                   <span className={`h-2 w-2 rounded-sm ${STATUS_FILL[status]}`} />
@@ -281,9 +286,15 @@ export function StatsPanel({ onClose, embedded = false }: StatsPanelProps): JSX.
             <SectionTitle className="border-b border-hair px-3 py-2">
               Squadra per squadra — clicca una colonna per ordinare
             </SectionTitle>
-            <div className="overflow-x-auto">
+            {/*
+              Qui lo scorrimento e' su due assi: le colonne sono undici e le
+              righe una per squadra. L'intestazione resta appiccicata in alto,
+              altrimenti a meta' tabella non si sa piu' quale colonna si sta
+              leggendo — e le colonne si ordinano proprio da li'.
+            */}
+            <div className="max-h-80 overflow-auto">
               <table className="w-full text-xs">
-                <thead className="text-zinc-500">
+                <thead className="sticky top-0 z-10 bg-surface text-zinc-500">
                   <tr>
                     <SortableTh label="sigla" sortKey="teamId" sort={sort} onSort={setSort} left />
                     <SortableTh label="crediti" sortKey="credits" sort={sort} onSort={setSort} />
@@ -391,7 +402,8 @@ function DealList({ title, hint, deals, nameById, render }: DealListProps): JSX.
     <div className="rounded-xl border border-hair bg-surface/50 p-3">
       <SectionTitle>{title}</SectionTitle>
       {hint !== undefined && <p className="mb-1 text-[10px] text-zinc-600">{hint}</p>}
-      <ol className="mt-1 flex flex-col gap-1">
+      {/* Come le altre sezioni: altezza propria, poi scorre. */}
+      <ol className="mt-1 flex max-h-56 flex-col gap-1 overflow-y-auto">
         {deals.map((deal) => (
           <li key={deal.playerId} className="flex items-center gap-2 text-xs">
             <RoleBadge role={deal.role} size="xs" />
